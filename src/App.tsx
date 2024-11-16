@@ -9,8 +9,22 @@ import { SearchPanel } from "@/components/search-panel";
 import { LayerControl } from "@/components/layer-control";
 import { AnalyticsPanel } from "@/components/analytics-panel";
 import { Globe2, GripVertical } from "lucide-react";
+import { useState, useEffect } from 'react';
 
 function App() {
+  // Add aspect ratio check
+  const [isVerticalDisplay, setIsVerticalDisplay] = useState(false);
+
+  useEffect(() => {
+    const checkOrientation = () => {
+      setIsVerticalDisplay(window.innerHeight > window.innerWidth * 1.2);
+    };
+
+    checkOrientation();
+    window.addEventListener('resize', checkOrientation);
+    return () => window.removeEventListener('resize', checkOrientation);
+  }, []);
+
   return (
     <div className="h-screen w-screen flex flex-col">
       {/* Header bar with app title and description */}
@@ -35,25 +49,41 @@ function App() {
           {/* Main panel group - 92% height */}
           <ResizablePanel defaultSize={92}>
             {/* Inner panel group with horizontal direction */}
-            <ResizablePanelGroup direction="horizontal" className="h-full">
-              {/* Layer control panel - 20% width */}
-              <ResizablePanel defaultSize={20} minSize={10} maxSize={30}>
+            <ResizablePanelGroup 
+              direction={isVerticalDisplay ? 'vertical' : 'horizontal'} 
+              className="h-full"
+            >
+              {/* Layer control panel - 15% width */}
+              <ResizablePanel 
+                defaultSize={isVerticalDisplay ? 25 : 15} 
+                minSize={isVerticalDisplay ? 15 : 10} 
+                maxSize={isVerticalDisplay ? 40 : 30}
+              >
                 <LayerControl />
               </ResizablePanel>
               <ResizeHandle withHandle>
-                {/* Resize handle with vertical grip icon */}
-                <GripVertical className="h-4 w-4" />
+                <div className={isVerticalDisplay ? 'rotate-90' : ''}>
+                  <GripVertical className="h-4 w-4" />
+                </div>
               </ResizeHandle>
-              <ResizablePanel defaultSize={60} minSize={40}>
+              {/* Map panel - 50% width */}
+              <ResizablePanel 
+                defaultSize={isVerticalDisplay ? 50 : 55} 
+                minSize={40}
+              >
                 <MapLayout />
-                {/* Map panel - 60% width */}
               </ResizablePanel>
               <ResizeHandle withHandle>
-                {/* Resize handle with vertical grip icon */}
-                <GripVertical className="h-4 w-4" />
+                <div className={isVerticalDisplay ? 'rotate-90' : ''}>
+                  <GripVertical className="h-4 w-4" />
+                </div>
               </ResizeHandle>
-              <ResizablePanel defaultSize={20} minSize={15} maxSize={50}>
-                {/* Analytics panel - 20% width */}
+              {/* Analytics panel - 35% width */}
+              <ResizablePanel 
+                defaultSize={isVerticalDisplay ? 25 : 30} 
+                minSize={isVerticalDisplay ? 20 : 15} 
+                maxSize={50}
+              >
                 <AnalyticsPanel />
               </ResizablePanel>
             </ResizablePanelGroup>

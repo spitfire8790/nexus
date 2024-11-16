@@ -1,9 +1,29 @@
 import express from 'express';
 import cors from 'cors';
 import axios from 'axios';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Define types for the API response
+interface SpatialAPIError {
+  error?: {
+    code?: number;
+    message?: string;
+    details?: string[];
+  };
+}
+
+interface SpatialAPIResponse extends SpatialAPIError {
+  features?: any[];
+  // Add other expected response fields here
+}
 
 const app = express();
 app.use(cors());
+app.use(express.json());
 
 app.use((req, res, next) => {
   res.setHeader(
@@ -60,12 +80,85 @@ app.get("/api/proxy", async (req, res) => {
   }
 });
 
+app.post("/api/proxy/spatial", async (req, res) => {
+  try {
+    const { url, params } = req.body;
+    
+    console.log("🚀 Making Spatial API request to:", url);
+    console.log("📨 With params:", JSON.stringify(params, null, 2)); // Log the params
+
+    const response = await axios({
+      method: 'POST',
+      url: url,
+      data: new URLSearchParams(params),
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
+    });
+
+    const queryParams = {
+      f: 'json',
+      geometry: params.bbox,
+      geometryType: 'esriGeometryEnvelope',
+      inSR: '4326',
+      spatialRel: 'esriSpatialRelIntersects',
+      outFields: '*',
+      returnGeometry: 'true',
+      outSR: '4326'
+    };
+
+    console.log("✅ Spatial API Response status:", response.status);
+
+    const data = response.data as SpatialAPIResponse;
+    if (data.error) {
+      throw new Error(
+        data.error.message || 
+        'API Error'
+      );
+    }
+
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Methods", "POST, OPTIONS");
+    res.header(
+      "Access-Control-Allow-Headers",
+      "Content-Type, Accept"
+    );
+
+    res.json(response.data);
+  } catch (error) {
+    console.error("❌ Spatial API Error:", {
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data,
+      message: error.message,
+      url: error.config?.url,
+      requestParams: req.body.params
+    });
+    
+    res.status(error.response?.status || 500).json({
+      error: "Failed to fetch data",
+      message: error.message,
+      details: error.response?.data
+    });
+  }
+});
+
 app.options("/api/proxy", (req, res) => {
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Methods", "GET, OPTIONS");
   res.header(
     "Access-Control-Allow-Headers",
     "Content-Type, Accept, EPINAME, ZONECODE"
+  );
+  res.sendStatus(200);
+});
+
+app.options("/api/proxy/spatial", (req, res) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Content-Type, Accept"
   );
   res.sendStatus(200);
 });

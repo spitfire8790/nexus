@@ -103,6 +103,16 @@ function MapController() {
   const searchControlRef = useRef<any>(null);
   
   useEffect(() => {
+    console.log('Initial map center:', map.getCenter());
+    
+    // Add a moveend event listener to track center changes
+    const onMoveEnd = () => {
+      console.log('Map moved to:', map.getCenter());
+      console.log('Move triggered by:', new Error().stack);
+    };
+    
+    map.on('moveend', onMoveEnd);
+    
     // Create custom panes with proper z-index ordering
     if (!map.getPane(BASE_PANE)) {
       map.createPane(BASE_PANE);
@@ -172,6 +182,7 @@ function MapController() {
         searchControlRef.current.remove();
       }
       map.off('mousemove', onMouseMove);
+      map.off('moveend', onMoveEnd);
     };
   }, [map]);
 
@@ -220,6 +231,20 @@ function OverlayLayers() {
               attribution: layer.attribution,
               className: layer.className,
               pane: OVERLAY_PANE  // All layers from layer control go in overlay pane
+            }).addTo(map);
+          } else if (layer.type === 'geojson') {
+            layerRefs.current[layer.id] = L.geoJSON(layer.data, {
+              pane: OVERLAY_PANE,
+              pointToLayer: (feature, latlng) => {
+                return L.circleMarker(latlng, {
+                  radius: 8,
+                  fillColor: "#2563eb",
+                  color: "#fff",
+                  weight: 1,
+                  opacity: layer.opacity,
+                  fillOpacity: 0.8
+                });
+              }
             }).addTo(map);
           }
         }
@@ -343,8 +368,6 @@ export function MapView() {
             maxZoom={19}
             attribution='© OpenStreetMap contributors, © CARTO'
             maxNativeZoom={19}
-            tileSize={512}
-            zoomOffset={-1}
             crossOrigin={true}
             pane={BASE_PANE}
           />

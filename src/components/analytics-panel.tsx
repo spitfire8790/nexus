@@ -1,6 +1,6 @@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import {
   School,
   GraduationCap,
@@ -24,9 +24,10 @@ import {
   InfoIcon,
   DollarSign,
   Clock,
-  Coffee
+  Coffee,
+  Users
 } from "lucide-react";
-import { useMapStore } from "@/lib/map-store";
+import { useMapStore, type MapState, type LayerGroup } from "@/lib/map-store";
 import { useEffect, useState, useCallback } from "react";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import ReactSpeedometer, { CustomSegmentLabelPosition, Transition } from "react-d3-speedometer";
@@ -39,6 +40,11 @@ import {
 } from "@/components/ui/tooltip";
 import { Slider } from "@/components/ui/slider";
 import * as turf from '@turf/turf';
+import { Button } from "@/components/ui/button";
+import { rpc } from "@/lib/rpc";
+import L from 'leaflet';
+import { useMap } from 'react-leaflet';
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip as RechartsTooltip, BarChart, CartesianGrid, XAxis, YAxis, Bar } from 'recharts';
 
 interface ZoningResult {
   title: string;
@@ -122,8 +128,6 @@ function SiteOverviewTab() {
     lgaName: string | null;
     propertyAddress: string | null;
     area: number | null;
-    lastSaleDate: string | null;
-    lastSalePrice: number | null;
     maxHeight: string | null;
     minLotSize: string | null;
   }>({
@@ -131,8 +135,6 @@ function SiteOverviewTab() {
     lgaName: null,
     propertyAddress: null,
     area: null,
-    lastSaleDate: null,
-    lastSalePrice: null,
     maxHeight: null,
     minLotSize: null
   });
@@ -182,58 +184,6 @@ function SiteOverviewTab() {
         }
       };
 
-      const fetchSales = async () => {
-        try {
-          console.time('sales-fetch');
-          console.log('Fetching sales for propId:', propId);
-          
-          // First check if the property exists with a count query
-          const countResponse = await fetchWithTimeout(
-            `https://maps.six.nsw.gov.au/arcgis/rest/services/public/Valuation/MapServer/1/query?` +
-            `where=propid=${propId.toLowerCase()}&` +
-            `returnCountOnly=true&` +
-            `f=json`,
-            5000
-          );
-          
-          const countData = await countResponse.json();
-          
-          // Only fetch details if we found a matching property
-          if (countData.count > 0) {
-            const response = await fetchWithTimeout(
-              `https://maps.six.nsw.gov.au/arcgis/rest/services/public/Valuation/MapServer/1/query?` +
-              `where=propid=${propId.toLowerCase()}&` +
-              `outFields=sale_date,price&` +
-              `f=json`,
-              5000
-            );
-            
-            const data = await response.json();
-            console.log('Sales data:', data);
-            
-            setData(prev => ({
-              ...prev,
-              lastSaleDate: data.features?.[0]?.attributes?.sale_date ?? null,
-              lastSalePrice: data.features?.[0]?.attributes?.price ?? null
-            }));
-          } else {
-            // No sales data found
-            setData(prev => ({
-              ...prev,
-              lastSaleDate: null,
-              lastSalePrice: null
-            }));
-          }
-          
-          console.timeEnd('sales-fetch');
-        } catch (error) {
-          console.error('Sales fetch error:', error);
-          setData(prev => ({ ...prev, lastSaleDate: null, lastSalePrice: null }));
-        } finally {
-          setLoadingStates(prev => ({ ...prev, sales: false }));
-        }
-      };
-
       const fetchZoning = async () => {
         const setZoneInfo = useMapStore.getState().setZoneInfo;
         
@@ -278,7 +228,6 @@ function SiteOverviewTab() {
       // Start all fetches concurrently
       fetchAddress();
       fetchSpatial();
-      fetchSales();
       fetchZoning();
     }
 
@@ -683,20 +632,20 @@ function SaleCard({ sale, index }: { sale: Sale; index: number }) {
         {index + 1}
       </div>
       <div className="grid grid-cols-12 flex-1 gap-0 min-w-0 ml-2">
-        <div className="col-span-8 text-sm truncate pr-2" title={sale.bp_address}>
+        <div className="col-span-8 text-xs truncate pr-2" title={sale.bp_address}>
           {sale.bp_address}
         </div>
-        <div className="col-span-2 text-sm text-center">
+        <div className="col-span-2 text-xs text-center">
           {new Date(sale.sale_date).toLocaleDateString('en-AU', {
             day: '2-digit',
             month: 'short',
             year: 'numeric'
           })}
         </div>
-        <div className="col-span-1 text-sm font-semibold text-blue-600 text-center">
+        <div className="col-span-1 text-xs font-semibold text-blue-600 text-center">
           {formatPrice(sale.price)}
         </div>
-        <div className="col-span-1 text-sm text-muted-foreground text-right pr-4">
+        <div className="col-span-1 text-xs text-muted-foreground text-right pr-4">
           {Math.round(sale.distance)}m
         </div>
       </div>
@@ -706,7 +655,6 @@ function SaleCard({ sale, index }: { sale: Sale; index: number }) {
 
 function SalesTab() {
   const selectedProperty = useMapStore((state) => state.selectedProperty);
-  const [loading, setLoading] = useState(true);
   const [propertyData, setPropertyData] = useState<{
     lastSaleDate: string | null;
     lastSalePrice: number | null;
@@ -714,6 +662,7 @@ function SalesTab() {
     lastSaleDate: null,
     lastSalePrice: null
   });
+  const [loading, setLoading] = useState(false);
   const [nearbySales, setNearbySales] = useState<Array<{
     sale_date: string;
     price: number;
@@ -761,8 +710,84 @@ function SalesTab() {
   };
 
   useEffect(() => {
+    let mounted = true;
+
+    async function fetchPropertySales(retryCount = 3, delayMs = 500) {
+      if (!selectedProperty?.propId) {
+        console.log('No property ID available');
+        return;
+      }
+      
+      if (mounted) setLoading(true);
+      console.log('Fetching sales data for property:', selectedProperty.propId);
+      
+      const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+      
+      for (let attempt = 1; attempt <= retryCount; attempt++) {
+        try {
+          if (attempt > 1) {
+            console.log(`Retry attempt ${attempt}/${retryCount}`);
+            await delay(delayMs);
+          }
+
+          // Build query similar to the working nearby sales query
+          const url = new URL('https://maps.six.nsw.gov.au/arcgis/rest/services/public/Valuation/MapServer/1/query');
+          url.searchParams.append('where', `propid = '${selectedProperty.propId.toLowerCase()}'`);
+          url.searchParams.append('outFields', 'sale_date,price');
+          url.searchParams.append('returnGeometry', 'false');
+          url.searchParams.append('f', 'json');
+          
+          console.log('Fetching from URL:', url.toString());
+          
+          const response = await fetchWithTimeout(url.toString(), 5000);
+          console.log('Response status:', response.status);
+          
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          
+          const data = await response.json();
+          console.log('Sales data received:', data);
+          
+          if (data.error) {
+            throw new Error(data.error.message || 'Failed to fetch sales data');
+          }
+
+          if (mounted) {
+            const saleData = {
+              lastSaleDate: data.features?.[0]?.attributes?.sale_date ?? null,
+              lastSalePrice: data.features?.[0]?.attributes?.price ?? null
+            };
+            
+            console.log('Processed sale data:', saleData);
+            setPropertyData(saleData);
+            setLoading(false);
+            return; // Success - exit the retry loop
+          }
+          
+        } catch (error) {
+          console.error(`Property sales fetch error (attempt ${attempt}/${retryCount}):`, error);
+          if (attempt === retryCount && mounted) {
+            setPropertyData({
+              lastSaleDate: null,
+              lastSalePrice: null
+            });
+            setLoading(false);
+          }
+        }
+      }
+    }
+
+    fetchPropertySales();
+
+    return () => {
+      mounted = false;
+    };
+  }, [selectedProperty?.propId]);
+
+  useEffect(() => {
     async function fetchSalesData() {
-      if (!selectedProperty?.geometry) return;
+      if (!selectedProperty?.geometry || !selectedProperty?.propId) return;
       
       setLoading(true);
       
@@ -780,14 +805,14 @@ function SalesTab() {
         const bufferDegrees = 0.01; // roughly 1km
         const bbox = `${centerX-bufferDegrees},${centerY-bufferDegrees},${centerX+bufferDegrees},${centerY+bufferDegrees}`;
 
-        // Update URL to include bp_address in outFields
+        // Fetch nearby sales
         const url = new URL('https://maps.six.nsw.gov.au/arcgis/rest/services/public/Valuation/MapServer/1/query');
         url.searchParams.append('where', "1=1");
         url.searchParams.append('geometry', bbox);
         url.searchParams.append('geometryType', 'esriGeometryEnvelope');
         url.searchParams.append('inSR', '4326');
         url.searchParams.append('spatialRel', 'esriSpatialRelIntersects');
-        url.searchParams.append('outFields', 'sale_date,price,bp_address'); // Added bp_address
+        url.searchParams.append('outFields', 'sale_date,price,bp_address');
         url.searchParams.append('returnGeometry', 'true');
         url.searchParams.append('outSR', '4326');
         url.searchParams.append('f', 'json');
@@ -875,73 +900,68 @@ function SalesTab() {
   }
 
   return (
-    <div className="p-4">
-      <div className="space-y-4">
-        <Card>
-          <CardContent className="pt-6">
-            {loading ? (
-              <div className="flex items-center justify-center p-4">
-                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+    <div className="p-4 space-y-4">
+      <Card>
+        <CardHeader>
+          <CardTitle>Property Sales History</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="flex items-center justify-center p-4">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : propertyData.lastSaleDate ? (
+            <div className="space-y-2">
+              <div className="text-sm">
+                <span className="font-medium">Last Sale Date: </span>
+                {new Date(propertyData.lastSaleDate).toLocaleDateString('en-AU', {
+                  day: '2-digit',
+                  month: 'short',
+                  year: 'numeric'
+                })}
               </div>
-            ) : propertyData.lastSaleDate ? (
-              <div>
-                <div className="flex justify-between items-center">
-                  <div className="text-sm font-medium">
-                    Last Sale Date: {new Date(propertyData.lastSaleDate).toLocaleDateString('en-AU', {
-                      day: '2-digit',
-                      month: 'short',
-                      year: 'numeric'
-                    })}
-                  </div>
-                  <div className="text-sm text-muted-foreground flex items-center gap-1">
-                    <Clock className="h-4 w-4" />
-                    {getTimeSinceSale(propertyData.lastSaleDate)}
-                  </div>
-                </div>
-                <div className="text-lg font-bold mt-1">
-                  ${propertyData.lastSalePrice?.toLocaleString('en-AU')}
-                </div>
+              <div className="text-sm">
+                <span className="font-medium">Sale Price: </span>
+                ${propertyData.lastSalePrice?.toLocaleString('en-AU')}
               </div>
-            ) : (
-              <div className="text-sm text-muted-foreground">
-                No sales data available for this property
-              </div>
-            )}
-          </CardContent>
-        </Card>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">No sales history found for this property</p>
+          )}
+        </CardContent>
+      </Card>
 
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle>Nearby Sales</CardTitle>
-            <CardDescription>Last 12 months - 10 closest properties</CardDescription>
-          </CardHeader>
-          <CardContent className="px-2">
-            {loading ? (
-              <div className="flex items-center justify-center p-4">
-                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle>Nearby Sales</CardTitle>
+          <CardDescription>Last 12 months - 10 closest properties</CardDescription>
+        </CardHeader>
+        <CardContent className="px-2">
+          {loading ? (
+            <div className="flex items-center justify-center p-4">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : nearbySales && nearbySales.length > 0 ? (
+            <div>
+              <div className="grid grid-cols-12 gap-0 pb-1 text-xs font-medium text-muted-foreground border-b">
+                <div className="col-span-8 pl-8 pr-2 text-xs leading-tight">Address</div>
+                <div className="col-span-2 text-center">Sale Date</div>
+                <div className="col-span-1 text-center">Price</div>
+                <div className="col-span-1 text-right pr-4">Distance</div>
               </div>
-            ) : nearbySales && nearbySales.length > 0 ? (
-              <div>
-                <div className="grid grid-cols-12 gap-0 pb-1 text-xs font-medium text-muted-foreground border-b">
-                  <div className="col-span-8 pl-8 pr-2">Address</div>
-                  <div className="col-span-2 text-center">Sale Date</div>
-                  <div className="col-span-1 text-center">Price</div>
-                  <div className="col-span-1 text-right pr-4">Distance</div>
-                </div>
-                <div className="divide-y divide-border/30">
-                  {nearbySales.map((sale, index) => (
-                    <SaleCard key={index} sale={sale} index={index} />
-                  ))}
-                </div>
+              <div className="divide-y divide-border/30">
+                {nearbySales.map((sale, index) => (
+                  <SaleCard key={index} sale={sale} index={index} />
+                ))}
               </div>
-            ) : (
-              <div className="text-sm text-muted-foreground">
-                No recent sales found in this area
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+            </div>
+          ) : (
+            <div className="text-xs text-muted-foreground">
+              No recent sales found in this area
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
@@ -1170,37 +1190,37 @@ const AMENITY_CONFIGS = {
     type: 'Hospital',
     url: 'NSW_FOI_Health_Facilities/MapServer/1',
     icon: Hospital,
-    nameField: 'FACILITY_NAME'
+    nameField: 'generalname'
   },
   ambulanceStation: {
     type: 'Ambulance Station',
     url: 'NSW_FOI_Health_Facilities/MapServer/0',
     icon: Truck,
-    nameField: 'FACILITY_NAME'
+    nameField: 'generalname'
   },
   policeStation: {
     type: 'Police Station',
     url: 'NSW_FOI_Emergency_Service_Facilities/MapServer/1',
     icon: LifeBuoy,
-    nameField: 'FACILITY_NAME'
+    nameField: 'generalname'
   },
   fireStation: {
     type: 'Fire Station',
     url: 'NSW_FOI_Emergency_Service_Facilities/MapServer/0',
     icon: Flame,
-    nameField: 'FACILITY_NAME'
+    nameField: 'generalname'
   },
   sesStation: {
     type: 'SES Station',
     url: 'NSW_FOI_Emergency_Service_Facilities/MapServer/3',
     icon: Shield,
-    nameField: 'FACILITY_NAME'
+    nameField: 'generalname'
   },
   railStation: {
     type: 'Rail Station',
     url: 'NSW_FOI_Transport_Facilities/MapServer/1',
     icon: Train,
-    nameField: 'FACILITY_NAME'
+    nameField: 'generalname'
   }
 };
 
@@ -1214,7 +1234,13 @@ function AmenitiesTab() {
     name: string;
     distance: number;
     icon?: React.ElementType;
+    geometry: {
+      x: number;
+      y: number;
+    };
   }> | null>(null);
+  const [isLayerLoading, setIsLayerLoading] = useState(false);
+  const setLayerGroups = useMapStore((state) => state.setLayerGroups);
 
   const updateBufferGeometry = useCallback((radius: number) => {
     if (!selectedProperty?.geometry) return;
@@ -1242,6 +1268,12 @@ function AmenitiesTab() {
   useEffect(() => {
     updateBufferGeometry(searchRadius);
   }, [searchRadius, updateBufferGeometry]);
+
+  useEffect(() => {
+    return () => {
+      setBufferGeometry(null);
+    };
+  }, [setBufferGeometry]);
 
   useEffect(() => {
     async function fetchAmenities() {
@@ -1286,42 +1318,81 @@ function AmenitiesTab() {
 
         const amenityPromises = Object.entries(AMENITY_CONFIGS).map(async ([key, config]) => {
           try {
-            const response = await fetch(
-              `https://portal.spatial.nsw.gov.au/server/rest/services/${config.url}/query?${new URLSearchParams(params)}`
-            );
-            
+            console.log(`🔍 Fetching ${config.type} amenities...`);
+            const response = await fetch('/api/proxy/spatial', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                url: `https://portal.spatial.nsw.gov.au/server/rest/services/${config.url}/query`,
+                params: params
+              })
+            });
+
             if (!response.ok) {
               throw new Error(`${config.type} API returned status: ${response.status}`);
             }
 
             const data = await response.json();
+            console.log(`📍 ${config.type} data:`, {
+              features: data.features?.length || 0,
+              firstFeature: data.features?.[0],
+              url: config.url
+            });
             return { key, config, data };
           } catch (error) {
-            console.error(`Error fetching ${config.type}:`, error);
+            console.error(`❌ Error fetching ${config.type}:`, error);
             return { key, config, data: { features: [] } };
           }
         });
 
         const results = await Promise.all(amenityPromises);
-        
+        console.log('🎯 All amenity results:', results.map(r => ({
+          type: r.config.type,
+          count: r.data.features?.length || 0
+        })));
+
         const allAmenities = results.flatMap(({ config, data }) => {
           if (!data.features?.length) return [];
 
-          return data.features
+          const amenities = data.features
             .map((feature: any) => {
               const dx = feature.geometry.x - centerX;
               const dy = feature.geometry.y - centerY;
               const distance = Math.sqrt(dx * dx + dy * dy);
               
-              return {
+              const amenity = {
                 type: config.type,
                 name: feature.attributes[config.nameField],
                 distance: Math.round(distance),
-                icon: config.icon
+                icon: config.icon,
+                geometry: feature.geometry
               };
+              
+              console.log(`📌 Found ${config.type}:`, {
+                name: amenity.name,
+                distance: `${(amenity.distance/1000).toFixed(1)}km`,
+                attributes: feature.attributes
+              });
+              
+              return amenity;
             })
             .filter((amenity: any) => amenity.distance <= searchRadius * 1000)
             .sort((a: any, b: any) => a.distance - b.distance);
+
+          console.log(`✨ Processed ${config.type}:`, {
+            total: data.features.length,
+            withinRadius: amenities.length,
+            radius: `${searchRadius}km`
+          });
+
+          return amenities;
+        });
+
+        console.log('🏁 Final amenities data:', {
+          total: allAmenities.length,
+          byType: Object.groupBy(allAmenities, (a: any) => a.type)
         });
 
         setAmenities(allAmenities);
@@ -1336,28 +1407,73 @@ function AmenitiesTab() {
     fetchAmenities();
   }, [selectedProperty?.geometry, searchRadius]);
 
-  useEffect(() => {
-    return () => {
-      setBufferGeometry(null);
-    };
-  }, [setBufferGeometry]);
+  const handleAddToMap = async () => {
+    if (!amenities?.length) return;
+    
+    setIsLayerLoading(true);
+    try {
+      const features = amenities.map(amenity => {
+        // Convert from Web Mercator to WGS84
+        const x = (amenity.geometry.x * 180) / 20037508.34;
+        const y = (Math.atan(Math.exp((amenity.geometry.y * Math.PI) / 20037508.34)) * 360) / Math.PI - 90;
+        
+        return {
+          type: "Feature",
+          properties: {
+            type: amenity.type,
+            name: amenity.name,
+            distance: (amenity.distance / 1000).toFixed(1) + 'km'
+          },
+          geometry: {
+            type: "Point",
+            coordinates: [x, y]  // [longitude, latitude]
+          }
+        };
+      });
+
+      const geojsonData = {
+        type: "FeatureCollection",
+        features: features
+      };
+
+      setLayerGroups([{
+        id: 'amenities',
+        name: 'Analysis',
+        layers: [{
+          id: 'nearby_amenities',
+          name: 'Nearby Amenities',
+          type: 'geojson' as const,
+          data: geojsonData,
+          enabled: true,
+          opacity: 1
+        }]
+      } as LayerGroup]);
+
+    } catch (error) {
+      console.error('Error creating amenities layer:', error);
+    } finally {
+      setIsLayerLoading(false);
+    }
+  };
 
   return (
     <div className="p-4">
       <Card>
         <CardHeader>
           <CardTitle>Nearby Amenities</CardTitle>
-          <CardDescription className="space-y-4">
-            <div>
-              Search radius: {searchRadius}km
-              <Slider
-                value={[searchRadius]}
-                onValueChange={([value]) => setSearchRadius(value)}
-                min={0.5}
-                max={10}
-                step={0.5}
-                className="mt-2"
-              />
+          <CardDescription> 
+            <div className="space-y-4">
+              <div className="mt-2">
+                Search radius: {searchRadius}km
+                <Slider
+                  value={[searchRadius]}
+                  onValueChange={([value]) => setSearchRadius(value)}
+                  min={0.5}
+                  max={10}
+                  step={0.5}
+                  className="mt-2"
+                />
+              </div>
             </div>
           </CardDescription>
         </CardHeader>
@@ -1398,6 +1514,193 @@ function AmenitiesTab() {
             </Alert>
           )}
         </CardContent>
+        <CardFooter>
+          <Button
+            onClick={handleAddToMap}
+            className="w-full"
+            disabled={isLayerLoading || !amenities?.length}
+          >
+            {isLayerLoading ? (
+              <span className="flex items-center justify-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Adding to map...
+              </span>
+            ) : (
+              'Add to Map'
+            )}
+          </Button>
+        </CardFooter>
+      </Card>
+    </div>
+  );
+}
+
+function DemographicsTab() {
+  const selectedProperty = useMapStore((state) => state.selectedProperty);
+  const [loading, setLoading] = useState(true);
+  const [genderData, setGenderData] = useState<Array<{ name: string; value: number }>>([]);
+  const [ageData, setAgeData] = useState<Array<{ name: string; value: number }>>([]);
+
+  useEffect(() => {
+    async function fetchCensusData() {
+      if (!selectedProperty?.geometry) return;
+      setLoading(true);
+
+      try {
+        // Convert Web Mercator to WGS84 coordinates
+        const rings = selectedProperty.geometry.rings[0];
+        const centerX = rings.reduce((sum: number, coord: number[]) => sum + coord[0], 0) / rings.length;
+        const centerY = rings.reduce((sum: number, coord: number[]) => sum + coord[1], 0) / rings.length;
+
+        // Convert to WGS84
+        const longitude = (centerX * 180) / 20037508.34;
+        const latitude = (Math.atan(Math.exp((centerY * Math.PI) / 20037508.34)) * 360) / Math.PI - 90;
+
+        const response = await fetch(
+          `https://services1.arcgis.com/v8Kimc579yljmjSP/ArcGIS/rest/services/ABS_2021_Census_G01_Selected_person_characteristics_by_sex_Beta/FeatureServer/5/query?` +
+          `geometry=${longitude},${latitude}&` +
+          `geometryType=esriGeometryPoint&` +
+          `inSR=4326&` +
+          `spatialRel=esriSpatialRelIntersects&` +
+          `outFields=*&` +
+          `returnGeometry=false&` +
+          `f=json`
+        );
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch census data');
+        }
+
+        const data = await response.json();
+        
+        if (data.features?.[0]?.attributes) {
+          const attributes = data.features[0].attributes;
+          
+          const total = (attributes.Tot_P_F || 0) + (attributes.Tot_P_M || 0);
+          setGenderData([
+            { name: 'Female', value: total ? (attributes.Tot_P_F || 0) / total : 0 },
+            { name: 'Male', value: total ? (attributes.Tot_P_M || 0) / total : 0 }
+          ]);
+
+          // Set age data
+          setAgeData([
+            { name: '0-4', value: attributes.Age_0_4_yr_P || 0 },
+            { name: '5-14', value: attributes.Age_5_14_yr_P || 0 },
+            { name: '15-19', value: attributes.Age_15_19_yr_P || 0 },
+            { name: '20-24', value: attributes.Age_20_24_yr_P || 0 },
+            { name: '25-34', value: attributes.Age_25_34_yr_P || 0 },
+            { name: '35-44', value: attributes.Age_35_44_yr_P || 0 },
+            { name: '45-54', value: attributes.Age_45_54_yr_P || 0 },
+            { name: '55-64', value: attributes.Age_55_64_yr_P || 0 },
+            { name: '65-74', value: attributes.Age_65_74_yr_P || 0 },
+            { name: '75-84', value: attributes.Age_75_84_yr_P || 0 },
+            { name: '85+', value: attributes.Age_85ov_P || 0 }
+          ]);
+        }
+
+      } catch (error) {
+        console.error('Error fetching census data:', error);
+        setGenderData([]);
+        setAgeData([]);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchCensusData();
+  }, [selectedProperty?.geometry]);
+
+  const COLORS = ['#C084FC', '#44B9FF'];
+
+  return (
+    <div className="p-2 space-y-4">
+      <Card>
+        <CardHeader>
+          <CardTitle>Gender Distribution</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="flex items-center justify-center h-[60px]">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : genderData.length > 0 ? (
+            <div className="space-y-4">
+              <div className="flex h-8">
+                <div 
+                  className="h-full" 
+                  style={{ 
+                    width: `${genderData[0].value * 100}%`,
+                    backgroundColor: COLORS[0]
+                  }} 
+                />
+                <div 
+                  className="h-full" 
+                  style={{ 
+                    width: `${genderData[1].value * 100}%`,
+                    backgroundColor: COLORS[1]
+                  }} 
+                />
+              </div>
+              <div className="flex justify-between text-sm">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3" style={{ backgroundColor: COLORS[0] }}></div>
+                  Female {(genderData[0].value * 100).toFixed(1)}%
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3" style={{ backgroundColor: COLORS[1] }}></div>
+                  Male {(genderData[1].value * 100).toFixed(1)}%
+                </div>
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">No demographic data available</p>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Age Distribution</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="flex items-center justify-center h-[300px]">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : ageData.length > 0 ? (
+            <div className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart 
+                  data={ageData}
+                  layout="horizontal"
+                  margin={{ top: 20, right: 10, left: 0, bottom: 20 }}
+                  barSize={35}
+                >
+                  <XAxis 
+                    dataKey="name" 
+                    tick={{ fontSize: 11 }}
+                    axisLine={true}
+                    interval={0}
+                  />
+                  <YAxis hide />
+                  <RechartsTooltip />
+                  <Bar 
+                    dataKey="value" 
+                    fill="#1E4FD9"
+                    label={{ 
+                      position: 'top',
+                      formatter: (value) => `${((value / ageData.reduce((acc, cur) => acc + cur.value, 0)) * 100).toFixed(1)}%`,
+                      fontSize: 11,
+                      dy: -5
+                    }}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">No age data available</p>
+          )}
+        </CardContent>
       </Card>
     </div>
   );
@@ -1413,10 +1716,10 @@ export function AnalyticsPanel() {
       overview: "Property Details",
       development: "Development Applications",
       planning: "Planning Controls",
-      analytics: "Property Analytics",
       constraints: "Site Constraints",
       sales: "Sales History",
-      amenities: "Nearby Amenities"
+      amenities: "Nearby Amenities",
+      demographics: "Local Demographics"
     };
     return headerMap[tab] || "Property Details";
   };
@@ -1454,7 +1757,7 @@ export function AnalyticsPanel() {
         onValueChange={setCurrentTab}
       >
         <div className="border-r w-[60px] flex flex-col">
-          <div className="h-[150px] border-b"></div>
+          <div className="h-[175px] border-b"></div>
           <TabsList className="flex flex-col gap-6 p-4">
             <TabsTrigger value="overview" className="w-10 h-10 p-0 relative group">
               <MapPin className="h-6 w-6" />
@@ -1474,12 +1777,6 @@ export function AnalyticsPanel() {
                 Planning
               </span>
             </TabsTrigger>
-            <TabsTrigger value="analytics" className="w-10 h-10 p-0 relative group">
-              <BarChart3 className="h-6 w-6" />
-              <span className="absolute left-[calc(100%+0.5rem)] bg-popover text-popover-foreground px-2 py-1 rounded-md text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 shadow-md z-50">
-                Analytics
-              </span>
-            </TabsTrigger>
             <TabsTrigger value="constraints" className="w-10 h-10 p-0 relative group">
               <AlertTriangle className="h-6 w-6" />
               <span className="absolute left-[calc(100%+0.5rem)] bg-popover text-popover-foreground px-2 py-1 rounded-md text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 shadow-md z-50">
@@ -1496,6 +1793,12 @@ export function AnalyticsPanel() {
               <Coffee className="h-6 w-6" />
               <span className="absolute left-[calc(100%+0.5rem)] bg-popover text-popover-foreground px-2 py-1 rounded-md text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 shadow-md z-50">
                 Amenities
+              </span>
+            </TabsTrigger>
+            <TabsTrigger value="demographics" className="w-10 h-10 p-0 relative group">
+              <Users className="h-6 w-6" />
+              <span className="absolute left-[calc(100%+0.5rem)] bg-popover text-popover-foreground px-2 py-1 rounded-md text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 shadow-md z-50">
+                Demographics
               </span>
             </TabsTrigger>
           </TabsList>
@@ -1538,14 +1841,6 @@ export function AnalyticsPanel() {
                 </ScrollArea>
               </TabsContent>
               
-              <TabsContent value="analytics" className="h-full">
-                <ScrollArea className="h-full">
-                  <div className="p-4">
-                    <p className="text-sm text-muted-foreground">Analytics coming soon</p>
-                  </div>
-                </ScrollArea>
-              </TabsContent>
-              
               <TabsContent value="constraints" className="h-full">
                 <ScrollArea className="h-full">
                   <div className="p-4 space-y-4">
@@ -1562,6 +1857,14 @@ export function AnalyticsPanel() {
               <TabsContent value="amenities" className="h-full">
                 <ScrollArea className="h-full">
                   <AmenitiesTab />
+                </ScrollArea>
+              </TabsContent>
+              <TabsContent value="demographics" className="h-full">
+                <ScrollArea className="h-full">
+                  <div className="px-4 text-xs text-muted-foreground">
+                    Data based on ABS Census 2021 using the SA1 the selected property is within
+                  </div>
+                  <DemographicsTab />
                 </ScrollArea>
               </TabsContent>
             </div>
