@@ -82,47 +82,32 @@ app.get("/api/proxy", async (req, res) => {
 
 app.post("/api/proxy/spatial", async (req, res) => {
   try {
-    const { url, params } = req.body;
+    const { service, params } = req.body;
+    
+    if (!service) {
+      throw new Error('Service path is required');
+    }
+
+    // Ensure the service URL ends with /query
+    const serviceUrl = service.endsWith('/query') ? service : `${service}/query`;
+    const url = `https://portal.spatial.nsw.gov.au/server/rest/services/${serviceUrl}`;
     
     console.log("🚀 Making Spatial API request to:", url);
-    console.log("📨 With params:", JSON.stringify(params, null, 2)); // Log the params
-
+    console.log("📨 With params:", params);
+    
     const response = await axios({
       method: 'POST',
-      url: url,
+      url,
       data: new URLSearchParams(params),
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Accept': 'application/json'
       }
     });
 
-    const queryParams = {
-      f: 'json',
-      geometry: params.bbox,
-      geometryType: 'esriGeometryEnvelope',
-      inSR: '4326',
-      spatialRel: 'esriSpatialRelIntersects',
-      outFields: '*',
-      returnGeometry: 'true',
-      outSR: '4326'
-    };
-
-    console.log("✅ Spatial API Response status:", response.status);
-
-    const data = response.data as SpatialAPIResponse;
-    if (data.error) {
-      throw new Error(
-        data.error.message || 
-        'API Error'
-      );
+    if (response.data.error) {
+      throw new Error(response.data.error.message || 'API Error');
     }
-
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Methods", "POST, OPTIONS");
-    res.header(
-      "Access-Control-Allow-Headers",
-      "Content-Type, Accept"
-    );
 
     res.json(response.data);
   } catch (error) {
@@ -132,7 +117,7 @@ app.post("/api/proxy/spatial", async (req, res) => {
       data: error.response?.data,
       message: error.message,
       url: error.config?.url,
-      requestParams: req.body.params
+      params: req.body.params
     });
     
     res.status(error.response?.status || 500).json({

@@ -1,0 +1,33 @@
+{
+  "framework": "vite",
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "rewrites": [
+    {
+      "source": "/api/eplanning/:path*",
+      "destination": "https://api.apps1.nsw.gov.au/eplanning/:path*"
+    },
+    {
+      "source": "/api/planning/:path*",
+      "destination": "https://api.apps1.nsw.gov.au/planning/:path*"
+    },
+    {
+      "source": "/api/spatial/:service*",
+      "destination": "https://portal.spatial.nsw.gov.au/server/rest/services/:service*"
+    },
+    {
+      "source": "/api/maps/:path*",
+      "destination": "https://maps.six.nsw.gov.au/arcgis/rest/services/:path*"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET, POST, OPTIONS" },
+        { "key": "Access-Control-Allow-Headers", "value": "Content-Type, Accept" }
+      ]
+    }
+  ]
+}

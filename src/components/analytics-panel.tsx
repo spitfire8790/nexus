@@ -157,7 +157,7 @@ function SiteOverviewTab() {
       const fetchAddress = async () => {
         try {
           const response = await fetchWithTimeout(
-            `https://api.apps1.nsw.gov.au/planning/viewersf/V1/ePlanningApi/address?id=${propId}&Type=property`
+            `/api/planning/viewersf/V1/ePlanningApi/address?id=${propId}&Type=property`
           );
           const address = await response.text();
           setData(prev => ({ ...prev, propertyAddress: address.replace(/^"|"$/g, '') }));
@@ -172,7 +172,7 @@ function SiteOverviewTab() {
       const fetchSpatial = async () => {
         try {
           const response = await fetchWithTimeout(
-            `https://portal.spatial.nsw.gov.au/server/rest/services/NSW_Land_Parcel_Property_Theme/MapServer/12/query?where=propid=${propId}&outFields=shape_Area&returnGeometry=false&f=json`
+            `/api/spatial/rest/services/NSW_Land_Parcel_Property_Theme/MapServer/12/query?where=propid=${propId}&outFields=shape_Area&returnGeometry=false&f=json`
           );
           const data = await response.json();
           setData(prev => ({ ...prev, area: data.features?.[0]?.attributes?.shape_Area ?? null }));
@@ -188,7 +188,7 @@ function SiteOverviewTab() {
         const setZoneInfo = useMapStore.getState().setZoneInfo;
         
         try {
-          const url = `https://api.apps1.nsw.gov.au/planning/viewersf/V1/ePlanningApi/layerintersect?type=property&id=${propId}&layers=epi`;
+          const url = `/api/planning/viewersf/V1/ePlanningApi/layerintersect?type=property&id=${propId}&layers=epi`;
           console.log('🔍 Fetching zoning data:', { propId, url });
           
           const response = await fetch(url);
@@ -1325,8 +1325,8 @@ function AmenitiesTab() {
                 'Content-Type': 'application/json',
               },
               body: JSON.stringify({
-                url: `https://portal.spatial.nsw.gov.au/server/rest/services/${config.url}/query`,
-                params: params
+                service: `${config.url}/query`,
+                params
               })
             });
 

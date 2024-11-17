@@ -14,11 +14,30 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      '/api/proxy': {
-        target: 'http://localhost:5174',
+      '/api/eplanning': {
+        target: 'https://api.apps1.nsw.gov.au/eplanning',
         changeOrigin: true,
-        secure: false
+        secure: false,
+        rewrite: (path) => path.replace(/^\/api\/eplanning/, ''),
+        configure: (proxy, _options) => {
+          proxy.on('proxyReq', (proxyReq, req, _res) => {
+            if (req.headers.pagesize) {
+              proxyReq.setHeader('PageSize', req.headers.pagesize);
+            }
+            if (req.headers.pagenumber) {
+              proxyReq.setHeader('PageNumber', req.headers.pagenumber);
+            }
+            if (req.headers.filters) {
+              proxyReq.setHeader('filters', req.headers.filters);
+            }
+          });
+        }
       }
     }
+  },
+  build: {
+    outDir: 'dist',
+    emptyOutDir: true,
+    sourcemap: true
   }
 });
