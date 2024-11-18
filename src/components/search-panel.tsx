@@ -144,7 +144,7 @@ export function SearchPanel() {
   };
 
   return (
-    <div className="h-full bg-card shadow-sm py-2 px-4">
+    <div className="h-full bg-card flex items-center px-4">
       <div className="flex gap-2 items-center">
         <ToggleGroup type="single" value={searchMode} onValueChange={(value) => {
           if (value) {

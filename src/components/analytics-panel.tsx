@@ -1,6 +1,6 @@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import {
   School,
   GraduationCap,
@@ -25,10 +25,11 @@ import {
   DollarSign,
   Clock,
   Coffee,
-  Users
+  Users,
+  Mountain
 } from "lucide-react";
 import { useMapStore, type MapState, type LayerGroup } from "@/lib/map-store";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import ReactSpeedometer, { CustomSegmentLabelPosition, Transition } from "react-d3-speedometer";
 import * as d3 from 'd3-ease';
@@ -39,12 +40,18 @@ import {
   TooltipTrigger 
 } from "@/components/ui/tooltip";
 import { Slider } from "@/components/ui/slider";
-import * as turf from '@turf/turf';
 import { Button } from "@/components/ui/button";
 import { rpc } from "@/lib/rpc";
 import L from 'leaflet';
 import { useMap } from 'react-leaflet';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip as RechartsTooltip, BarChart, CartesianGrid, XAxis, YAxis, Bar } from 'recharts';
+import * as turf from '@turf/turf';
+import { cn } from "@/lib/utils";
+import React from "react";
+import { buffer } from '@turf/buffer';
+import { supabase } from '@/lib/supabase';
+import { LineChart, Line } from 'recharts';
+
 
 interface ZoningResult {
   title: string;
@@ -115,13 +122,18 @@ async function fetchWithTimeout(url: string, timeout = 10000) {
   }
 }
 
+// The rest of your code remains the same, with the width calculation now happening
+// in the useEffect hook we added in the SiteOverviewTab component
+
 function SiteOverviewTab() {
   const selectedProperty = useMapStore((state) => state.selectedProperty);
   const [loadingStates, setLoadingStates] = useState({
     address: false,
     spatial: false,
     sales: false,
-    zoning: false
+    zoning: false,
+    hob: false,
+    lotSize: false
   });
   const [data, setData] = useState<{
     zoneInfo: string | null;
@@ -130,14 +142,63 @@ function SiteOverviewTab() {
     area: number | null;
     maxHeight: string | null;
     minLotSize: string | null;
+    floorSpaceRatio: string | null;  // Add this line
+    elevation: {
+      min: number | null;
+      max: number | null;
+      avg: number | null;
+    };
   }>({
     zoneInfo: null,
     lgaName: null,
     propertyAddress: null,
     area: null,
     maxHeight: null,
-    minLotSize: null
+    minLotSize: null,
+    floorSpaceRatio: null,  // Add this line
+    elevation: {
+      min: null,
+      max: null,
+      avg: null
+    }
   });
+
+  // Separate effect for width calculation
+  useEffect(() => {
+    if (!selectedProperty?.geometry) return;
+    
+    setLoadingStates(prev => ({ ...prev, width: true }));
+    
+    try {
+      const coordinates = selectedProperty.geometry.rings[0];
+      let maxWidth = 0;
+      
+      // Convert to turf points for accurate calculations
+      const points = coordinates.map(coord => point([
+        (coord[0] * 180) / 20037508.34, // Convert Web Mercator X to longitude
+        (Math.atan(Math.exp((coord[1] * Math.PI) / 20037508.34)) * 360 / Math.PI - 90) // Convert Web Mercator Y to latitude
+      ]));
+      
+      // Calculate distance between each pair of points
+      for (let i = 0; i < points.length; i++) {
+        for (let j = i + 1; j < points.length; j++) {
+          const dist = distance(points[i], points[j], { units: 'meters' });
+          maxWidth = Math.max(maxWidth, dist);
+        }
+      }
+
+      console.log('Calculated width:', maxWidth);
+      setData(prev => ({
+        ...prev,
+        width: maxWidth
+      }));
+    } catch (error) {
+      console.error('Error calculating width:', error);
+      setData(prev => ({ ...prev, width: null }));
+    } finally {
+      setLoadingStates(prev => ({ ...prev, width: false }));
+    }
+  }, [selectedProperty?.geometry]);
 
   useEffect(() => {
     async function fetchPropertyData() {
@@ -148,7 +209,10 @@ function SiteOverviewTab() {
         address: true,
         spatial: true,
         sales: true,
-        zoning: true
+        zoning: true,
+        width: false,
+        hob: false,
+        lotSize: false
       });
 
       const propId = selectedProperty.propId;
@@ -157,7 +221,7 @@ function SiteOverviewTab() {
       const fetchAddress = async () => {
         try {
           const response = await fetchWithTimeout(
-            `/api/planning/viewersf/V1/ePlanningApi/address?id=${propId}&Type=property`
+            `https://api.apps1.nsw.gov.au/planning/viewersf/V1/ePlanningApi/address?id=${propId}&Type=property`
           );
           const address = await response.text();
           setData(prev => ({ ...prev, propertyAddress: address.replace(/^"|"$/g, '') }));
@@ -171,11 +235,30 @@ function SiteOverviewTab() {
 
       const fetchSpatial = async () => {
         try {
+          console.log('Fetching spatial data...');
           const response = await fetchWithTimeout(
-            `/api/spatial/rest/services/NSW_Land_Parcel_Property_Theme/MapServer/12/query?where=propid=${propId}&outFields=shape_Area&returnGeometry=false&f=json`
+            `https://portal.spatial.nsw.gov.au/server/rest/services/NSW_Land_Parcel_Property_Theme/MapServer/12/query?where=propid=${propId}&outFields=shape_Area&returnGeometry=true&f=json`
           );
           const data = await response.json();
-          setData(prev => ({ ...prev, area: data.features?.[0]?.attributes?.shape_Area ?? null }));
+          console.log('Spatial data received:', data);
+          
+          const feature = data.features?.[0];
+          if (feature?.geometry) {
+            // Convert Web Mercator coordinates to WGS84
+            const coordinates = feature.geometry.rings[0].map((coord: number[]) => [
+              (coord[0] * 180) / 20037508.34, // Convert X to longitude
+              (Math.atan(Math.exp((coord[1] * Math.PI) / 20037508.34)) * 360 / Math.PI - 90) // Convert Y to latitude
+            ]);
+
+            // Create a turf polygon and calculate its area
+            const polygon = turf.polygon([coordinates]);
+            const area = turf.area(polygon);
+
+            setData(prev => ({
+              ...prev,
+              area: area
+            }));
+          }
         } catch (error) {
           console.error('Spatial fetch error:', error);
           setData(prev => ({ ...prev, area: null }));
@@ -188,7 +271,7 @@ function SiteOverviewTab() {
         const setZoneInfo = useMapStore.getState().setZoneInfo;
         
         try {
-          const url = `/api/planning/viewersf/V1/ePlanningApi/layerintersect?type=property&id=${propId}&layers=epi`;
+          const url = `https://api.apps1.nsw.gov.au/planning/viewersf/V1/ePlanningApi/layerintersect?type=property&id=${propId}&layers=epi`;
           console.log('🔍 Fetching zoning data:', { propId, url });
           
           const response = await fetch(url);
@@ -225,10 +308,101 @@ function SiteOverviewTab() {
         }
       };
 
+      const fetchElevationInfo = async () => {
+        if (!selectedProperty?.geometry) {
+          console.log('⚠️ No property geometry available for elevation fetch');
+          return;
+        }
+        
+        console.log('🏔️ Starting elevation info fetch for property:', selectedProperty);
+        try {
+          const elevationData = await fetchElevationData(selectedProperty.geometry);
+          console.log('📈 Setting elevation data:', elevationData);
+          setData(prev => ({
+            ...prev,
+            elevation: elevationData
+          }));
+        } catch (error) {
+          console.error('❌ Elevation fetch error:', error);
+          setData(prev => ({
+            ...prev,
+            elevation: { min: null, max: null, avg: null }
+          }));
+        }
+      };
+
+      const fetchZoningDetails = async () => {
+        if (!selectedProperty?.geometry) return;
+        
+        try {
+          setLoadingStates(prev => ({ ...prev, hob: true, lotSize: true }));
+          
+          // Get centroid of the property
+          const rings = selectedProperty.geometry.rings[0];
+          const centerX = rings.reduce((sum: number, coord: number[]) => sum + coord[0], 0) / rings.length;
+          const centerY = rings.reduce((sum: number, coord: number[]) => sum + coord[1], 0) / rings.length;
+
+          // Create point geometry in proper format
+          const pointGeometry = {
+            spatialReference: { wkid: 102100 },
+            x: centerX,
+            y: centerY
+          };
+
+          // Fetch HOB
+          const hobResponse = await fetch(
+            `https://mapprod3.environment.nsw.gov.au/arcgis/rest/services/Planning/Principal_Planning_Layers/MapServer/7/query?` +
+            `geometry=${encodeURIComponent(JSON.stringify(pointGeometry))}` +
+            `&geometryType=esriGeometryPoint` +
+            `&spatialRel=esriSpatialRelIntersects` +
+            `&outFields=MAX_B_H` +
+            `&returnGeometry=false` +
+            `&f=json`
+          );
+
+          // Fetch Minimum Lot Size
+          const lotSizeResponse = await fetch(
+            `https://mapprod3.environment.nsw.gov.au/arcgis/rest/services/Planning/Principal_Planning_Layers/MapServer/14/query?` +
+            `geometry=${encodeURIComponent(JSON.stringify(pointGeometry))}` +
+            `&geometryType=esriGeometryPoint` +
+            `&spatialRel=esriSpatialRelIntersects` +
+            `&outFields=LOT_SIZE` +
+            `&returnGeometry=false` +
+            `&f=json`
+          );
+
+          const [hobData, lotSizeData] = await Promise.all([
+            hobResponse.json(),
+            lotSizeResponse.json()
+          ]);
+
+          const hob = hobData.features?.[0]?.attributes?.MAX_B_H;
+          const lotSize = lotSizeData.features?.[0]?.attributes?.LOT_SIZE;
+
+          setData(prev => ({
+            ...prev,
+            maxHeight: hob ? `${hob}m` : 'Not specified',
+            minLotSize: lotSize ? `${lotSize}m²` : 'Not specified'
+          }));
+
+        } catch (error) {
+          console.error('Error fetching zoning details:', error);
+          setData(prev => ({
+            ...prev,
+            maxHeight: 'Error loading',
+            minLotSize: 'Error loading'
+          }));
+        } finally {
+          setLoadingStates(prev => ({ ...prev, hob: false, lotSize: false }));
+        }
+      };
+
       // Start all fetches concurrently
       fetchAddress();
       fetchSpatial();
       fetchZoning();
+      fetchElevationInfo();
+      fetchZoningDetails();
     }
 
     fetchPropertyData();
@@ -254,6 +428,15 @@ function SiteOverviewTab() {
         </div>
         <div className="border-b pb-2">
           {data.propertyAddress === null ? <LoadingPulse /> : data.propertyAddress}
+        </div>
+
+        {/* LGA - Moved up */}
+        <div className="font-semibold border-b pb-2 flex items-center gap-2 pt-4">
+          <Building className="h-4 w-4" />
+          LGA
+        </div>
+        <div className="border-b pb-2 pt-4">
+          {data.lgaName === null ? <LoadingPulse /> : data.lgaName}
         </div>
 
         {/* Area */}
@@ -297,13 +480,48 @@ function SiteOverviewTab() {
           {data.zoneInfo === null ? <LoadingPulse /> : data.zoneInfo}
         </div>
 
-        {/* LGA */}
+        {/* Height of Building */}
         <div className="font-semibold border-b pb-2 flex items-center gap-2 pt-4">
-          <Building className="h-4 w-4" />
-          LGA
+          <Building2 className="h-4 w-4" />
+          Height of Building (HOB)
         </div>
         <div className="border-b pb-2 pt-4">
-          {data.lgaName === null ? <LoadingPulse /> : data.lgaName}
+          {data.maxHeight === null ? <LoadingPulse /> : data.maxHeight}
+        </div>
+
+        {/* Minimum Lot Size */}
+        <div className="font-semibold border-b pb-2 flex items-center gap-2 pt-4">
+          <Ruler className="h-4 w-4" />
+          Minimum Lot Size
+        </div>
+        <div className="border-b pb-2 pt-4">
+          {data.minLotSize === null ? <LoadingPulse /> : data.minLotSize}
+        </div>
+
+        {/* Elevation */}
+        <div className="font-semibold border-b pb-2 flex items-center gap-2 pt-4">
+          <Mountain className="h-4 w-4" />
+          Elevation
+        </div>
+        <div className="border-b pb-2 pt-4">
+          {data.elevation.min === null ? (
+            <LoadingPulse />
+          ) : (
+            <div className="space-y-1">
+              <div className="text-sm">
+                <span className="font-medium">Min: </span>
+                {data.elevation.min}m
+              </div>
+              <div className="text-sm">
+                <span className="font-medium">Max: </span>
+                {data.elevation.max}m
+              </div>
+              <div className="text-sm">
+                <span className="font-medium">Avg: </span>
+                {data.elevation.avg?.toFixed(1)}m
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -509,28 +727,29 @@ function ContaminationRisk() {
       }
       
       setLoading(true);
-      console.log('Fetching contamination data for property:', selectedProperty);
       
       try {
-        const response = await fetch('/api/proxy', {
+        const response = await fetch('/api/proxy/spatial', {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
+            'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            url: `https://maptest2.environment.nsw.gov.au/arcgis/rest/services/EPA/EPACS/MapServer/1/query`,
+            service: 'EPA/EPACS/MapServer/1',
             params: {
               geometry: JSON.stringify(selectedProperty.geometry),
               geometryType: 'esriGeometryPolygon',
               spatialRel: 'esriSpatialRelIntersects',
               outFields: 'SiteName',
-              returnGeometry: false,
+              returnGeometry: 'false',
               f: 'json'
             }
           })
         });
 
-        if (!response.ok) throw new Error('Failed to fetch contamination data');
+        if (!response.ok) {
+          throw new Error(`API call failed with status: ${response.status}`);
+        }
         
         const data = await response.json();
         console.log('Contamination data received:', data);
@@ -626,26 +845,33 @@ function formatPrice(price: number): string {
 }
 
 function SaleCard({ sale, index }: { sale: Sale; index: number }) {
+  const [streetAddress, locality] = sale.bp_address.split(',').map(s => s.trim());
+  
   return (
     <div className="flex items-center py-1.5">
       <div className="w-6 h-6 flex-shrink-0 border border-red-500 rounded-full flex items-center justify-center text-xs font-medium text-red-500">
         {index + 1}
       </div>
       <div className="grid grid-cols-12 flex-1 gap-0 min-w-0 ml-2">
-        <div className="col-span-8 text-xs truncate pr-2" title={sale.bp_address}>
-          {sale.bp_address}
+        <div className="col-span-6">
+          <div className="text-xs truncate" title={streetAddress}>
+            {streetAddress}
+          </div>
+          <div className="text-xs text-muted-foreground truncate" title={locality}>
+            {locality}
+          </div>
         </div>
-        <div className="col-span-2 text-xs text-center">
+        <div className="col-span-3 text-xs">
           {new Date(sale.sale_date).toLocaleDateString('en-AU', {
             day: '2-digit',
             month: 'short',
             year: 'numeric'
           })}
         </div>
-        <div className="col-span-1 text-xs font-semibold text-blue-600 text-center">
+        <div className="col-span-2 text-xs font-semibold text-blue-600">
           {formatPrice(sale.price)}
         </div>
-        <div className="col-span-1 text-xs text-muted-foreground text-right pr-4">
+        <div className="col-span-1 text-xs text-muted-foreground text-right">
           {Math.round(sale.distance)}m
         </div>
       </div>
@@ -654,240 +880,285 @@ function SaleCard({ sale, index }: { sale: Sale; index: number }) {
 }
 
 function SalesTab() {
+  const map = useMapStore((state) => state.mapInstance);
   const selectedProperty = useMapStore((state) => state.selectedProperty);
-  const [propertyData, setPropertyData] = useState<{
-    lastSaleDate: string | null;
-    lastSalePrice: number | null;
-  }>({
-    lastSaleDate: null,
-    lastSalePrice: null
+  const [isShowingOnMap, setIsShowingOnMap] = useState(false);
+  const [isLayerLoading, setIsLayerLoading] = useState(false);
+  const salesLayerRef = useRef<L.LayerGroup | null>(null);
+  const [salesData, setSalesData] = useState({
+    loading: false,
+    error: null,
+    propertyData: {
+      lastSaleDate: null,
+      lastSalePrice: null
+    },
+    nearbySales: null
   });
-  const [loading, setLoading] = useState(false);
-  const [nearbySales, setNearbySales] = useState<Array<{
-    sale_date: string;
-    price: number;
-    distance: number;
-    bp_address: string;
-  }> | null>(null);
 
-  // Helper function to parse date string from REST server
-  const parseDate = (dateStr: string) => {
-    if (!dateStr) return null;
-    const [day, month, year] = dateStr.split(' ');
-    const months: { [key: string]: number } = {
-      'January': 0, 'February': 1, 'March': 2, 'April': 3, 'May': 4, 'June': 5,
-      'July': 6, 'August': 7, 'September': 8, 'October': 9, 'November': 10, 'December': 11
-    };
-    return new Date(parseInt(year), months[month], parseInt(day));
-  };
-
-  // Helper function to calculate time since sale
-  const getTimeSinceSale = (saleDate: string) => {
-    const sale = new Date(saleDate);
-    const today = new Date();
-    
-    let years = today.getFullYear() - sale.getFullYear();
-    let months = today.getMonth() - sale.getMonth();
-    let days = today.getDate() - sale.getDate();
-
-    // Adjust for negative months or days
-    if (days < 0) {
-      months--;
-      days += new Date(today.getFullYear(), today.getMonth(), 0).getDate();
-    }
-    if (months < 0) {
-      years--;
-      months += 12;
-    }
-
-    // Build the display string
-    const parts = [];
-    if (years > 0) parts.push(`${years} ${years === 1 ? 'year' : 'years'}`);
-    if (months > 0) parts.push(`${months} ${months === 1 ? 'month' : 'months'}`);
-    if (days > 0) parts.push(`${days} ${days === 1 ? 'day' : 'days'}`);
-    
-    return parts.join(', ');
-  };
-
+  // Reset state when property changes
   useEffect(() => {
-    let mounted = true;
+    if (salesLayerRef.current) {
+      map?.removeLayer(salesLayerRef.current);
+      salesLayerRef.current = null;
+    }
+    setIsShowingOnMap(false);
+  }, [selectedProperty, map]);
 
-    async function fetchPropertySales(retryCount = 3, delayMs = 500) {
-      if (!selectedProperty?.propId) {
-        console.log('No property ID available');
+  const handleToggleOnMap = async () => {
+    if (!salesData.nearbySales?.length || !map) return;
+    
+    setIsLayerLoading(true);
+    try {
+      // Remove existing markers if they exist
+      if (salesLayerRef.current) {
+        map.removeLayer(salesLayerRef.current);
+        salesLayerRef.current = null;
+        setIsShowingOnMap(false);
         return;
       }
-      
-      if (mounted) setLoading(true);
-      console.log('Fetching sales data for property:', selectedProperty.propId);
-      
-      const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-      
-      for (let attempt = 1; attempt <= retryCount; attempt++) {
-        try {
-          if (attempt > 1) {
-            console.log(`Retry attempt ${attempt}/${retryCount}`);
-            await delay(delayMs);
-          }
 
-          // Build query similar to the working nearby sales query
-          const url = new URL('https://maps.six.nsw.gov.au/arcgis/rest/services/public/Valuation/MapServer/1/query');
-          url.searchParams.append('where', `propid = '${selectedProperty.propId.toLowerCase()}'`);
-          url.searchParams.append('outFields', 'sale_date,price');
-          url.searchParams.append('returnGeometry', 'false');
-          url.searchParams.append('f', 'json');
-          
-          console.log('Fetching from URL:', url.toString());
-          
-          const response = await fetchWithTimeout(url.toString(), 5000);
-          console.log('Response status:', response.status);
-          
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-          
-          const data = await response.json();
-          console.log('Sales data received:', data);
-          
-          if (data.error) {
-            throw new Error(data.error.message || 'Failed to fetch sales data');
-          }
+      // Create a layer group only after ensuring map is ready
+      await new Promise(resolve => {
+        if (map.getContainer()) {
+          resolve(true);
+        } else {
+          map.once('load', () => resolve(true));
+        }
+      });
 
-          if (mounted) {
-            const saleData = {
-              lastSaleDate: data.features?.[0]?.attributes?.sale_date ?? null,
-              lastSalePrice: data.features?.[0]?.attributes?.price ?? null
-            };
-            
-            console.log('Processed sale data:', saleData);
-            setPropertyData(saleData);
-            setLoading(false);
-            return; // Success - exit the retry loop
-          }
-          
-        } catch (error) {
-          console.error(`Property sales fetch error (attempt ${attempt}/${retryCount}):`, error);
-          if (attempt === retryCount && mounted) {
-            setPropertyData({
-              lastSaleDate: null,
-              lastSalePrice: null
-            });
-            setLoading(false);
-          }
+      salesLayerRef.current = L.layerGroup();
+      const bounds = L.latLngBounds([]);
+
+      // Add markers for each sale
+      salesData.nearbySales.forEach((sale, index) => {
+        const point = L.point(sale.coordinates[0], sale.coordinates[1]);
+        const latLng = L.CRS.EPSG3857.unproject(point);
+        bounds.extend(latLng);
+
+        const icon = L.divIcon({
+          className: 'custom-div-icon',
+          html: `<div class="w-6 h-6 flex items-center justify-center rounded-full bg-white border-2 border-red-500 text-red-500 text-xs font-medium">${index + 1}</div>`,
+          iconSize: [24, 24],
+          iconAnchor: [12, 12]
+        });
+        
+        const marker = L.marker(latLng, { icon })
+          .bindPopup(`
+            <div class="text-sm">
+              <div class="font-medium">${sale.bp_address}</div>
+              <div>${new Date(sale.sale_date).toLocaleDateString()}</div>
+              <div class="font-semibold text-blue-600">$${sale.price.toLocaleString()}</div>
+              <div>${(sale.distance/1000).toFixed(1)}km away</div>
+            </div>
+          `);
+        
+        salesLayerRef.current?.addLayer(marker);
+      });
+
+      // Add selected property to bounds
+      if (selectedProperty?.geometry) {
+        const propertyBounds = getPropertyBounds(selectedProperty.geometry);
+        if (propertyBounds) {
+          bounds.extend(propertyBounds);
         }
       }
+
+      // Add layer to map
+      if (salesLayerRef.current) {
+        salesLayerRef.current.addTo(map);
+        map.fitBounds(bounds, { padding: [50, 50] });
+        setIsShowingOnMap(true);
+      }
+
+    } catch (error) {
+      console.error('Error showing sales on map:', error);
+    } finally {
+      setIsLayerLoading(false);
     }
+  };
 
-    fetchPropertySales();
+  // Helper function to get bounds from property geometry
+  const getPropertyBounds = (geometry: any) => {
+    try {
+      const rings = geometry.rings[0].map((coord: number[]) => {
+        const point = L.point(coord[0], coord[1]);
+        const latLng = L.CRS.EPSG3857.unproject(point);
+        return [latLng.lat, latLng.lng];
+      });
+      return L.latLngBounds(rings);
+    } catch (error) {
+      console.error('Error calculating property bounds:', error);
+      return null;
+    }
+  };
 
+  // Cleanup on unmount or tab change
+  useEffect(() => {
     return () => {
-      mounted = false;
+      if (map && salesLayerRef.current) {
+        map.removeLayer(salesLayerRef.current);
+        salesLayerRef.current = null;
+      }
     };
-  }, [selectedProperty?.propId]);
+  }, [map]);
 
   useEffect(() => {
+    let isMounted = true;
+    const controller = new AbortController();
+
     async function fetchSalesData() {
-      if (!selectedProperty?.geometry || !selectedProperty?.propId) return;
+      if (!selectedProperty?.geometry || !selectedProperty?.propId) {
+        console.log('⚠️ No property geometry or ID available');
+        return;
+      }
+
+      console.log('🔄 Starting sales data fetch for property:', selectedProperty.propId);
       
-      setLoading(true);
-      
+      if (isMounted) {
+        setSalesData(prev => ({
+          ...prev,
+          loading: true,
+          error: null,
+          propertyData: {
+            lastSaleDate: null,
+            lastSalePrice: null
+          },
+          nearbySales: null
+        }));
+      }
+
       try {
-        // Convert Web Mercator coordinates to WGS84 for the center calculation
+        // First fetch the selected property's sale data using propId
+        console.log('🎯 Fetching selected property sale data for propId:', selectedProperty.propId);
+        const propertyResponse = await fetch(
+          `https://maps.six.nsw.gov.au/arcgis/rest/services/public/Valuation/MapServer/1/query?where=propid=${selectedProperty.propId}&outFields=sale_date,price&f=json`,
+          { signal: controller.signal }
+        );
+
+        if (!propertyResponse.ok) {
+          console.error('❌ Property sales API error:', propertyResponse.status, propertyResponse.statusText);
+          throw new Error(`HTTP error! status: ${propertyResponse.status}`);
+        }
+
+        const propertyData = await propertyResponse.json();
+        console.log('🏠 Raw property sale data:', propertyData);
+
+        // Parse the property sale data
+        const propertyFeature = propertyData.features?.[0]?.attributes;
+        if (propertyFeature) {
+          setSalesData(prev => ({
+            ...prev,
+            propertyData: {
+              lastSaleDate: propertyFeature.sale_date,
+              lastSalePrice: propertyFeature.price
+            }
+          }));
+        }
+
+        // Then fetch nearby sales using geometry
         const rings = selectedProperty.geometry.rings[0].map((coord: number[]) => {
           const x = (coord[0] * 180) / 20037508.34;
-          const y = (Math.atan(Math.exp((coord[1] * Math.PI) / 20037508.34)) * 360) / Math.PI - 90;
+          const y = (Math.atan(Math.exp((coord[1] * Math.PI) / 20037508.34)) * 360 / Math.PI - 90);
           return [x, y];
         });
 
-        const centerX = rings.reduce((sum: number, coord: number[]) => sum + coord[0], 0) / rings.length;
-        const centerY = rings.reduce((sum: number, coord: number[]) => sum + coord[1], 0) / rings.length;
+        const centerX = rings.reduce((sum, coord) => sum + coord[0], 0) / rings.length;
+        const centerY = rings.reduce((sum, coord) => sum + coord[1], 0) / rings.length;
+        
+        console.log('📍 Calculated center point:', { centerX, centerY });
         
         const bufferDegrees = 0.01; // roughly 1km
         const bbox = `${centerX-bufferDegrees},${centerY-bufferDegrees},${centerX+bufferDegrees},${centerY+bufferDegrees}`;
-
-        // Fetch nearby sales
-        const url = new URL('https://maps.six.nsw.gov.au/arcgis/rest/services/public/Valuation/MapServer/1/query');
-        url.searchParams.append('where', "1=1");
-        url.searchParams.append('geometry', bbox);
-        url.searchParams.append('geometryType', 'esriGeometryEnvelope');
-        url.searchParams.append('inSR', '4326');
-        url.searchParams.append('spatialRel', 'esriSpatialRelIntersects');
-        url.searchParams.append('outFields', 'sale_date,price,bp_address');
-        url.searchParams.append('returnGeometry', 'true');
-        url.searchParams.append('outSR', '4326');
-        url.searchParams.append('f', 'json');
-
-        console.log('Fetching sales from URL:', url.toString());
-        const response = await fetch(url);
         
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
+        console.log('🔍 Fetching nearby sales with bbox:', bbox);
 
-        if (data.error) {
-          throw new Error(data.error.message || 'Failed to fetch sales data');
-        }
+        const nearbyResponse = await fetch(
+          `https://maps.six.nsw.gov.au/arcgis/rest/services/public/Valuation/MapServer/1/query?` +
+          `where=1=1&geometry=${bbox}&geometryType=esriGeometryEnvelope&inSR=4326&` +
+          `spatialRel=esriSpatialRelIntersects&outFields=sale_date,price,bp_address&` +
+          `returnGeometry=true&outSR=4326&f=json`,
+          { signal: controller.signal }
+        );
 
-        // Process all sales with address included
-        const allSales = data.features?.map((f: any) => ({
-          ...f.attributes,
-          geometry: f.geometry,
-          date: parseDate(f.attributes.sale_date)
-        })) as Sale[];
-
-        // Find the selected property's latest sale (closest to centroid)
-        const selectedPropertySale = allSales.find((sale: Sale) => {
-          const dx = sale.geometry.x - centerX;
-          const dy = sale.geometry.y - centerY;
-          const distance = Math.sqrt(dx * dx + dy * dy);
-          return distance < 0.0001; // Small threshold for matching
-        });
-
-        if (selectedPropertySale) {
-          setPropertyData({
-            lastSaleDate: selectedPropertySale.sale_date,
-            lastSalePrice: selectedPropertySale.price
-          });
+        if (!nearbyResponse.ok) {
+          console.error('❌ Nearby sales API error:', nearbyResponse.status, nearbyResponse.statusText);
+          throw new Error(`HTTP error! status: ${nearbyResponse.status}`);
         }
 
-        // Filter nearby sales (excluding selected property)
+        const nearbyData = await nearbyResponse.json();
+        console.log('📊 Raw nearby sales data:', nearbyData);
+
+        // Calculate date 12 months ago
         const today = new Date();
         const twelveMonthsAgo = new Date(today.setMonth(today.getMonth() - 12));
+        console.log('📅 Filtering sales after:', twelveMonthsAgo);
 
-        const nearbySalesFiltered = allSales
-          .filter((sale: Sale) => {
-            const dx = sale.geometry.x - centerX;
-            const dy = sale.geometry.y - centerY;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-            return distance > 0.0001 && sale.date && sale.date >= twelveMonthsAgo;
+        // Process nearby sales
+        const nearbySalesFiltered = nearbyData.features
+          ?.filter((f: any) => {
+            const sale = {
+              ...f.attributes,
+              date: new Date(f.attributes.sale_date)
+            };
+            return sale.date >= twelveMonthsAgo && f.attributes.propid !== selectedProperty.propId;
           })
-          .map((sale: Sale) => {
-            const dx = sale.geometry.x - centerX;
-            const dy = sale.geometry.y - centerY;
-            const distance = Math.sqrt(dx * dx + dy * dy) * 111000; // Convert to meters
+          .map((f: any) => {
             return {
-              sale_date: sale.sale_date,
-              price: sale.price,
-              distance,
-              bp_address: sale.bp_address || 'Address not available'
+              sale_date: f.attributes.sale_date,
+              price: f.attributes.price,
+              bp_address: f.attributes.bp_address,
+              distance: turf.distance(
+                turf.point([centerX, centerY]),
+                turf.point([f.geometry.x, f.geometry.y]),
+                { units: 'meters' }
+              ),
+              coordinates: [f.geometry.x, f.geometry.y]
             };
           })
-          .sort((a: { distance: number }, b: { distance: number }) => a.distance - b.distance)
+          .sort((a: any, b: any) => a.distance - b.distance)
           .slice(0, 10);
 
-        setNearbySales(nearbySalesFiltered);
+        console.log('🏘️ Filtered nearby sales:', nearbySalesFiltered);
+
+        if (isMounted) {
+          setSalesData(prev => ({
+            ...prev,
+            loading: false,
+            propertyData: prev.propertyData, // Keep the property data from earlier update
+            nearbySales: nearbySalesFiltered
+          }));
+        }
+
       } catch (error) {
-        console.error('Sales fetch error:', error);
-        setPropertyData({ lastSaleDate: null, lastSalePrice: null });
-        setNearbySales(null);
-      } finally {
-        setLoading(false);
+        if (error.name === 'AbortError') {
+          console.log('🚫 Request aborted');
+          return;
+        }
+        
+        console.error('❌ Sales fetch error:', error);
+        if (isMounted) {
+          setSalesData(prev => ({
+            ...prev,
+            loading: false,
+            error: error.message,
+            propertyData: {
+              lastSaleDate: null,
+              lastSalePrice: null
+            },
+            nearbySales: null
+          }));
+        }
       }
     }
 
     fetchSalesData();
-  }, [selectedProperty?.geometry]);
+
+    return () => {
+      console.log('🧹 Cleaning up sales fetch');
+      isMounted = false;
+      controller.abort();
+    };
+  }, [selectedProperty?.propId, selectedProperty?.geometry]);
 
   if (!selectedProperty) {
     return (
@@ -899,68 +1170,95 @@ function SalesTab() {
     );
   }
 
+  if (salesData.error) {
+    return (
+      <div className="p-4">
+        <Alert variant="destructive">
+          <AlertTitle>{salesData.error}</AlertTitle>
+        </Alert>
+      </div>
+    );
+  }
+
   return (
     <div className="p-4 space-y-4">
       <Card>
         <CardHeader>
           <CardTitle>Property Sales History</CardTitle>
+          <CardDescription>Last recorded sale for this property</CardDescription>
         </CardHeader>
         <CardContent>
-          {loading ? (
-            <div className="flex items-center justify-center p-4">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-            </div>
-          ) : propertyData.lastSaleDate ? (
+          {salesData.loading ? (
+            <LoadingPulse />
+          ) : salesData.propertyData.lastSaleDate ? (
             <div className="space-y-2">
-              <div className="text-sm">
-                <span className="font-medium">Last Sale Date: </span>
-                {new Date(propertyData.lastSaleDate).toLocaleDateString('en-AU', {
+              <p>
+                <strong>Last Sale Date:</strong>{' '}
+                {new Date(salesData.propertyData.lastSaleDate).toLocaleDateString('en-AU', {
                   day: '2-digit',
                   month: 'short',
                   year: 'numeric'
                 })}
-              </div>
-              <div className="text-sm">
-                <span className="font-medium">Sale Price: </span>
-                ${propertyData.lastSalePrice?.toLocaleString('en-AU')}
-              </div>
+              </p>
+              <p>
+                <strong>Sale Price:</strong>{' '}
+                {salesData.propertyData.lastSalePrice
+                  ? formatPrice(salesData.propertyData.lastSalePrice)
+                  : 'Not available'}
+              </p>
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground">No sales history found for this property</p>
+            <p className="text-muted-foreground">No sales history found</p>
           )}
         </CardContent>
       </Card>
 
       <Card>
-        <CardHeader className="pb-2">
+        <CardHeader>
           <CardTitle>Nearby Sales</CardTitle>
-          <CardDescription>Last 12 months - 10 closest properties</CardDescription>
+          <CardDescription>Recent sales within 1km radius</CardDescription>
         </CardHeader>
-        <CardContent className="px-2">
-          {loading ? (
-            <div className="flex items-center justify-center p-4">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-            </div>
-          ) : nearbySales && nearbySales.length > 0 ? (
-            <div>
-              <div className="grid grid-cols-12 gap-0 pb-1 text-xs font-medium text-muted-foreground border-b">
-                <div className="col-span-8 pl-8 pr-2 text-xs leading-tight">Address</div>
-                <div className="col-span-2 text-center">Sale Date</div>
-                <div className="col-span-1 text-center">Price</div>
-                <div className="col-span-1 text-right pr-4">Distance</div>
-              </div>
-              <div className="divide-y divide-border/30">
-                {nearbySales.map((sale, index) => (
+        <CardContent>
+          {salesData.loading ? (
+            <LoadingPulse />
+          ) : salesData.nearbySales && salesData.nearbySales.length > 0 ? (
+            <div className="space-y-2">
+              <div className="space-y-2">
+                <div className="grid grid-cols-12 text-xs font-medium text-muted-foreground mb-2">
+                  <div className="col-span-6 pl-8">Address</div>
+                  <div className="col-span-3 pl-[32px]">Date</div>
+                  <div className="col-span-2 pl-[16px]">Price</div>
+                  <div className="col-span-1 text-right">Dist.</div>
+                </div>
+                {salesData.nearbySales.map((sale, index) => (
                   <SaleCard key={index} sale={sale} index={index} />
                 ))}
               </div>
             </div>
           ) : (
-            <div className="text-xs text-muted-foreground">
-              No recent sales found in this area
-            </div>
+            <p className="text-muted-foreground">No nearby sales found</p>
           )}
         </CardContent>
+        <CardFooter>
+          <Button
+            onClick={handleToggleOnMap}
+            className="w-full"
+            disabled={isLayerLoading || !salesData.nearbySales?.length}
+            variant={isShowingOnMap ? "secondary" : "default"}
+          >
+            {isLayerLoading ? (
+              <span className="flex items-center justify-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                {isShowingOnMap ? "Removing from map..." : "Adding to map..."}
+              </span>
+            ) : (
+              <span className="flex items-center justify-center gap-2">
+                <MapPin className="h-4 w-4" />
+                {isShowingOnMap ? "Hide on Map" : "Show on Map"}
+              </span>
+            )}
+          </Button>
+        </CardFooter>
       </Card>
     </div>
   );
@@ -1247,12 +1545,12 @@ function AmenitiesTab() {
 
     const rings = selectedProperty.geometry.rings[0];
     const coordinates = rings.map((coord: number[]) => [
-      (coord[0] * 180) / 20037508.34,
-      (Math.atan(Math.exp((coord[1] * Math.PI) / 20037508.34)) * 360 / Math.PI - 90)
+            (coord[0] * 180) / 20037508.34,
+            (Math.atan(Math.exp((coord[1] * Math.PI) / 20037508.34)) * 360 / Math.PI - 90)
     ]);
 
     const center = turf.center(turf.polygon([coordinates]));
-    const buffered = turf.buffer(center, radius, { units: 'kilometers' });
+    const buffered = buffer(center, radius, { units: 'kilometers' });
     
     const bufferCoords = buffered.geometry.coordinates[0].map((coord: [number, number]) => [
       (coord[0] * 20037508.34) / 180,
@@ -1276,65 +1574,50 @@ function AmenitiesTab() {
   }, [setBufferGeometry]);
 
   useEffect(() => {
-    async function fetchAmenities() {
-      if (!selectedProperty?.geometry) {
-        console.log('No property geometry available');
-        return;
-      }
-      
+    const fetchData = async () => {
+      if (!selectedProperty?.geometry) return;
       setLoading(true);
-      
+
       try {
+        // Get center point from the property geometry
         const rings = selectedProperty.geometry.rings[0];
         const centerX = rings.reduce((sum: number, coord: number[]) => sum + coord[0], 0) / rings.length;
         const centerY = rings.reduce((sum: number, coord: number[]) => sum + coord[1], 0) / rings.length;
 
+        // Create a simple square buffer (searchRadius in km converted to meters)
+        const bufferDistance = searchRadius * 1000;
         const bufferGeometry = {
-          rings: [[]] as number[][],
+          rings: [[
+            [centerX - bufferDistance, centerY - bufferDistance],
+            [centerX + bufferDistance, centerY - bufferDistance],
+            [centerX + bufferDistance, centerY + bufferDistance],
+            [centerX - bufferDistance, centerY + bufferDistance],
+            [centerX - bufferDistance, centerY - bufferDistance]
+          ]],
           spatialReference: { wkid: 102100 }
-        };
-
-        const points = 64;
-        const radius = searchRadius * 1000;
-        for (let i = 0; i < points; i++) {
-          const angle = (i * 2 * Math.PI) / points;
-          bufferGeometry.rings[0].push([
-            centerX + radius * Math.cos(angle),
-            centerY + radius * Math.sin(angle)
-          ]);
-        }
-        bufferGeometry.rings[0].push(bufferGeometry.rings[0][0]);
-
-        const params = {
-          f: 'json',
-          geometry: JSON.stringify(bufferGeometry),
-          geometryType: 'esriGeometryPolygon',
-          spatialRel: 'esriSpatialRelIntersects',
-          outFields: '*',
-          returnGeometry: 'true',
-          inSR: '102100',
-          outSR: '102100'
         };
 
         const amenityPromises = Object.entries(AMENITY_CONFIGS).map(async ([key, config]) => {
           try {
             console.log(`🔍 Fetching ${config.type} amenities...`);
-            const response = await fetch('/api/proxy/spatial', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                service: `${config.url}/query`,
-                params
-              })
-            });
+            const url = new URL(`https://portal.spatial.nsw.gov.au/server/rest/services/${config.url}/query`);
+            
+            url.searchParams.append('f', 'json');
+            url.searchParams.append('geometry', JSON.stringify(bufferGeometry));
+            url.searchParams.append('geometryType', 'esriGeometryPolygon');
+            url.searchParams.append('spatialRel', 'esriSpatialRelIntersects');
+            url.searchParams.append('outFields', '*');
+            url.searchParams.append('returnGeometry', 'true');
+            url.searchParams.append('inSR', '102100');
+            url.searchParams.append('outSR', '102100');
 
-            if (!response.ok) {
+            const response = await fetch(url);
+
+        if (!response.ok) {
               throw new Error(`${config.type} API returned status: ${response.status}`);
-            }
-
-            const data = await response.json();
+        }
+        
+        const data = await response.json();
             console.log(`📍 ${config.type} data:`, {
               features: data.features?.length || 0,
               firstFeature: data.features?.[0],
@@ -1390,21 +1673,15 @@ function AmenitiesTab() {
           return amenities;
         });
 
-        console.log('🏁 Final amenities data:', {
-          total: allAmenities.length,
-          byType: Object.groupBy(allAmenities, (a: any) => a.type)
-        });
-
         setAmenities(allAmenities);
       } catch (error) {
-        console.error('Error fetching amenities:', error);
-        setAmenities(null);
+        console.error('Error in amenities tab:', error);
       } finally {
         setLoading(false);
       }
-    }
+    };
 
-    fetchAmenities();
+    fetchData();
   }, [selectedProperty?.geometry, searchRadius]);
 
   const handleAddToMap = async () => {
@@ -1461,21 +1738,19 @@ function AmenitiesTab() {
       <Card>
         <CardHeader>
           <CardTitle>Nearby Amenities</CardTitle>
-          <CardDescription> 
-            <div className="space-y-4">
-              <div className="mt-2">
-                Search radius: {searchRadius}km
-                <Slider
-                  value={[searchRadius]}
-                  onValueChange={([value]) => setSearchRadius(value)}
-                  min={0.5}
-                  max={10}
-                  step={0.5}
-                  className="mt-2"
-                />
-              </div>
+          <div className="mt-2">
+            <div className="text-sm text-muted-foreground">
+              Search radius: {searchRadius}km
             </div>
-          </CardDescription>
+            <Slider
+              value={[searchRadius]}
+              onValueChange={([value]) => setSearchRadius(value)}
+              min={0.5}
+              max={10}
+              step={0.5}
+              className="mt-2"
+            />
+          </div>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -1498,7 +1773,9 @@ function AmenitiesTab() {
                       {Icon && <Icon className="h-4 w-4" />}
                       <div>
                         <div className="font-medium">{config.type}</div>
-                        <div className="text-sm text-muted-foreground">{nearest.name}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {nearest.name}
+                        </div>
                       </div>
                     </div>
                     <div className="text-sm text-muted-foreground">
@@ -1507,6 +1784,9 @@ function AmenitiesTab() {
                   </div>
                 );
               })}
+              <p className="text-xs text-muted-foreground mt-4 italic">
+                Closest amenity for each is listed with total counts shown for completeness.
+              </p>
             </div>
           ) : (
             <Alert>
@@ -1540,6 +1820,7 @@ function DemographicsTab() {
   const [loading, setLoading] = useState(true);
   const [genderData, setGenderData] = useState<Array<{ name: string; value: number }>>([]);
   const [ageData, setAgeData] = useState<Array<{ name: string; value: number }>>([]);
+  const [populationData, setPopulationData] = useState<Array<{ year: number; population: number }>>([]);
 
   useEffect(() => {
     async function fetchCensusData() {
@@ -1556,25 +1837,42 @@ function DemographicsTab() {
         const longitude = (centerX * 180) / 20037508.34;
         const latitude = (Math.atan(Math.exp((centerY * Math.PI) / 20037508.34)) * 360) / Math.PI - 90;
 
-        const response = await fetch(
-          `https://services1.arcgis.com/v8Kimc579yljmjSP/ArcGIS/rest/services/ABS_2021_Census_G01_Selected_person_characteristics_by_sex_Beta/FeatureServer/5/query?` +
-          `geometry=${longitude},${latitude}&` +
-          `geometryType=esriGeometryPoint&` +
-          `inSR=4326&` +
-          `spatialRel=esriSpatialRelIntersects&` +
-          `outFields=*&` +
-          `returnGeometry=false&` +
-          `f=json`
-        );
+        // Fetch both demographic and population data
+        const [censusResponse, populationResponse] = await Promise.all([
+          fetch(
+            `https://services1.arcgis.com/v8Kimc579yljmjSP/ArcGIS/rest/services/ABS_2021_Census_G01_Selected_person_characteristics_by_sex_Beta/FeatureServer/5/query?` +
+            `geometry=${longitude},${latitude}&` +
+            `geometryType=esriGeometryPoint&` +
+            `inSR=4326&` +
+            `spatialRel=esriSpatialRelIntersects&` +
+            `outFields=*&` +
+            `returnGeometry=false&` +
+            `f=json`
+          ),
+          fetch(
+            `https://services1.arcgis.com/v8Kimc579yljmjSP/ArcGIS/rest/services/ABS_Estimated_resident_population_2001_2021_Beta/FeatureServer/0/query?` +
+            `geometry=${longitude},${latitude}&` +
+            `geometryType=esriGeometryPoint&` +
+            `inSR=4326&` +
+            `spatialRel=esriSpatialRelIntersects&` +
+            `outFields=*&` +
+            `returnGeometry=false&` +
+            `f=json`
+          )
+        ]);
 
-        if (!response.ok) {
-          throw new Error('Failed to fetch census data');
+        if (!censusResponse.ok || !populationResponse.ok) {
+          throw new Error('Failed to fetch data');
         }
 
-        const data = await response.json();
-        
-        if (data.features?.[0]?.attributes) {
-          const attributes = data.features[0].attributes;
+        const [censusData, populationData] = await Promise.all([
+          censusResponse.json(),
+          populationResponse.json()
+        ]);
+
+        // Process census data (existing code)
+        if (censusData.features?.[0]?.attributes) {
+          const attributes = censusData.features[0].attributes;
           
           const total = (attributes.Tot_P_F || 0) + (attributes.Tot_P_M || 0);
           setGenderData([
@@ -1582,7 +1880,6 @@ function DemographicsTab() {
             { name: 'Male', value: total ? (attributes.Tot_P_M || 0) / total : 0 }
           ]);
 
-          // Set age data
           setAgeData([
             { name: '0-4', value: attributes.Age_0_4_yr_P || 0 },
             { name: '5-14', value: attributes.Age_5_14_yr_P || 0 },
@@ -1598,10 +1895,25 @@ function DemographicsTab() {
           ]);
         }
 
+        // Process population data
+        if (populationData.features?.[0]?.attributes) {
+          const attributes = populationData.features[0].attributes;
+          const timeSeriesData = Array.from({ length: 21 }, (_, i) => {
+            const year = 2001 + i;
+            return {
+              year,
+              population: attributes[`ERP_no_${year}`] || 0
+            };
+          }).filter(d => d.population > 0);
+
+          setPopulationData(timeSeriesData);
+        }
+
       } catch (error) {
-        console.error('Error fetching census data:', error);
+        console.error('Error fetching data:', error);
         setGenderData([]);
         setAgeData([]);
+        setPopulationData([]);
       } finally {
         setLoading(false);
       }
@@ -1702,8 +2014,117 @@ function DemographicsTab() {
           )}
         </CardContent>
       </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Population Over Time</CardTitle>
+          <CardDescription>Historical population trends (2001-2021)</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="flex items-center justify-center h-[300px]">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : populationData.length > 0 ? (
+            <div className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart
+                  data={populationData}
+                  margin={{ top: 20, right: 30, left: 30, bottom: 20 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis
+                    dataKey="year"
+                    type="number"
+                    domain={['dataMin', 'dataMax']}
+                    tickFormatter={(value) => value.toString()}
+                    tick={{ fontSize: 11 }}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 11 }}
+                    tickFormatter={(value) => value.toLocaleString()}
+                  />
+                  <RechartsTooltip
+                    formatter={(value: number) => [value.toLocaleString(), 'Population']}
+                    labelFormatter={(year) => `Year: ${year}`}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="population"
+                    stroke="#1E4FD9"
+                    strokeWidth={2}
+                    dot={{ r: 3 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">No population data available</p>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
+}
+
+async function fetchElevationData(geometry: any) {
+  console.log('🗺️ Starting elevation data fetch...');
+  try {
+    // Convert Web Mercator to WGS84 coordinates
+    const rings = geometry.rings[0].map((coord: number[]) => [
+      (coord[0] * 180) / 20037508.34,
+      (Math.atan(Math.exp((coord[1] * Math.PI) / 20037508.34)) * 360 / Math.PI - 90)
+    ]);
+    
+    console.log('🔄 Converted coordinates:', rings);
+
+    const queryGeometry = {
+      rings: [rings],
+          spatialReference: { wkid: 4326 }
+        };
+
+    console.log('📍 Query geometry:', queryGeometry);
+
+    const url = `https://portal.spatial.nsw.gov.au/server/rest/services/NSW_Elevation_and_Depth_Theme/FeatureServer/2/query?` +
+      `geometry=${encodeURIComponent(JSON.stringify(queryGeometry))}` +
+      `&geometryType=esriGeometryPolygon` +
+      `&spatialRel=esriSpatialRelIntersects` +
+      `&outFields=elevation` +
+      `&returnGeometry=false` +
+      `&inSR=4326` +
+      `&f=json`;
+
+    console.log('🌐 Fetching from URL:', url);
+
+    const response = await fetch(url);
+    console.log('📥 Response status:', response.status);
+
+    if (!response.ok) throw new Error(`Failed to fetch elevation data: ${response.status}`);
+    
+    const data = await response.json();
+    console.log('📦 Raw elevation data:', data);
+        
+        if (data.features && data.features.length > 0) {
+      // Extract elevation values from contour lines that intersect with the property
+      const elevations = data.features.map((f: any) => f.attributes.elevation);
+      console.log('📊 Elevation values:', elevations);
+      
+      const result = {
+        min: Math.min(...elevations),
+        max: Math.max(...elevations),
+        avg: elevations.reduce((a: number, b: number) => a + b, 0) / elevations.length
+      };
+      
+      console.log('✨ Processed elevation data:', result);
+      return result;
+    }
+    
+    console.log('⚠️ No elevation features found');
+    return { min: null, max: null, avg: null };
+  } catch (error) {
+    console.error('❌ Error fetching elevation data:', error);
+    return { min: null, max: null, avg: null };
+  }
 }
 
 export function AnalyticsPanel() {
@@ -1873,4 +2294,35 @@ export function AnalyticsPanel() {
       </Tabs>
     </div>
   );
+}
+
+export function useOnlineUsers(channel: string) {
+  const [onlineCount, setOnlineCount] = useState(0);
+
+  useEffect(() => {
+    const presence = supabase.channel(`presence_${channel}`, {
+      config: {
+        presence: {
+          key: crypto.randomUUID(),
+        },
+      },
+    });
+
+    presence
+      .on('presence', { event: 'sync' }, () => {
+        const state = presence.presenceState();
+        setOnlineCount(Object.keys(state).length);
+      })
+      .subscribe(async (status) => {
+        if (status === 'SUBSCRIBED') {
+          await presence.track({ online_at: new Date().toISOString() });
+        }
+      });
+
+    return () => {
+      presence.unsubscribe();
+    };
+  }, [channel]);
+
+  return onlineCount;
 }

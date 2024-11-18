@@ -27,17 +27,25 @@ import {
 import { Layers, Tag, Filter, X, SlidersHorizontal } from "lucide-react";
 import { useState } from 'react';
 import { MapLayer, ZoneOption, ZONE_OPTIONS } from "@/lib/map-store";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Info as InfoIcon } from "lucide-react";
+import { create } from 'zustand';
+
 
 interface SortableLayerItemProps {
   layer: MapLayer;
   onToggle: (id: string) => void;
-  onToggleLabels: (id: string) => void;
   onUpdateZones: (id: string, zones: string[]) => void;
   onUpdateOpacity: (id: string, opacity: number) => void;
   onUpdateLayerUrl: (id: string, url: string) => void;
 }
 
-function SortableLayerItem({ layer, onToggle, onToggleLabels, onUpdateZones, onUpdateOpacity, onUpdateLayerUrl }: SortableLayerItemProps) {
+function SortableLayerItem({ layer, onToggle, onUpdateZones, onUpdateOpacity, onUpdateLayerUrl }: SortableLayerItemProps) {
   const [showFilter, setShowFilter] = useState(false);
   const [opacityValue, setOpacityValue] = useState(layer.opacity ? Math.round(layer.opacity * 100) : 100);
   const [metromapToken, setMetromapToken] = useState('');
@@ -112,6 +120,7 @@ function SortableLayerItem({ layer, onToggle, onToggleLabels, onUpdateZones, onU
     };
   }, [showFilter]);
 
+
   return (
     <div
       ref={setNodeRef}
@@ -136,21 +145,34 @@ function SortableLayerItem({ layer, onToggle, onToggleLabels, onUpdateZones, onU
           onCheckedChange={() => handleLayerToggle(layer.id)}
           disabled={layer.id !== 'metromap' && !layer.url}
         />
-        <Label htmlFor={layer.id} className="text-left flex-1">
+        <Label htmlFor={layer.id} className="text-left flex items-center gap-2">
           {layer.name}
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <InfoIcon className="h-4 w-4 text-muted-foreground" />
+              </TooltipTrigger>
+              <TooltipContent side="right" className="layer-tooltip">
+                <p>{getLayerDescription(layer.id).description}</p>
+                {getLayerDescription(layer.id).source && (
+                  <>
+                    <p className="mt-2"><strong>Source:</strong> {getLayerDescription(layer.id).source}</p>
+                  </>
+                )}
+                {getLayerDescription(layer.id).link && (
+                  <>
+                    <p className="mt-2"><strong>Link:</strong></p>
+                    <a href={getLayerDescription(layer.id).link} target="_blank" rel="noopener noreferrer" className="url-link text-blue-500 hover:text-blue-600">
+                      {getLayerDescription(layer.id).link}
+                    </a>
+                  </>
+                )}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </Label>
         {layer.enabled && (
           <>
-            {layer.id === 'cadastre' && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className={`h-6 w-6 ${layer.showLabels ? 'text-primary' : 'text-muted-foreground'}`}
-                onClick={() => onToggleLabels(layer.id)}
-              >
-                <Tag className="h-4 w-4" />
-              </Button>
-            )}
             {layer.id === 'zoning' && (
               <Button
                 variant="ghost"
@@ -272,8 +294,68 @@ function SortableLayerItem({ layer, onToggle, onToggleLabels, onUpdateZones, onU
   );
 }
 
+function getLayerDescription(layerId: string): { name: string; description: string; source: string; link: string } {
+  const descriptions: Record<string, { name: string; description: string; source: string; link: string }> = {
+    'imagery': {
+      name: 'NSW Imagery',
+      description: 'Aerial imagery of NSW - Progressively from scales larger than 1:150,000 higher resolution imagery overlays lower resolution imagery and most recent imagery overlays older imagery within each resolution',
+      source: 'NSW Department of Customer Servie (Spatial Services)',
+      link: 'https://maps.six.nsw.gov.au/arcgis/rest/services/public/NSW_Imagery/MapServer'
+    },
+    'cadastre': {
+      name: 'Lots',
+      description: 'NSW Cadastre - Lot and Plan details',
+      source: 'NSW Department of Customer Servie (Spatial Services)',
+      link: 'https://maps.six.nsw.gov.au/arcgis/rest/services/public/NSW_Cadastre/MapServer'
+    },
+    'zoning': {
+      name: 'Land Zoning',
+      description: 'This spatial dataset identifies land use zones and the type of land uses that are permitted (with or without consent) or prohibited in each zone on any given land as designated by the relevant NSW environmental planning instrument (EPI) under the Environmental Planning and Assessment Act 1979.',
+      source: 'NSW Department of Planning, Housing and Infrastructure',
+      link: 'https://mapprod3.environment.nsw.gov.au/arcgis/rest/services/ePlanning/Planning_Portal_Principal_Planning/MapServer/19'
+    },
+    'fsr': {
+      name: 'Floor Space Ratio',
+      description: 'This spatial dataset identifies the maximum floor space ratio that is permitted on land as designated by the relevant NSW environmental planning instrument (EPI) under the Environmental Planning and Assessment Act 1979.',
+      source: 'NSW Department of Planning, Housing and Infrastructure',
+      link: 'https://mapprod3.environment.nsw.gov.au/arcgis/rest/services/ePlanning/Planning_Portal_Principal_Planning/MapServer/11'
+    },
+    'height': {
+      name: 'Height of Building',
+      description: 'This spatial dataset identifies the maximum height of a building that is permitted on land as designated by the relevant NSW environmental planning instrument (EPI) under the Environmental Planning and Assessment Act 1979.',
+      source: 'NSW Department of Planning, Housing and Infrastructure',
+      link: 'https://mapprod3.environment.nsw.gov.au/arcgis/rest/services/ePlanning/Planning_Portal_Principal_Planning/MapServer/14'
+    },
+    'heritage': {
+      name: 'Heritage',
+      description: 'This spatial dataset identifies areas subject to Heritage conservation as designated by the relevant NSW environmental planning instrument (EPI) under the Environmental Planning and Assessment Act 1979.',
+      source: 'NSW Department of Planning, Housing and Infrastructure',
+      link: 'https://mapprod3.environment.nsw.gov.au/arcgis/rest/services/ePlanning/Planning_Portal_Principal_Planning/MapServer/16'
+    },
+    'bushfire': {
+      name: 'Bushfire Prone Land',
+      description: 'The NSW Bush Fire Prone Land dataset is a map prepared in accordance with the Guide for Bush Fire Prone Land Mapping (BFPL Mapping Guide) and certified by the Commissioner of NSW RFS under section 146(2) of the Environmental Planning and Assessment Act 1979. Over time there has been various releases of the BFPL Mapping Guide, in which the categories and types of vegetation included in the BFPL map have changed. The version of the guide under which, each polygon or LGA was certified is contained in the data. An area of land that can support a bush fire or is likely to be subject to bush fire attack, as designated on a bush fire prone land map. The definition of bushfire vegetation categories under guideline version 5b: Vegetation Category 1 consists of: > Areas of forest, woodlands, heaths (tall and short), forested wetlands and timber plantations. Vegetation Category 2 consists of: >Rainforests. >Lower risk vegetation parcels. These vegetation parcels represent a lower bush fire risk to surrounding development and consist of: - Remnant vegetation; - Land with ongoing land management practices that actively reduces bush fire risk. Vegetation Category 3 consists of: > Grasslands, freshwater wetlands, semi-arid woodlands, alpine complex and arid shrublands. Buffers are created based on the bushfire vegetation, with buffering distance being 100 metres for vegetation category 1 and 30 metres for vegetation category 2 and 3. Vegetation excluded from the bushfire vegetation categories include isolated areas of vegetation less than one hectare, managed lands and some agricultural lands. Please refer to BFPL Mapping Guide for a full list of exclusions.The legislative context of this dataset is as follows: On 1 August 2002, the Rural Fires and Environmental Assessment Legislation Amendment Act 2002 (Amendment Act) came into effect.The Act amended both the Environmental Planning and Assessment Act 1979 and the Rural Fire Services Act 1997 to ensure that people, property and the environment are more fully protected against the dangers that may arise from bushfires. Councils are required to map bushfire prone land within their local government area, which becomes the trigger for the consideration of bushfire protection measures when developing land. BFPL Mapping Guidelines are available from www.rfs.nsw.gov.au. The NSW BFPL Map is collated and merged together from individual NSW local council maps which are submitted by the local council for certification. The maps are often a product of or derived from local and state vegetation mapping with input from Local Council and RFS staff. In some cases the maps are produced under contract for local council by various companies. Please refer to the individual metadata statements for each LGA BFPL Map.',
+      source: 'NSW Department of Planning, Housing and Infrastructure',
+      link: 'https://mapprod3.environment.nsw.gov.au/arcgis/rest/services/ePlanning/Planning_Portal_Hazard/MapServer/229'
+    },
+    'contamination': {
+      name: 'Contaminated Land',
+      description: 'This dataset includes contaminated land notified under section 60 of the Contaminated Land Management Act 1997 (CLM Act). These have been assessed by the EPA as being contaminated, but may not always require regulation under the CLM Act.',
+      source: 'NSW Environment Protection Authority',
+      link: 'https://maptest2.environment.nsw.gov.au/arcgis/rest/services/EPA/EPACS/MapServer/1'
+    }
+  };
+  
+  return descriptions[layerId] || {
+    name: 'Unknown Layer',
+    description: 'No description available',
+    source: 'Unknown',
+    link: ''
+  };
+}
+
 export function LayerControl() {
-  const { layerGroups, toggleLayer, toggleLabels, updateSelectedZones, updateLayerOpacity, updateLayerUrl } = useMapStore();
+  const { layerGroups, toggleLayer, updateSelectedZones, updateLayerOpacity, updateLayerUrl } = useMapStore();
 
   return (
     <Card className="h-full bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/75">
@@ -294,7 +376,6 @@ export function LayerControl() {
                       key={layer.id}
                       layer={layer}
                       onToggle={toggleLayer}
-                      onToggleLabels={toggleLabels}
                       onUpdateZones={updateSelectedZones}
                       onUpdateOpacity={updateLayerOpacity}
                       onUpdateLayerUrl={updateLayerUrl}

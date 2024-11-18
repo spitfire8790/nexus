@@ -8,36 +8,19 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, './src'),
     },
+    extensions: ['.js', '.ts', '.jsx', '.tsx']
   },
   optimizeDeps: {
     exclude: ['lucide-react'],
   },
   server: {
+    port: 5173,
     proxy: {
-      '/api/eplanning': {
-        target: 'https://api.apps1.nsw.gov.au/eplanning',
+      '/api/proxy': {
+        target: 'http://localhost:5174',
         changeOrigin: true,
-        secure: false,
-        rewrite: (path) => path.replace(/^\/api\/eplanning/, ''),
-        configure: (proxy, _options) => {
-          proxy.on('proxyReq', (proxyReq, req, _res) => {
-            if (req.headers.pagesize) {
-              proxyReq.setHeader('PageSize', req.headers.pagesize);
-            }
-            if (req.headers.pagenumber) {
-              proxyReq.setHeader('PageNumber', req.headers.pagenumber);
-            }
-            if (req.headers.filters) {
-              proxyReq.setHeader('filters', req.headers.filters);
-            }
-          });
-        }
+        secure: false
       }
     }
-  },
-  build: {
-    outDir: 'dist',
-    emptyOutDir: true,
-    sourcemap: true
   }
 });

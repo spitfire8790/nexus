@@ -202,69 +202,96 @@ function CoordinateDisplay({ position }: { position: L.LatLng | null }) {
 function OverlayLayers() {
   const map = useMap();
   const layerGroups = useMapStore((state) => state.layerGroups);
-  const layerRefs = useRef<Record<string, any>>({});
+  const layerRefs = useRef<{ [key: string]: L.Layer }>({});
 
   useEffect(() => {
-    const allLayers = layerGroups.flatMap(group => group.layers);
+    layerGroups.forEach(group => {
+      group.layers.forEach(layer => {
+        // Remove existing layer if it exists
+        if (layerRefs.current[layer.id]) {
+          map.removeLayer(layerRefs.current[layer.id]);
+          delete layerRefs.current[layer.id];
+        }
 
-    allLayers.forEach(layer => {
-      if (layer.enabled) {
-        if (!layerRefs.current[layer.id]) {
-          if (layer.type === 'dynamic') {
-            const layerOptions: any = {
-              url: layer.url,
-              layers: [layer.layerId],
-              opacity: layer.opacity,
-              pane: OVERLAY_PANE,
-            };
-
-            if (layer.filter) {
-              layerOptions.layerDefs = {
-                [layer.layerId!]: layer.filter
-              };
-            }
-
-            layerRefs.current[layer.id] = EL.dynamicMapLayer(layerOptions).addTo(map);
-          } else if (layer.type === 'tile') {
-            layerRefs.current[layer.id] = L.tileLayer(layer.url, {
-              opacity: layer.opacity,
-              attribution: layer.attribution,
-              className: layer.className,
-              pane: OVERLAY_PANE  // All layers from layer control go in overlay pane
-            }).addTo(map);
-          } else if (layer.type === 'geojson') {
-            layerRefs.current[layer.id] = L.geoJSON(layer.data, {
-              pane: OVERLAY_PANE,
+        if (layer.enabled) {
+          // Handle GeoJSON layers
+          if (layer.type === 'geojson' && layer.data) {
+            const geojsonLayer = L.geoJSON(layer.data as GeoJSON.GeoJsonObject, {
               pointToLayer: (feature, latlng) => {
-                return L.circleMarker(latlng, {
-                  radius: 8,
-                  fillColor: "#2563eb",
-                  color: "#fff",
-                  weight: 1,
-                  opacity: layer.opacity,
-                  fillOpacity: 0.8
+                // Create custom marker for sales points
+                const index = (layer.data as any).features.indexOf(feature) + 1;
+                const icon = L.divIcon({
+                  className: 'custom-div-icon',
+                  html: `<div class="w-6 h-6 flex items-center justify-center rounded-full bg-white border-2 border-red-500 text-red-500 text-xs font-medium">${index}</div>`,
+                  iconSize: [24, 24],
+                  iconAnchor: [12, 12]
                 });
+                
+                return L.marker(latlng, { icon });
+              },
+              onEachFeature: (feature, layer) => {
+                if (feature.properties) {
+                  const popupContent = `
+                    <div class="text-sm">
+                      <div class="font-medium">${feature.properties.address}</div>
+                      <div>${new Date(feature.properties.sale_date).toLocaleDateString()}</div>
+                      <div class="font-semibold text-blue-600">$${feature.properties.price.toLocaleString()}</div>
+                      <div>${feature.properties.distance} away</div>
+                    </div>
+                  `;
+                  layer.bindPopup(popupContent);
+                }
               }
+            });
+            
+            layerRefs.current[layer.id] = geojsonLayer;
+            geojsonLayer.addTo(map);
+          } 
+          // Handle other layer types (WMS, etc)
+          else if (layer.url) {
+            layerRefs.current[layer.id] = L.tileLayer.wms(layer.url, {
+              layers: layer.wmsLayers,
+              format: 'image/png',
+              transparent: true,
+              opacity: layer.opacity
             }).addTo(map);
           }
         }
-      } else if (layerRefs.current[layer.id]) {
-        map.removeLayer(layerRefs.current[layer.id]);
-        delete layerRefs.current[layer.id];
-      }
-
-      if (layerRefs.current[layer.id]) {
-        layerRefs.current[layer.id].setOpacity(layer.opacity);
-      }
+      });
     });
 
+    // Cleanup function
     return () => {
       Object.values(layerRefs.current).forEach(layer => {
-        if (layer) map.removeLayer(layer);
+        if (map.hasLayer(layer)) {
+          map.removeLayer(layer);
+        }
       });
       layerRefs.current = {};
     };
   }, [map, layerGroups]);
+
+  // Update layer opacity
+  useEffect(() => {
+    layerGroups.forEach(group => {
+      group.layers.forEach(layer => {
+        const mapLayer = layerRefs.current[layer.id];
+        if (mapLayer) {
+          if (layer.type === 'geojson') {
+            // For GeoJSON layers, we need to update style for all features
+            if (mapLayer instanceof L.GeoJSON) {
+              mapLayer.setStyle({
+                opacity: layer.opacity,
+                fillOpacity: layer.opacity * 0.2
+              });
+            }
+          } else if (mapLayer instanceof L.TileLayer) {
+            mapLayer.setOpacity(layer.opacity);
+          }
+        }
+      });
+    });
+  }, [layerGroups]);
 
   return null;
 }
