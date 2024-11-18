@@ -247,13 +247,24 @@ function OverlayLayers() {
             layerRefs.current[layer.id] = geojsonLayer;
             geojsonLayer.addTo(map);
           } 
-          // Handle other layer types (WMS, etc)
-          else if (layer.url) {
-            layerRefs.current[layer.id] = L.tileLayer.wms(layer.url, {
-              layers: layer.wmsLayers,
-              format: 'image/png',
-              transparent: true,
-              opacity: layer.opacity
+                   // Handle dynamic (ArcGIS) layers
+          else if (layer.type === 'dynamic' && layer.url) {
+            const dynamicLayer = EL.dynamicMapLayer({
+              url: layer.url,
+              opacity: layer.opacity,
+              layers: [layer.layerId],
+              pane: OVERLAY_PANE,
+              f: 'image'
+            });
+            
+            layerRefs.current[layer.id] = dynamicLayer;
+            dynamicLayer.addTo(map);
+          }
+          // Handle tile layers
+          else if (layer.type === 'tile' && layer.url) {
+            layerRefs.current[layer.id] = L.tileLayer(layer.url, {
+              opacity: layer.opacity,
+              pane: OVERLAY_PANE
             }).addTo(map);
           }
         }
