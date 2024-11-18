@@ -28,7 +28,7 @@ L.Marker.prototype.options.icon = new DefaultIcon();
 
 // Constants for pane management
 const BASE_PANE = 'base-pane';
-const BASE_PANE_Z_INDEX = 200;
+const BASE_PANE_Z_INDEX = 100;
 const OVERLAY_PANE = 'overlay-pane';
 const OVERLAY_PANE_Z_INDEX = 400;
 const BOUNDARY_PANE = 'boundary';
