@@ -1340,7 +1340,7 @@ function PlanningTab() {
           ? 'http://localhost:5173'
           : '';
 
-        const permittedResponse = await fetch(`${API_BASE_URL}/api/proxy`, {
+        const permittedResponse = await fetch(`/api/planning/viewersf/V1/ePlanningApi/landuse`, {
           headers: {
             'EPINAME': epiName,
             'ZONECODE': zoneCode,
