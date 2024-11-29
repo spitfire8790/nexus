@@ -13,6 +13,11 @@ import EmojiPicker from 'emoji-picker-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useOnlineUsers } from '@/hooks/use-online-users';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+import { UserPresenceControl } from './user-presence-control';
+import { UserCard } from './user-card';
+import type { Profile } from "@/lib/supabase-types";
+import { MessageReactions } from './message-reactions';
+import { TypingIndicator } from './typing-indicator';
 
 export function GeneralChat() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -38,6 +43,11 @@ export function GeneralChat() {
           profile:profiles(
             username,
             avatar_url
+          ),
+          reactions:message_reactions(
+            emoji,
+            user_id,
+            profile:profiles(username)
           )
         `)
         .eq('is_general', true)
@@ -73,6 +83,11 @@ export function GeneralChat() {
             profile:profiles(
               username,
               avatar_url
+            ),
+            reactions:message_reactions(
+              emoji,
+              user_id,
+              profile:profiles(username)
             )
           `)
           .eq('id', payload.new.id)
@@ -173,6 +188,7 @@ export function GeneralChat() {
 
   return (
     <div className="flex flex-col h-full">
+      <UserPresenceControl />
       <div className="px-4 py-2 border-b">
         <div className="flex items-center justify-between">
           <h3 className="font-semibold">General Chat</h3>
@@ -182,14 +198,17 @@ export function GeneralChat() {
                 {onlineCount} online
               </div>
             </HoverCardTrigger>
-            <HoverCardContent className="w-48">
-              <div className="space-y-1">
+            <HoverCardContent className="w-80">
+              <div className="space-y-2">
                 <h4 className="text-sm font-semibold">Online Users</h4>
-                <div className="text-sm space-y-1">
+                <div className="space-y-1">
                   {Object.values(onlineUsers)
                     .filter(user => user.username)
                     .map(user => (
-                      <div key={user.username} className={getUsernameColor(user.username)}>
+                      <div 
+                        key={user.username} 
+                        className={`text-sm ${getUsernameColor(user.username!)}`}
+                      >
                         {user.username}
                       </div>
                     ))}
@@ -200,29 +219,58 @@ export function GeneralChat() {
         </div>
       </div>
       <ScrollArea ref={scrollRef} className="flex-1 p-4">
+        <TypingIndicator users={typingUsers} />
         <div className="space-y-4">
-          {messages.map((message) => (
-            <div
-              key={message.id}
-              className="flex flex-col space-y-1"
-            >
-              <div className="flex items-center gap-2">
-                <span className={`font-medium ${getUsernameColor(message.profile?.username || 'Anonymous')}`}>
-                  {message.profile?.username || 'Anonymous'}
-                </span>
-                <span className="text-xs text-muted-foreground">
-                  {format(new Date(message.created_at), 'MMM d, h:mm a')}
-                </span>
+          {messages.map((message) => {
+            const messageReactions = message.reactions?.reduce((acc, r) => {
+              const existing = acc.find(a => a.emoji === r.emoji);
+              if (existing) {
+                existing.count++;
+                existing.users.push(r.profile.username);
+                existing.hasReacted = existing.hasReacted || r.user_id === user?.id;
+              } else {
+                acc.push({
+                  emoji: r.emoji,
+                  count: 1,
+                  users: [r.profile.username],
+                  hasReacted: r.user_id === user?.id
+                });
+              }
+              return acc;
+            }, [] as MessageReaction[]) || [];
+
+            return (
+              <div
+                key={message.id}
+                className="flex flex-col space-y-1"
+              >
+                <div className="flex items-center gap-2">
+                  <span className={`font-medium ${getUsernameColor(message.profile?.username || 'Anonymous')}`}>
+                    {message.profile?.username || 'Anonymous'}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    {format(new Date(message.created_at), 'MMM d, h:mm a')}
+                  </span>
+                </div>
+                <p className="text-sm whitespace-pre-wrap">
+                  {message.moderated_message}
+                </p>
+                <MessageReactions
+                  messageId={message.id}
+                  reactions={messageReactions}
+                  onReactionChange={() => {
+                    // Refresh messages to update reactions
+                    fetchMessages();
+                  }}
+                />
               </div>
-              <p className="text-sm whitespace-pre-wrap">
-                {message.moderated_message}
-              </p>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </ScrollArea>
 
-      <div className="p-4 border-t">
+      <div className="p-4 border-t space-y-2">
+        <TypingIndicator users={typingUsers} />
         <form
           onSubmit={(e) => {
             e.preventDefault();

@@ -16,6 +16,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { useOnlineUsers } from '@/hooks/use-online-users';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { getUsernameColor } from '@/lib/username-color';
+import { TypingIndicator } from './typing-indicator';
+import { UserCard } from "./user-card";
 
 export function PropertyChat() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -189,6 +191,7 @@ export function PropertyChat() {
             <span className="text-xs text-muted-foreground">
               {selectedProperty?.address}
             </span>
+            <TypingIndicator users={typingUsers} />
           </div>
           <HoverCard>
             <HoverCardTrigger>
@@ -196,14 +199,17 @@ export function PropertyChat() {
                 {onlineCount} online
               </div>
             </HoverCardTrigger>
-            <HoverCardContent className="w-48">
-              <div className="space-y-1">
+            <HoverCardContent className="w-80">
+              <div className="space-y-2">
                 <h4 className="text-sm font-semibold">Online Users</h4>
-                <div className="text-sm space-y-1">
+                <div className="space-y-1">
                   {Object.values(onlineUsers)
                     .filter(user => user.username)
                     .map(user => (
-                      <div key={user.username} className={getUsernameColor(user.username)}>
+                      <div 
+                        key={user.username} 
+                        className={`text-sm ${getUsernameColor(user.username!)}`}
+                      >
                         {user.username}
                       </div>
                     ))}

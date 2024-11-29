@@ -1,6 +1,6 @@
 {
   "framework": "vite",
-  "buildCommand": "npm run build",
+  "buildCommand": "npm run build", 
   "outputDirectory": "dist",
   "rewrites": [
     {
@@ -18,6 +18,24 @@
     {
       "source": "/api/maps/:path*",
       "destination": "https://maps.six.nsw.gov.au/arcgis/rest/services/:path*"
+    },
+    {
+      "source": "/api/proxy",
+      "has": [
+        { 
+          "type": "header", 
+          "key": "EPINAME" 
+        },
+        {
+          "type": "header",
+          "key": "ZONECODE"
+        }
+      ],
+      "destination": "https://api-uat.apps1.nsw.gov.au/eplanning/data/v0/FetchEPILandUsePermissibility"
+    },
+    {
+      "source": "/api/tiles/:path*",
+      "destination": "https://tiles.opencitymodel.org/data/v1/:path*"
     }
   ],
   "headers": [
@@ -26,7 +44,8 @@
       "headers": [
         { "key": "Access-Control-Allow-Origin", "value": "*" },
         { "key": "Access-Control-Allow-Methods", "value": "GET, POST, OPTIONS" },
-        { "key": "Access-Control-Allow-Headers", "value": "Content-Type, Accept" }
+        { "key": "Access-Control-Allow-Headers", "value": "Content-Type, Accept, EPINAME, ZONECODE" },
+        { "key": "Access-Control-Expose-Headers", "value": "Content-Type, Accept, EPINAME, ZONECODE" }
       ]
     }
   ]

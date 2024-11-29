@@ -16,6 +16,13 @@ export interface ChatMessage {
   is_general: boolean;
   moderated_message: string;
   profile?: Profile;
+  reactions?: Array<{
+    emoji: string;
+    user_id: string;
+    profile: {
+      username: string;
+    };
+  }>;
 }
 
 export interface FeatureRequest {

@@ -26,7 +26,8 @@ import {
   Clock,
   Coffee,
   Users,
-  Mountain
+  Mountain,
+  FileCheck
 } from "lucide-react";
 import { useMapStore, type MapState, type LayerGroup } from "@/lib/map-store";
 import { useEffect, useState, useCallback, useRef } from "react";
@@ -44,14 +45,37 @@ import { Button } from "@/components/ui/button";
 import { rpc } from "@/lib/rpc";
 import L from 'leaflet';
 import { useMap } from 'react-leaflet';
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip as RechartsTooltip, BarChart, CartesianGrid, XAxis, YAxis, Bar } from 'recharts';
+import { 
+  PieChart, 
+  Pie, 
+  Cell, 
+  ResponsiveContainer, 
+  Legend, 
+  Tooltip as RechartsTooltip, 
+  BarChart, 
+  CartesianGrid, 
+  XAxis, 
+  YAxis, 
+  Bar,
+  LineChart,
+  Line,
+  Area,
+  ComposedChart,
+  ReferenceArea
+} from 'recharts';
 import * as turf from '@turf/turf';
 import { cn } from "@/lib/utils";
 import React from "react";
 import { buffer } from '@turf/buffer';
 import { supabase } from '@/lib/supabase';
-import { LineChart, Line } from 'recharts';
-
+import { LottieLoader } from '@/components/ui/lottie-loader';
+import { ResponsiveLine } from '@nivo/line';
+import { loadPopulationData } from '@/lib/population-data';
+import populationCSV from '../data/popprojSA2.csv';
+import { SearchRadiusCircle } from '@/components/map-view';
+import { debounce } from 'lodash';
+import { TooltipWrapper } from '@/components/ui/tooltip-wrapper';
+import { DevelopmentTab } from "@/components/analytics/tabs/development-tab";
 
 interface ZoningResult {
   title: string;
@@ -99,10 +123,10 @@ interface Sale {
   distance?: number;
 }
 
-function LoadingPulse() {
+function LoadingState({ className }: { className?: string }) {
   return (
-    <div className="animate-pulse">
-      <div className="h-4 bg-muted rounded w-24"></div>
+    <div className={cn("block", className)}>
+      <LottieLoader />
     </div>
   );
 }
@@ -146,7 +170,7 @@ function SiteOverviewTab() {
     elevation: {
       min: number | null;
       max: number | null;
-      avg: number | null;
+      change: number | null;
     };
   }>({
     zoneInfo: null,
@@ -159,7 +183,7 @@ function SiteOverviewTab() {
     elevation: {
       min: null,
       max: null,
-      avg: null
+      change: null
     }
   });
 
@@ -308,25 +332,60 @@ function SiteOverviewTab() {
         }
       };
 
-      const fetchElevationInfo = async () => {
-        if (!selectedProperty?.geometry) {
-          console.log('⚠️ No property geometry available for elevation fetch');
-          return;
-        }
-        
-        console.log('🏔️ Starting elevation info fetch for property:', selectedProperty);
+      const fetchElevation = async () => {
         try {
-          const elevationData = await fetchElevationData(selectedProperty.geometry);
-          console.log('📈 Setting elevation data:', elevationData);
+          const rings = selectedProperty.geometry.rings[0];
+          const centerX = rings.reduce((sum, coord) => sum + coord[0], 0) / rings.length;
+          const centerY = rings.reduce((sum, coord) => sum + coord[1], 0) / rings.length;
+          
+          console.log('Fetching elevation for coordinates:', { centerX, centerY });
+          
+          const response = await fetch('/api/spatial/NSW_Elevation/MapServer/identify', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              geometry: `${centerX},${centerY}`,
+              geometryType: 'esriGeometryPoint',
+              sr: 102100,
+              layers: 'all',
+              tolerance: 1,
+              mapExtent: `${centerX-1000},${centerY-1000},${centerX+1000},${centerY+1000}`,
+              imageDisplay: '96,96,96',
+              returnGeometry: false,
+              f: 'json'
+            })
+          });
+          
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Elevation API error response:', errorText);
+            throw new Error(`Elevation API returned status: ${response.status}`);
+          }
+          
+          const data = await response.json();
+          console.log('Elevation API response:', data);
+          
+          const elevation = data.results?.[0]?.value;
+          
           setData(prev => ({
             ...prev,
-            elevation: elevationData
+            elevation: {
+              min: elevation,
+              max: elevation,
+              change: 0
+            }
           }));
         } catch (error) {
-          console.error('❌ Elevation fetch error:', error);
-          setData(prev => ({
-            ...prev,
-            elevation: { min: null, max: null, avg: null }
+          console.error('Elevation fetch error:', error);
+          setData(prev => ({ 
+            ...prev, 
+            elevation: {
+              min: null,
+              max: null,
+              change: null
+            }
           }));
         }
       };
@@ -379,8 +438,8 @@ function SiteOverviewTab() {
           const hob = hobData.features?.[0]?.attributes?.MAX_B_H;
           const lotSize = lotSizeData.features?.[0]?.attributes?.LOT_SIZE;
 
-          setData(prev => ({
-            ...prev,
+          setData(prev => ({ 
+            ...prev, 
             maxHeight: hob ? `${hob}m` : 'Not specified',
             minLotSize: lotSize ? `${lotSize}m²` : 'Not specified'
           }));
@@ -401,7 +460,7 @@ function SiteOverviewTab() {
       fetchAddress();
       fetchSpatial();
       fetchZoning();
-      fetchElevationInfo();
+      fetchElevation();
       fetchZoningDetails();
     }
 
@@ -410,56 +469,69 @@ function SiteOverviewTab() {
 
   if (!selectedProperty) {
     return (
-      <div className="p-4 space-y-4">
-        <p className="text-sm text-muted-foreground">
-          Select a property to view site overview
-        </p>
+      <div className="p-4">
+        <Alert>
+          <AlertTitle>Select a property to view details</AlertTitle>
+          <AlertDescription>
+            Click on any property on the map to view its details
+          </AlertDescription>
+        </Alert>
       </div>
     );
   }
 
   return (
-    <div className="p-4">
-      <div className="grid grid-cols-2 gap-x-4">
-        {/* Address */}
-        <div className="font-semibold border-b pb-2 flex items-center gap-2">
+    <div className="p-4 space-y-4">
+      {/* Address */}
+      <div className="flex items-center justify-between border-b pb-2">
+        <div className="flex items-center gap-2">
           <Home className="h-4 w-4" />
-          Address
+          <span className="font-semibold">Address</span>
+          <TooltipWrapper tooltipKey="propertyAddress" showIcon />
         </div>
-        <div className="border-b pb-2">
-          {data.propertyAddress === null ? <LoadingPulse /> : data.propertyAddress}
+        <div>
+          {data.propertyAddress === null ? <LoadingState /> : data.propertyAddress}
         </div>
+      </div>
 
-        {/* LGA - Moved up */}
-        <div className="font-semibold border-b pb-2 flex items-center gap-2 pt-4">
+      {/* Local Government Area */}
+      <div className="flex items-center justify-between border-b pb-2">
+        <div className="flex items-center gap-2">
           <Building className="h-4 w-4" />
-          LGA
+          <span className="font-semibold">Local Government Area</span>
+          <TooltipWrapper tooltipKey="lgaInfo" showIcon />
         </div>
-        <div className="border-b pb-2 pt-4">
-          {data.lgaName === null ? <LoadingPulse /> : data.lgaName}
+        <div>
+          {data.lgaName === null ? <LoadingState /> : data.lgaName}
         </div>
+      </div>
 
-        {/* Area */}
-        <div className="font-semibold border-b pb-2 flex items-center gap-2 pt-4">
+      {/* Property Area */}
+      <div className="flex items-center justify-between border-b pb-2">
+        <div className="flex items-center gap-2">
           <Ruler className="h-4 w-4" />
-          Area
+          <span className="font-semibold">Property Area</span>
+          <TooltipWrapper tooltipKey="propertyArea" showIcon />
         </div>
-        <div className="border-b pb-2 pt-4">
+        <div>
           {data.area === null ? (
-            <LoadingPulse />
+            <LoadingState />
           ) : (
             `${data.area.toLocaleString('en-AU', { maximumFractionDigits: 0 })} m²`
           )}
         </div>
+      </div>
 
-        {/* Lots */}
-        <div className="font-semibold border-b pb-2 flex items-center gap-2 pt-4">
+      {/* Lots */}
+      <div className="flex items-center justify-between border-b pb-2">
+        <div className="flex items-center gap-2">
           <Layers className="h-4 w-4" />
-          Lots
+          <span className="font-semibold">Lots</span>
+          <TooltipWrapper tooltipKey="lotsInfo" showIcon />
         </div>
-        <div className="border-b pb-2 pt-4">
-          {selectedProperty.lots && selectedProperty.lots.length > 0 ? (
-            <div className="space-y-1">
+        <div>
+          {selectedProperty?.lots && selectedProperty.lots.length > 0 ? (
+            <div className="text-right">
               {selectedProperty.lots.map((lot: Lot) => (
                 <div key={lot.attributes.LotDescription}>
                   {lot.attributes.LotDescription}
@@ -470,55 +542,67 @@ function SiteOverviewTab() {
             <span className="text-muted-foreground">No lot information</span>
           )}
         </div>
+      </div>
 
-        {/* Land Zone */}
-        <div className="font-semibold border-b pb-2 flex items-center gap-2 pt-4">
+      {/* Land Zone */}
+      <div className="flex items-center justify-between border-b pb-2">
+        <div className="flex items-center gap-2">
           <Map className="h-4 w-4" />
-          Land Zone
+          <span className="font-semibold">Land Zone</span>
+          <TooltipWrapper tooltipKey="zoneInfo" showIcon />
         </div>
-        <div className="border-b pb-2 pt-4">
-          {data.zoneInfo === null ? <LoadingPulse /> : data.zoneInfo}
+        <div>
+          {data.zoneInfo === null ? <LoadingState /> : data.zoneInfo}
         </div>
+      </div>
 
-        {/* Height of Building */}
-        <div className="font-semibold border-b pb-2 flex items-center gap-2 pt-4">
+      {/* Height of Building */}
+      <div className="flex items-center justify-between border-b pb-2">
+        <div className="flex items-center gap-2">
           <Building2 className="h-4 w-4" />
-          Height of Building (HOB)
+          <span className="font-semibold">Height of Building (HOB)</span>
+          <TooltipWrapper tooltipKey="maxHeight" showIcon />
         </div>
-        <div className="border-b pb-2 pt-4">
-          {data.maxHeight === null ? <LoadingPulse /> : data.maxHeight}
+        <div>
+          {data.maxHeight === null ? <LoadingState /> : data.maxHeight}
         </div>
+      </div>
 
-        {/* Minimum Lot Size */}
-        <div className="font-semibold border-b pb-2 flex items-center gap-2 pt-4">
+      {/* Minimum Lot Size */}
+      <div className="flex items-center justify-between border-b pb-2">
+        <div className="flex items-center gap-2">
           <Ruler className="h-4 w-4" />
-          Minimum Lot Size
+          <span className="font-semibold">Minimum Lot Size</span>
+          <TooltipWrapper tooltipKey="minLotSize" showIcon />
         </div>
-        <div className="border-b pb-2 pt-4">
-          {data.minLotSize === null ? <LoadingPulse /> : data.minLotSize}
+        <div>
+          {data.minLotSize === null ? <LoadingState /> : data.minLotSize}
         </div>
+      </div>
 
-        {/* Elevation */}
-        <div className="font-semibold border-b pb-2 flex items-center gap-2 pt-4">
+      {/* Elevation */}
+      <div className="flex items-center justify-between border-b pb-2">
+        <div className="flex items-center gap-2">
           <Mountain className="h-4 w-4" />
-          Elevation
+          <span className="font-semibold">Elevation</span>
+          <TooltipWrapper tooltipKey="elevation" showIcon />
         </div>
-        <div className="border-b pb-2 pt-4">
+        <div>
           {data.elevation.min === null ? (
-            <LoadingPulse />
+            <LoadingState />
           ) : (
-            <div className="space-y-1">
-              <div className="text-sm">
-                <span className="font-medium">Min: </span>
-                {data.elevation.min}m
+            <div className="space-y-1 text-right">
+              <div className="flex justify-between">
+                <span>Minimum:</span>
+                <span>{data.elevation.min}m</span>
               </div>
-              <div className="text-sm">
-                <span className="font-medium">Max: </span>
-                {data.elevation.max}m
+              <div className="flex justify-between">
+                <span>Maximum:</span>
+                <span>{data.elevation.max}m</span>
               </div>
-              <div className="text-sm">
-                <span className="font-medium">Avg: </span>
-                {data.elevation.avg?.toFixed(1)}m
+              <div className="flex justify-between">
+                <span>Change:</span>
+                <span>{data.elevation.change}m</span>
               </div>
             </div>
           )}
@@ -604,7 +688,7 @@ function BushfireRiskDial({ risk = 'None' }: { risk: RiskCategory }) {
             paddingVertical={0}
           />
           <div className="text-center text-xl font-semibold -mt-0">{risk}</div>
-        </div>
+      </div>
       </CardContent>
     </Card>
   );
@@ -715,122 +799,151 @@ function ContaminationRisk() {
   const selectedProperty = useMapStore((state) => state.selectedProperty);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [contaminationData, setContaminationData] = useState<Array<{
-    SiteName: string;
-  }> | null>(null);
+  const [data, setData] = useState<{
+    contaminatedSites: Array<{ siteName: string }>;
+    epaLicenses: Array<{
+      organisation: string;
+      site: string;
+      primaryActivity: string;
+    }>;
+  }>({
+    contaminatedSites: [],
+    epaLicenses: []
+  });
+
+  const fetchData = async () => {
+    if (!selectedProperty?.geometry) return;
+    
+    setLoading(true);
+    setError(null);
+    
+    try {
+      // Fetch contaminated sites
+      const contaminatedResponse = await fetch(
+        `https://maptest2.environment.nsw.gov.au/arcgis/rest/services/EPA/EPACS/MapServer/1/query?` +
+        `geometry=${encodeURIComponent(JSON.stringify(selectedProperty.geometry))}` +
+        `&geometryType=esriGeometryPolygon` +
+        `&spatialRel=esriSpatialRelIntersects` +
+        `&outFields=SiteName` +
+        `&returnGeometry=false` +
+        `&f=json`
+      );
+
+      // Fetch EPA licenses
+      const licensesResponse = await fetch(
+        `https://maptest1.environment.nsw.gov.au/arcgis/rest/services/EPA/Environment_Protection_Licences/FeatureServer/2/query?` +
+        `geometry=${encodeURIComponent(JSON.stringify(selectedProperty.geometry))}` +
+        `&geometryType=esriGeometryPolygon` +
+        `&spatialRel=esriSpatialRelIntersects` +
+        `&outFields=APName,LocationName,PrimaryFeebasedActivity` +
+        `&returnGeometry=false` +
+        `&f=json`
+      );
+
+      if (!contaminatedResponse.ok || !licensesResponse.ok) {
+        throw new Error('Failed to fetch environmental data');
+      }
+
+      const contaminatedData = await contaminatedResponse.json();
+      const licensesData = await licensesResponse.json();
+
+      setData({
+        contaminatedSites: contaminatedData.features?.map((f: any) => ({
+          siteName: f.attributes.SiteName
+        })) || [],
+        epaLicenses: licensesData.features?.map((f: any) => ({
+          organisation: f.attributes.APName,
+          site: f.attributes.LocationName,
+          primaryActivity: f.attributes.PrimaryFeebasedActivity
+        })) || []
+      });
+    } catch (err) {
+      console.error('Error fetching environmental data:', err);
+      setError('Failed to load environmental data. Please try again later.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    async function fetchContaminationData() {
-      if (!selectedProperty?.geometry) {
-        setContaminationData(null);
-        return;
-      }
-      
-      setLoading(true);
-      
-      try {
-        const response = await fetch('/api/proxy/spatial', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            service: 'EPA/EPACS/MapServer/1',
-            params: {
-              geometry: JSON.stringify(selectedProperty.geometry),
-              geometryType: 'esriGeometryPolygon',
-              spatialRel: 'esriSpatialRelIntersects',
-              outFields: 'SiteName',
-              returnGeometry: 'false',
-              f: 'json'
-            }
-          })
-        });
-
-        if (!response.ok) {
-          throw new Error(`API call failed with status: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        console.log('Contamination data received:', data);
-        
-        if (data.features && data.features.length > 0) {
-          setContaminationData(data.features.map((f: any) => ({
-            SiteName: f.attributes.SiteName
-          })));
-        } else {
-          setContaminationData(null);
-        }
-      } catch (error) {
-        console.error('Error fetching contamination data:', error);
-        setError('Failed to fetch contamination data');
-      } finally {
-        setLoading(false);
-      }
+    if (selectedProperty?.geometry) {
+      fetchData();
     }
-
-    fetchContaminationData();
   }, [selectedProperty?.geometry]);
 
-  if (!selectedProperty) {
-    return (
-      <div className="p-4">
-        <Alert>
-          <AlertTitle>Select a property to view contamination assessment</AlertTitle>
-        </Alert>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="p-4">
-        <Alert variant="destructive">
-          <AlertTitle>{error}</AlertTitle>
-        </Alert>
-      </div>
-    );
-  }
-
   return (
-    <Card className="w-full max-w-md mt-4">
-      <CardHeader className="pb-2">
-        <div className="flex items-center gap-2">
-          <CardTitle>Contamination Risk</CardTitle>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <InfoIcon className="h-4 w-4 text-muted-foreground" />
-              </TooltipTrigger>
-              <TooltipContent className="max-w-[500px] max-h-[400px] p-4 overflow-auto text-sm">
-                <p>The list of notified sites contain land that has been notified to the EPA as being potentially contaminated. The list states whether the land is regulated under the CLM Act.</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
-        <CardDescription>EPA contaminated land notifications for selected property</CardDescription>
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <AlertTriangle className="h-5 w-5" />
+          Contamination and Environmental Licenses
+        </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-6">
         {loading ? (
-          <div className="flex items-center justify-center p-4">
-            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          <div className="flex items-center gap-2">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <span>Loading environmental data...</span>
           </div>
-        ) : contaminationData && contaminationData.length > 0 ? (
-          <div className="space-y-4">
-            <Alert variant="destructive">
-              <AlertTitle>EPA Contaminated Sites Found</AlertTitle>
-            </Alert>
-            {contaminationData.map((site, index) => (
-              <div key={index} className="space-y-2">
-                <div className="font-medium">Site {index + 1}</div>
-                <div className="text-sm">Site Name: {site.SiteName}</div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <Alert>
-            <AlertTitle>No EPA Contaminated Sites Found</AlertTitle>
+        ) : error ? (
+          <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
           </Alert>
+        ) : (
+          <>
+            {/* Contaminated Sites Section */}
+            <div>
+              <h3 className="font-semibold mb-2">Contaminated Land</h3>
+              {data.contaminatedSites.length > 0 ? (
+                <div className="space-y-2">
+                  <Alert variant="destructive">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertTitle>Contamination Notice</AlertTitle>
+                    <AlertDescription>
+                      This property has been identified as contaminated land under the Contaminated Land Management Act 1997.
+                    </AlertDescription>
+                  </Alert>
+                  {data.contaminatedSites.map((site, index) => (
+                    <div key={index} className="text-sm">
+                      <strong>Site {index + 1} Name:</strong> {site.siteName}
+        </div>
+                  ))}
+                </div>
+              ) : (
+                <Alert>
+                  <AlertTitle>No Contamination Notices</AlertTitle>
+                  <AlertDescription className="text-muted-foreground italic">
+                    No contamination notices have been identified for this property.
+                  </AlertDescription>
+                </Alert>
+              )}
+      </div>
+
+            {/* EPA Licensed Premises Section */}
+            <div>
+              <h3 className="font-semibold mb-2">EPA Licensed Premises</h3>
+              {data.epaLicenses.length > 0 ? (
+                <div className="space-y-4">
+                  {data.epaLicenses.map((license, index) => (
+                    <div key={index} className="space-y-1 text-sm">
+                      <div><strong>Organisation:</strong> {license.organisation}</div>
+                      <div><strong>Site:</strong> {license.site}</div>
+                      <div><strong>Primary Activity:</strong> {license.primaryActivity}</div>
+        </div>
+                  ))}
+                </div>
+              ) : (
+                <Alert>
+                  <AlertTitle>No EPA Licenses</AlertTitle>
+                  <AlertDescription>
+                    No EPA licensed premises have been identified for this property.
+                  </AlertDescription>
+                </Alert>
+              )}
+            </div>
+          </>
         )}
       </CardContent>
     </Card>
@@ -1150,6 +1263,7 @@ function SalesTab() {
         }
       }
     }
+  
 
     fetchSalesData();
 
@@ -1189,7 +1303,7 @@ function SalesTab() {
         </CardHeader>
         <CardContent>
           {salesData.loading ? (
-            <LoadingPulse />
+            <LoadingState />
           ) : salesData.propertyData.lastSaleDate ? (
             <div className="space-y-2">
               <p>
@@ -1220,7 +1334,7 @@ function SalesTab() {
         </CardHeader>
         <CardContent>
           {salesData.loading ? (
-            <LoadingPulse />
+            <LoadingState />
           ) : salesData.nearbySales && salesData.nearbySales.length > 0 ? (
             <div className="space-y-2">
               <div className="space-y-2">
@@ -1418,7 +1532,7 @@ function PlanningTab() {
         </CardHeader>
         <CardContent>
           {permittedUses.loading ? (
-            <LoadingPulse />
+            <LoadingState />
           ) : permittedUses.error ? (
             <Alert variant="destructive">
               <AlertTitle>Error</AlertTitle>
@@ -1526,7 +1640,8 @@ function AmenitiesTab() {
   const selectedProperty = useMapStore((state) => state.selectedProperty);
   const setBufferGeometry = useMapStore((state) => state.setBufferGeometry);
   const [loading, setLoading] = useState(true);
-  const [searchRadius, setSearchRadius] = useState(2);
+  const searchRadius = useMapStore((state) => state.searchRadius);
+  const setSearchRadius = useMapStore((state) => state.setSearchRadius);
   const [amenities, setAmenities] = useState<Array<{
     type: string;
     name: string;
@@ -1692,7 +1807,7 @@ function AmenitiesTab() {
       const features = amenities.map(amenity => {
         // Convert from Web Mercator to WGS84
         const x = (amenity.geometry.x * 180) / 20037508.34;
-        const y = (Math.atan(Math.exp((amenity.geometry.y * Math.PI) / 20037508.34)) * 360) / Math.PI - 90;
+        const y = (Math.atan(Math.exp((amenity.geometry.y * Math.PI) / 20037508.34)) * 360 / Math.PI - 90);
         
         return {
           type: "Feature",
@@ -1733,6 +1848,10 @@ function AmenitiesTab() {
     }
   };
 
+  const [debouncedRadius] = useState(() => 
+    debounce((value: number) => setSearchRadius(value), 300)
+  );
+
   return (
     <div className="p-4">
       <Card>
@@ -1744,7 +1863,12 @@ function AmenitiesTab() {
             </div>
             <Slider
               value={[searchRadius]}
-              onValueChange={([value]) => setSearchRadius(value)}
+              onValueChange={([value]) => {
+                // Update the display immediately
+                setSearchRadius(value);
+                // Debounce the actual data fetch
+                debouncedRadius(value);
+              }}
               min={0.5}
               max={10}
               step={0.5}
@@ -1821,6 +1945,7 @@ function DemographicsTab() {
   const [genderData, setGenderData] = useState<Array<{ name: string; value: number }>>([]);
   const [ageData, setAgeData] = useState<Array<{ name: string; value: number }>>([]);
   const [populationData, setPopulationData] = useState<Array<{ year: number; population: number }>>([]);
+  const [sa2Name, setSa2Name] = useState<string>('');
 
   useEffect(() => {
     async function fetchCensusData() {
@@ -1835,7 +1960,7 @@ function DemographicsTab() {
 
         // Convert to WGS84
         const longitude = (centerX * 180) / 20037508.34;
-        const latitude = (Math.atan(Math.exp((centerY * Math.PI) / 20037508.34)) * 360) / Math.PI - 90;
+        const latitude = (Math.atan(Math.exp((centerY * Math.PI) / 20037508.34)) * 360 / Math.PI - 90);
 
         // Fetch both demographic and population data
         const [censusResponse, populationResponse] = await Promise.all([
@@ -1897,16 +2022,43 @@ function DemographicsTab() {
 
         // Process population data
         if (populationData.features?.[0]?.attributes) {
-          const attributes = populationData.features[0].attributes;
-          const timeSeriesData = Array.from({ length: 21 }, (_, i) => {
-            const year = 2001 + i;
-            return {
-              year,
-              population: attributes[`ERP_no_${year}`] || 0
-            };
-          }).filter(d => d.population > 0);
+          try {
+            // Get projected data first
+            const { data: projectedData, sa2Name: name } = await fetchPopulationData(selectedProperty.geometry);
+            setSa2Name(name);
 
-          setPopulationData(timeSeriesData);
+            // Then get historical data
+            const attributes = populationData.features[0].attributes;
+            const historicalData = Array.from({ length: 21 }, (_, i) => {
+              const year = 2001 + i;
+              return {
+                year,
+                population: attributes[`ERP_no_${year}`] || 0
+              };
+            }).filter(d => d.population > 0);
+
+            // Merge historical and projected data, preferring historical where they overlap
+            const mergedData = [...historicalData];
+            projectedData.forEach(proj => {
+              if (!mergedData.some(hist => hist.year === proj.year)) {
+                mergedData.push(proj);
+              }
+            });
+
+            // Sort by year
+            setPopulationData(mergedData.sort((a, b) => a.year - b.year));
+          } catch (projectionError) {
+            console.error('Error fetching population projections:', projectionError);
+            // If projection fails, still show historical data
+            const historicalData = Array.from({ length: 21 }, (_, i) => {
+              const year = 2001 + i;
+              return {
+                year,
+                population: attributes[`ERP_no_${year}`] || 0
+              };
+            }).filter(d => d.population > 0);
+            setPopulationData(historicalData);
+          }
         }
 
       } catch (error) {
@@ -2015,24 +2167,28 @@ function DemographicsTab() {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Population Over Time</CardTitle>
-          <CardDescription>Historical population trends (2001-2021)</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <div className="flex items-center justify-center h-[300px]">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-            </div>
-          ) : populationData.length > 0 ? (
-            <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart
-                  data={populationData}
-                  margin={{ top: 20, right: 30, left: 30, bottom: 20 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" />
+      <TooltipProvider>
+        <Card>
+          <CardHeader>
+            <CardTitle>Population Over Time</CardTitle>
+            <CardDescription>Historical and projected population for this SA2 region</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <ResponsiveContainer width="100%" height={300}>
+                <ComposedChart data={populationData}>
+                  <ReferenceArea
+                    x1="2020"
+                    x2="2022"
+                    fill="#d7153a"
+                    fillOpacity={0.1}
+                    label={{
+                      value: "COVID-19 Period",
+                      position: "insideTop",
+                      fill: "#d7153a",
+                      fontSize: 12
+                    }}
+                  />
                   <XAxis
                     dataKey="year"
                     type="number"
@@ -2040,90 +2196,169 @@ function DemographicsTab() {
                     tickFormatter={(value) => value.toString()}
                     tick={{ fontSize: 11 }}
                   />
-                  <YAxis
-                    tick={{ fontSize: 11 }}
+                  <YAxis 
+                    domain={['auto', 'auto']} 
                     tickFormatter={(value) => value.toLocaleString()}
+                    tick={{ fontSize: 11 }}
                   />
-                  <RechartsTooltip
-                    formatter={(value: number) => [value.toLocaleString(), 'Population']}
-                    labelFormatter={(year) => `Year: ${year}`}
+                  <RechartsTooltip 
+                    content={({ active, payload, label }) => {
+                      if (active && payload && payload.length > 0) {
+                        // Find the relevant line (historical or projected)
+                        const relevantData = payload.find(p => 
+                          label <= 2024 ? p.name === "Historical" : p.name === "Projected"
+                        );
+                        
+                        if (!relevantData) return null;
+
+                        return (
+                          <div className="bg-popover text-popover-foreground rounded-md shadow-md p-2 text-sm">
+                            <div>{label}</div>
+                            <div className="font-medium">
+                              {relevantData.name}: {relevantData.value.toLocaleString()}
+                            </div>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
                   />
+                  <Legend />
                   <Line
+                    name="Historical"
                     type="monotone"
+                    data={populationData.filter(d => d.year <= 2024)}
                     dataKey="population"
                     stroke="#1E4FD9"
                     strokeWidth={2}
-                    dot={{ r: 3 }}
+                    dot={false}
                   />
-                </LineChart>
+                  <Line
+                    name="Projected"
+                    type="monotone"
+                    data={populationData.filter(d => d.year > 2024)}
+                    dataKey="population"
+                    stroke="#9CA3AF"
+                    strokeWidth={2}
+                    strokeDasharray="5 5"
+                    dot={false}
+                  />
+                </ComposedChart>
               </ResponsiveContainer>
+              <div className="text-xs text-muted-foreground italic">
+                <a 
+                  href="https://www.planning.nsw.gov.au/research-and-demography/population-projections/explore-the-data"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:underline"
+                >
+                  Source: NSW Department of Planning, Housing and Infrastructure
+                </a>
+              </div>
             </div>
-          ) : (
-            <p className="text-sm text-muted-foreground">No population data available</p>
-          )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </TooltipProvider>
     </div>
   );
 }
 
 async function fetchElevationData(geometry: any) {
-  console.log('🗺️ Starting elevation data fetch...');
   try {
-    // Convert Web Mercator to WGS84 coordinates
+    const response = await fetch('/api/proxy', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        url: 'https://portal.spatial.nsw.gov.au/server/rest/services/NSW_Elevation/MapServer/0/query',
+        params: {
+          geometry: JSON.stringify(geometry),
+          geometryType: 'esriGeometryPolygon',
+          spatialRel: 'esriSpatialRelIntersects',
+          outFields: 'ELEVATION',
+          returnGeometry: false,
+          f: 'json'
+        }
+      })
+    });
+
+    const data = await response.json();
+    
+    if (data.features?.length > 0) {
+      const elevations = data.features.map((f: any) => f.attributes.ELEVATION);
+      const min = Math.min(...elevations);
+      const max = Math.max(...elevations);
+      
+      return {
+        min,
+        max,
+        change: max - min
+      };
+    }
+
+    // If no direct hits, try with buffered geometry
     const rings = geometry.rings[0].map((coord: number[]) => [
       (coord[0] * 180) / 20037508.34,
       (Math.atan(Math.exp((coord[1] * Math.PI) / 20037508.34)) * 360 / Math.PI - 90)
     ]);
+
+    const polygon = turf.polygon([rings]);
+    const buffered = turf.buffer(polygon, 0.1, { units: 'kilometers' });
+    const bufferedCoords = buffered.geometry.coordinates[0].map((coord: number[]) => [
+      (coord[0] * 20037508.34) / 180,
+      Math.log(Math.tan((90 + coord[1]) * Math.PI / 360)) / (Math.PI / 180) * 20037508.34 / 180
+    ]);
+
+    const bufferedGeometry = {
+      rings: [bufferedCoords],
+      spatialReference: { wkid: 102100 }
+    };
+
+    const bufferedResponse = await fetch('/api/proxy', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        url: 'https://portal.spatial.nsw.gov.au/server/rest/services/NSW_Elevation/MapServer/0/query',
+        params: {
+          geometry: JSON.stringify(bufferedGeometry),
+          geometryType: 'esriGeometryPolygon',
+          spatialRel: 'esriSpatialRelIntersects',
+          outFields: 'ELEVATION',
+          returnGeometry: true,
+          f: 'json'
+        }
+      })
+    });
+
+    const bufferedData = await bufferedResponse.json();
     
-    console.log('🔄 Converted coordinates:', rings);
-
-    const queryGeometry = {
-      rings: [rings],
-          spatialReference: { wkid: 4326 }
-        };
-
-    console.log('📍 Query geometry:', queryGeometry);
-
-    const url = `https://portal.spatial.nsw.gov.au/server/rest/services/NSW_Elevation_and_Depth_Theme/FeatureServer/2/query?` +
-      `geometry=${encodeURIComponent(JSON.stringify(queryGeometry))}` +
-      `&geometryType=esriGeometryPolygon` +
-      `&spatialRel=esriSpatialRelIntersects` +
-      `&outFields=elevation` +
-      `&returnGeometry=false` +
-      `&inSR=4326` +
-      `&f=json`;
-
-    console.log('🌐 Fetching from URL:', url);
-
-    const response = await fetch(url);
-    console.log('📥 Response status:', response.status);
-
-    if (!response.ok) throw new Error(`Failed to fetch elevation data: ${response.status}`);
-    
-    const data = await response.json();
-    console.log('📦 Raw elevation data:', data);
-        
-        if (data.features && data.features.length > 0) {
-      // Extract elevation values from contour lines that intersect with the property
-      const elevations = data.features.map((f: any) => f.attributes.elevation);
-      console.log('📊 Elevation values:', elevations);
+    if (bufferedData.features?.length > 0) {
+      const elevations = bufferedData.features.map((f: any) => f.attributes.ELEVATION);
+      const min = Math.min(...elevations);
+      const max = Math.max(...elevations);
       
-      const result = {
-        min: Math.min(...elevations),
-        max: Math.max(...elevations),
-        avg: elevations.reduce((a: number, b: number) => a + b, 0) / elevations.length
+      return {
+        min,
+        max,
+        change: max - min
       };
-      
-      console.log('✨ Processed elevation data:', result);
-      return result;
     }
-    
-    console.log('⚠️ No elevation features found');
-    return { min: null, max: null, avg: null };
+
+    return {
+              min: null,
+              max: null,
+              change: null
+    };
   } catch (error) {
-    console.error('❌ Error fetching elevation data:', error);
-    return { min: null, max: null, avg: null };
+    console.error('Error fetching elevation data:', error);
+    return {
+      min: null,
+      max: null,
+      change: null
+    };
   }
 }
 
@@ -2175,7 +2410,10 @@ export function AnalyticsPanel() {
         defaultValue="overview" 
         orientation="vertical" 
         className="h-full flex"
-        onValueChange={setCurrentTab}
+        onValueChange={(value) => {
+          setCurrentTab(value);
+          useMapStore.getState().setCurrentTab(value);
+        }}
       >
         <div className="border-r w-[60px] flex flex-col">
           <div className="h-[175px] border-b"></div>
@@ -2250,9 +2488,7 @@ export function AnalyticsPanel() {
               
               <TabsContent value="development" className="h-full">
                 <ScrollArea className="h-full">
-                  <div className="p-4">
-                    <p className="text-sm text-muted-foreground">Development applications coming soon</p>
-                  </div>
+                  <DevelopmentTab />
                 </ScrollArea>
               </TabsContent>
               
@@ -2325,4 +2561,118 @@ export function useOnlineUsers(channel: string) {
   }, [channel]);
 
   return onlineCount;
+}
+
+interface FieldDescription {
+  name: string;
+  description: string;
+  source?: string;
+}
+
+// Add this before the component definitions
+const fieldDescriptions: Record<string, FieldDescription> = {
+  address: {
+    name: "Address",
+    description: "Official property address as registered with NSW Land Registry Services",
+    source: "NSW Land Registry Services"
+  },
+  lga: {
+    name: "Local Government Area",
+    description: "The local council or administrative area that the property falls within",
+    source: "NSW Department of Planning and Environment"
+  },
+  lot: {
+    name: "Lot Description",
+    description: "The legal lot and deposited plan (DP) or strata plan (SP) number that uniquely identifies the property",
+    source: "NSW Land Registry Services"
+  },
+  area: {
+    name: "Site Area",
+    description: "Total land area of the property in square meters",
+    source: "NSW Land Registry Services"
+  },
+  elevation: {
+    name: "Elevation",
+    description: "Height above sea level in meters, showing minimum, maximum, and average elevation across the property",
+    source: "NSW Department of Customer Service (Spatial Services)"
+  }
+};
+
+function PropertyDetail({ label, value, fieldKey }: { label: string; value: string | number | null; fieldKey: string }) {
+  return (
+    <div className="flex items-center justify-between">
+      <div className="flex items-center gap-2">
+        <span className="font-medium">{label}:</span>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <InfoIcon className="h-4 w-4 text-muted-foreground cursor-help" />
+            </TooltipTrigger>
+            <TooltipContent side="right" className="max-w-[300px]">
+              <p>{fieldDescriptions[fieldKey].description}</p>
+              {fieldDescriptions[fieldKey].source && (
+                <p className="mt-2 text-sm text-muted-foreground">
+                  <strong>Source:</strong> {fieldDescriptions[fieldKey].source}
+                </p>
+              )}
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </div>
+      <span>{value || 'Not available'}</span>
+    </div>
+  );  
+}
+
+interface PopulationData {
+  year: number;
+  population: number;
+}
+
+async function fetchPopulationData(geometry: any) {
+  // Convert Web Mercator to WGS84 coordinates for the centroid
+  const rings = geometry.rings[0];
+  const centerX = rings.reduce((sum: number, coord: number[]) => sum + coord[0], 0) / rings.length;
+  const centerY = rings.reduce((sum: number, coord: number[]) => sum + coord[1], 0) / rings.length;
+
+  // Convert to WGS84
+  const longitude = (centerX * 180) / 20037508.34;
+  const latitude = (Math.atan(Math.exp((centerY * Math.PI) / 20037508.34)) * 360 / Math.PI - 90);
+
+  // Fetch SA2 data using the same coordinate system as other queries
+  const response = await fetch(
+    `https://services1.arcgis.com/v8Kimc579yljmjSP/ArcGIS/rest/services/ASGS_2021_SA2/FeatureServer/0/query?` +
+    `geometry=${longitude},${latitude}&` +
+    `geometryType=esriGeometryPoint&` +
+    `inSR=4326&` +
+    `spatialRel=esriSpatialRelIntersects&` +
+    `outFields=SA2_NAME_2021&` +
+    `returnGeometry=false&` +
+    `f=json`
+  );
+
+  const data = await response.json();
+  const sa2Name = data.features?.[0]?.attributes?.SA2_NAME_2021;
+
+  if (!sa2Name) {
+    throw new Error('Could not find SA2 region');
+  }
+
+  // Load population data
+  const populationData = await loadPopulationData();
+  const yearlyData = populationData[sa2Name];
+
+  if (!yearlyData) {
+    throw new Error('Could not find population projections for this area');
+  }
+
+  return {
+    data: Object.entries(yearlyData)
+      .map(([year, population]) => ({
+        year: Number(year),
+        population: Number(population)
+      }))
+      .sort((a, b) => a.year - b.year),
+    sa2Name
+  };
 }

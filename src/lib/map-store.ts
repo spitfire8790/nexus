@@ -3,11 +3,12 @@ import { create } from 'zustand';
 export interface MapLayer {
   id: string;
   name: string;
-  url: string;
+  url?: string;
   enabled: boolean;
   opacity?: number;
   attribution?: string;
-  type?: 'tile' | 'dynamic' | 'geojson';
+  type?: 'tile' | 'wms' | 'geojson' | 'custom' | 'dynamic';
+  wmsLayers?: string;
   layerId?: number;
   showLabels?: boolean;
   filter?: string;
@@ -15,6 +16,7 @@ export interface MapLayer {
   className?: string;
   hidden?: boolean;
   data?: GeoJSON.GeoJsonObject;
+  tooltipKey?: string;
 }
 
 interface PropertyData {
@@ -46,6 +48,12 @@ interface MapState {
   setLayerGroups: (groups: LayerGroup[]) => void;
   mapInstance: L.Map | null;
   setMapInstance: (map: L.Map | null) => void;
+  currentTab: string;
+  setCurrentTab: (tab: string) => void;
+  searchRadius: number;
+  setSearchRadius: (radius: number) => void;
+  buildings3D: boolean;
+  setBuildings3D: (enabled: boolean) => void;
 }
 
 export interface ZoneOption {
@@ -262,6 +270,31 @@ export const useMapStore = create<MapState>((set) => ({
           layerId: 1,
           opacity: 0.7,
           attribution: '© NSW Government - EPA'
+        },
+        {
+          id: 'epa-licenses',
+          name: 'EPA Licensed Premises',
+          url: 'https://maptest1.environment.nsw.gov.au/arcgis/rest/services/EPA/Environment_Protection_Licences/MapServer',
+          enabled: false,
+          type: 'dynamic',
+          layerId: 2,
+          opacity: 0.7,
+          attribution: '© NSW Government - EPA'
+        }
+      ]
+    },
+    {
+      id: '3d',
+      name: '3D Features',
+      layers: [
+        {
+          id: 'buildings3d',
+          name: '3D Buildings',
+          type: 'custom',
+          enabled: false,
+          opacity: 1,
+          attribution: '© OSM Buildings',
+          tooltipKey: 'buildings3d'
         }
       ]
     }
@@ -272,9 +305,16 @@ export const useMapStore = create<MapState>((set) => ({
     set((state) => ({
       layerGroups: state.layerGroups.map(group => ({
         ...group,
-        layers: group.layers.map(layer =>
-          layer.id === id ? { ...layer, enabled: !layer.enabled } : layer
-        )
+        layers: group.layers.map(layer => {
+          if (layer.id === id) {
+            if (!layer.enabled && layer.type === 'wms' && !layer.wmsLayers) {
+              console.warn(`Layer ${id} is missing wmsLayers property`);
+              return layer;
+            }
+            return { ...layer, enabled: !layer.enabled };
+          }
+          return layer;
+        })
       }))
     })),
 
@@ -321,4 +361,10 @@ export const useMapStore = create<MapState>((set) => ({
   setLayerGroups: (groups) => set({ layerGroups: groups }),
   mapInstance: null,
   setMapInstance: (map) => set({ mapInstance: map }),
+  currentTab: 'overview',
+  setCurrentTab: (tab) => set({ currentTab: tab }),
+  searchRadius: 2,
+  setSearchRadius: (radius) => set({ searchRadius: radius }),
+  buildings3D: false,
+  setBuildings3D: (enabled) => set({ buildings3D: enabled })
 }));

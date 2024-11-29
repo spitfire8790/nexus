@@ -1,16 +1,17 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 
-type PresenceState = {
-  username: string;
+interface PresenceState {
+  username?: string;
   isTyping: boolean;
   online_at: string;
-};
+}
 
 export function useOnlineUsers(channel: string, username?: string) {
   const [onlineUsers, setOnlineUsers] = useState<Record<string, PresenceState>>({});
-  const [isTyping, setIsTyping] = useState(false);
-  
+  const [typingUsers, setTypingUsers] = useState<string[]>([]);
+  const typingTimeoutRef = useRef<Record<string, NodeJS.Timeout>>({});
+
   useEffect(() => {
     const presence = supabase.channel(`presence_${channel}`, {
       config: {
@@ -20,12 +21,17 @@ export function useOnlineUsers(channel: string, username?: string) {
       },
     });
 
-    let typingTimeout: NodeJS.Timeout;
-
     presence
       .on('presence', { event: 'sync' }, () => {
         const state = presence.presenceState();
         setOnlineUsers(state as Record<string, PresenceState>);
+        
+        // Update typing users based on presence state
+        const typing = Object.values(state)
+          .filter(user => user.isTyping)
+          .map(user => user.username)
+          .filter(Boolean);
+        setTypingUsers(typing);
       })
       .on('presence', { event: 'join' }, ({ key, newPresence }) => {
         setOnlineUsers(prev => ({ ...prev, [key]: newPresence }));
@@ -38,7 +44,7 @@ export function useOnlineUsers(channel: string, username?: string) {
         });
       })
       .subscribe(async (status) => {
-        if (status === 'SUBSCRIBED') {
+        if (status === 'SUBSCRIBED' && username) {
           await presence.track({
             username,
             isTyping: false,
@@ -47,25 +53,30 @@ export function useOnlineUsers(channel: string, username?: string) {
         }
       });
 
-    const updateTyping = async (typing: boolean) => {
-      await presence.track({
-        username,
-        isTyping: typing,
-        online_at: new Date().toISOString()
-      });
-    };
-
     return () => {
-      clearTimeout(typingTimeout);
+      Object.values(typingTimeoutRef.current).forEach(clearTimeout);
       presence.unsubscribe();
     };
   }, [channel, username]);
 
-  const setTyping = async (typing: boolean) => {
-    setIsTyping(typing);
+  const setTyping = async (isTyping: boolean) => {
+    if (!username) return;
+
+    // Clear existing timeout for this user
+    if (typingTimeoutRef.current[username]) {
+      clearTimeout(typingTimeoutRef.current[username]);
+    }
+
+    // Set a new timeout to clear typing state
+    if (isTyping) {
+      typingTimeoutRef.current[username] = setTimeout(() => {
+        setTyping(false);
+      }, 3000);
+    }
+
     await supabase.channel(`presence_${channel}`).track({
       username,
-      isTyping: typing,
+      isTyping,
       online_at: new Date().toISOString()
     });
   };
@@ -73,7 +84,7 @@ export function useOnlineUsers(channel: string, username?: string) {
   return {
     onlineUsers,
     onlineCount: Object.keys(onlineUsers).length,
-    typingUsers: Object.values(onlineUsers).filter(u => u.isTyping && u.username !== username),
+    typingUsers: typingUsers.filter(user => user !== username),
     setTyping
   };
 } 

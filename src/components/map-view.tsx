@@ -8,6 +8,8 @@ import '@geoman-io/leaflet-geoman-free';
 import '@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css';
 import 'esri-leaflet-geocoder/dist/esri-leaflet-geocoder.css';
 import { useMapStore } from '@/lib/map-store';
+import { Deck } from '@deck.gl/core';
+import { GeoJsonLayer } from '@deck.gl/layers';
 
 // Fix for default marker icons in Leaflet with Vite
 import icon from 'leaflet/dist/images/marker-icon.png';
@@ -33,6 +35,7 @@ const OVERLAY_PANE = 'overlay-pane';
 const OVERLAY_PANE_Z_INDEX = 400;
 const BOUNDARY_PANE = 'boundary';
 const BOUNDARY_PANE_Z_INDEX = 600;
+const RADIUS_PANE = 'radius-pane';
 
 function MapClickHandler() {
   const { setSelectedProperty } = useMapStore();
@@ -129,6 +132,11 @@ function MapController() {
       map.getPane(BOUNDARY_PANE)!.style.zIndex = BOUNDARY_PANE_Z_INDEX.toString();
     }
 
+    if (!map.getPane(RADIUS_PANE)) {
+      map.createPane(RADIUS_PANE);
+      map.getPane(RADIUS_PANE)!.style.zIndex = '399';
+    }
+
     // Initialize Leaflet.Geoman controls
     map.pm.addControls({
       position: 'topleft',
@@ -202,96 +210,77 @@ function CoordinateDisplay({ position }: { position: L.LatLng | null }) {
 function OverlayLayers() {
   const map = useMap();
   const layerGroups = useMapStore((state) => state.layerGroups);
-  const layerRefs = useRef<{ [key: string]: L.Layer }>({});
+  const layerRefs = useRef<Record<string, any>>({});
 
   useEffect(() => {
-    layerGroups.forEach(group => {
-      group.layers.forEach(layer => {
-        // Remove existing layer if it exists
+    const allLayers = layerGroups.flatMap(group => group.layers);
+
+    allLayers.forEach(layer => {
+      if (layer.enabled) {
+        // Skip custom layers as they're handled by their own components
+        if (layer.type === 'custom') {
+          return;
+        }
+
+        if (!layerRefs.current[layer.id]) {
+          if (layer.type === 'dynamic') {
+            const layerOptions: any = {
+              url: layer.url,
+              layers: [layer.layerId],
+              opacity: layer.opacity,
+              pane: OVERLAY_PANE,
+            };
+
+            if (layer.filter) {
+              layerOptions.layerDefs = {
+                [layer.layerId!]: layer.filter
+              };
+            }
+
+            layerRefs.current[layer.id] = EL.dynamicMapLayer(layerOptions).addTo(map);
+          } else if (layer.type === 'tile') {
+            layerRefs.current[layer.id] = L.tileLayer(layer.url || '', {
+              opacity: layer.opacity,
+              attribution: layer.attribution,
+              className: layer.className,
+              pane: OVERLAY_PANE
+            }).addTo(map);
+          } else if (layer.type === 'geojson') {
+            layerRefs.current[layer.id] = L.geoJSON(layer.data, {
+              pane: OVERLAY_PANE,
+              pointToLayer: (_feature, latlng) => {
+                return L.circleMarker(latlng, {
+                  radius: 8,
+                  fillColor: "#2563eb",
+                  color: "#fff",
+                  weight: 1,
+                  opacity: layer.opacity,
+                  fillOpacity: 0.8
+                });
+              }
+            }).addTo(map);
+          }
+        }
+        
+        // Only try to set opacity for non-custom layers
+        if (layerRefs.current[layer.id] && layer.type && layer.type !== 'custom') {
+          layerRefs.current[layer.id].setOpacity(layer.opacity || 1);
+        }
+      } else {
         if (layerRefs.current[layer.id]) {
           map.removeLayer(layerRefs.current[layer.id]);
           delete layerRefs.current[layer.id];
         }
-
-        if (layer.enabled) {
-          // Handle GeoJSON layers
-          if (layer.type === 'geojson' && layer.data) {
-            const geojsonLayer = L.geoJSON(layer.data as GeoJSON.GeoJsonObject, {
-              pointToLayer: (feature, latlng) => {
-                // Create custom marker for sales points
-                const index = (layer.data as any).features.indexOf(feature) + 1;
-                const icon = L.divIcon({
-                  className: 'custom-div-icon',
-                  html: `<div class="w-6 h-6 flex items-center justify-center rounded-full bg-white border-2 border-red-500 text-red-500 text-xs font-medium">${index}</div>`,
-                  iconSize: [24, 24],
-                  iconAnchor: [12, 12]
-                });
-                
-                return L.marker(latlng, { icon });
-              },
-              onEachFeature: (feature, layer) => {
-                if (feature.properties) {
-                  const popupContent = `
-                    <div class="text-sm">
-                      <div class="font-medium">${feature.properties.address}</div>
-                      <div>${new Date(feature.properties.sale_date).toLocaleDateString()}</div>
-                      <div class="font-semibold text-blue-600">$${feature.properties.price.toLocaleString()}</div>
-                      <div>${feature.properties.distance} away</div>
-                    </div>
-                  `;
-                  layer.bindPopup(popupContent);
-                }
-              }
-            });
-            
-            layerRefs.current[layer.id] = geojsonLayer;
-            geojsonLayer.addTo(map);
-          } 
-          // Handle other layer types (WMS, etc)
-          else if (layer.url) {
-            layerRefs.current[layer.id] = L.tileLayer.wms(layer.url, {
-              layers: layer.wmsLayers,
-              format: 'image/png',
-              transparent: true,
-              opacity: layer.opacity
-            }).addTo(map);
-          }
-        }
-      });
+      }
     });
 
-    // Cleanup function
     return () => {
       Object.values(layerRefs.current).forEach(layer => {
-        if (map.hasLayer(layer)) {
-          map.removeLayer(layer);
-        }
+        if (layer) map.removeLayer(layer);
       });
       layerRefs.current = {};
     };
   }, [map, layerGroups]);
-
-  // Update layer opacity
-  useEffect(() => {
-    layerGroups.forEach(group => {
-      group.layers.forEach(layer => {
-        const mapLayer = layerRefs.current[layer.id];
-        if (mapLayer) {
-          if (layer.type === 'geojson') {
-            // For GeoJSON layers, we need to update style for all features
-            if (mapLayer instanceof L.GeoJSON) {
-              mapLayer.setStyle({
-                opacity: layer.opacity,
-                fillOpacity: layer.opacity * 0.2
-              });
-            }
-          } else if (mapLayer instanceof L.TileLayer) {
-            mapLayer.setOpacity(layer.opacity);
-          }
-        }
-      });
-    });
-  }, [layerGroups]);
 
   return null;
 }
@@ -372,6 +361,261 @@ function PropertyBoundary() {
   return null;
 }
 
+interface SearchRadiusCircleProps {
+  radius?: number;
+}
+
+export function SearchRadiusCircle({ radius = 2000 }: SearchRadiusCircleProps) {
+  const map = useMap();
+  const selectedProperty = useMapStore((state) => state.selectedProperty);
+  const circleRef = useRef<L.Circle | null>(null);
+
+  useEffect(() => {
+    if (selectedProperty?.geometry) {
+      // Remove existing circle if it exists
+      if (circleRef.current) {
+        map.removeLayer(circleRef.current);
+      }
+
+      // Calculate centroid from property geometry
+      const rings = selectedProperty.geometry.rings[0];
+      const centerX = rings.reduce((sum: number, coord: number[]) => sum + coord[0], 0) / rings.length;
+      const centerY = rings.reduce((sum: number, coord: number[]) => sum + coord[1], 0) / rings.length;
+
+      // Convert to WGS84
+      const point = L.point(centerX, centerY);
+      const latLng = L.CRS.EPSG3857.unproject(point);
+
+      // Create circle
+      circleRef.current = L.circle(latLng, {
+        radius: radius,
+        pane: RADIUS_PANE,
+        color: '#000000', // black outline
+        weight: 1.5,
+        opacity: 0.6,
+        fillColor: '#e5e7eb', // gray-200
+        fillOpacity: 0.15
+      }).addTo(map);
+
+      // Calculate bounds that include both the property and the circle
+      const circleBounds = circleRef.current.getBounds();
+      const propertyBounds = L.latLngBounds(
+        selectedProperty.geometry.rings[0].map((coord: number[]) => {
+          const pt = L.point(coord[0], coord[1]);
+          return L.CRS.EPSG3857.unproject(pt);
+        })
+      );
+
+      // Fit map to combined bounds with smooth animation
+      const bounds = circleBounds.extend(propertyBounds);
+      map.fitBounds(bounds, {
+        padding: [50, 50],
+        duration: 1.2, // animation duration in seconds
+        easeLinearity: 0.25
+      });
+    }
+
+    return () => {
+      if (circleRef.current) {
+        map.removeLayer(circleRef.current);
+      }
+    };
+  }, [map, selectedProperty, radius]);
+
+  return null;
+}
+
+function MapLayerController() {
+  const map = useMap();
+  const currentTab = useMapStore((state) => state.currentTab);
+  const searchRadius = useMapStore((state) => state.searchRadius);
+  const circleRef = useRef<L.Circle | null>(null);
+  const selectedProperty = useMapStore((state) => state.selectedProperty);
+
+  useEffect(() => {
+    if (currentTab === 'amenities' && selectedProperty?.geometry) {
+      // Calculate centroid from property geometry
+      const rings = selectedProperty.geometry.rings[0];
+      const centerX = rings.reduce((sum: number, coord: number[]) => sum + coord[0], 0) / rings.length;
+      const centerY = rings.reduce((sum: number, coord: number[]) => sum + coord[1], 0) / rings.length;
+
+      // Convert to WGS84
+      const point = L.point(centerX, centerY);
+      const latLng = L.CRS.EPSG3857.unproject(point);
+
+      // Create circle
+      circleRef.current = L.circle(latLng, {
+        radius: searchRadius * 1000,
+        pane: RADIUS_PANE,
+        color: '#22c55e', // green-500
+        weight: 2,
+        opacity: 0.8,
+        fillOpacity: 0.1
+      }).addTo(map);
+
+      // Calculate bounds that include both the property and the circle
+      const circleBounds = circleRef.current.getBounds();
+      const propertyBounds = L.latLngBounds(
+        selectedProperty.geometry.rings[0].map((coord: number[]) => {
+          const pt = L.point(coord[0], coord[1]);
+          return L.CRS.EPSG3857.unproject(pt);
+        })
+      );
+
+      // Fit map to combined bounds
+      const bounds = circleBounds.extend(propertyBounds);
+      map.fitBounds(bounds, { padding: [50, 50] });
+    }
+
+    return () => {
+      if (circleRef.current) {
+        map.removeLayer(circleRef.current);
+        circleRef.current = null;
+      }
+    };
+  }, [map, currentTab, searchRadius, selectedProperty]);
+
+  return null;
+}
+
+function Buildings3D() {
+  const map = useMap();
+  const layerGroups = useMapStore((state) => state.layerGroups);
+  const buildings3dLayer = layerGroups
+    .find(g => g.id === '3d')
+    ?.layers.find(l => l.id === 'buildings3d');
+  const deckRef = useRef<Deck | null>(null);
+
+  useEffect(() => {
+    if (!map || !buildings3dLayer?.enabled) return;
+
+    deckRef.current = new Deck({
+      canvas: 'deck-canvas',
+      initialViewState: {
+        latitude: map.getCenter().lat,
+        longitude: map.getCenter().lng,
+        zoom: map.getZoom(),
+        pitch: 45,
+        bearing: 0
+      },
+      controller: false,
+      layers: [
+        new GeoJsonLayer({
+          id: 'buildings3d',
+          // Provide initial empty GeoJSON structure with explicit typing
+          data: {
+            type: 'FeatureCollection' as const,
+            features: [] as any[]
+          },
+          dataTransform: async (data: any) => {
+            try {
+              const response = await fetch(
+                'https://services-ap1.arcgis.com/iA7fZQOnjY9D67Zx/arcgis/rest/services/OSM_AU_Buildings/FeatureServer/0/query?where=1%3D1&outFields=height,building_height&geometryType=esriGeometryPolygon&spatialRel=esriSpatialRelIntersects&outSR=4326&f=geojson'
+              );
+              const jsonData = await response.json();
+              
+              // Check if response has the expected structure
+              if (!jsonData || !jsonData.features) {
+                console.error('Invalid response data:', jsonData);
+                return {
+                  type: 'FeatureCollection' as const,
+                  features: []
+                };
+              }
+
+              // Transform the data
+              return {
+                type: 'FeatureCollection' as const,
+                features: Array.isArray(jsonData.features) ? jsonData.features.map((feature: any) => ({
+                  type: 'Feature',
+                  geometry: {
+                    type: feature.geometry?.type || 'Polygon',
+                    coordinates: feature.geometry?.coordinates || []
+                  },
+                  properties: feature.properties || {}
+                })) : []
+              };
+            } catch (error) {
+              console.error('Error loading GeoJSON data:', error);
+              return {
+                type: 'FeatureCollection' as const,
+                features: []
+              };
+            }
+          },
+          getFillColor: [255, 255, 255, 255],
+          getLineColor: [0, 0, 0, 255],
+          getLineWidth: () => 1,
+          lineWidthMinPixels: 1,
+          getElevation: (d: any) => {
+            if (!d?.properties) return 10;
+            return Number(d.properties.height) || Number(d.properties.building_height) || 10;
+          },
+          elevationScale: 1,
+          pickable: true,
+          autoHighlight: true,
+          wireframe: true,
+          loadOptions: {
+            fetch: {
+              method: 'GET',
+              headers: {
+                'Accept': 'application/json'
+              }
+            }
+          },
+          onDataLoad: (data: any) => {
+            if (!data || !data.features) {
+              console.error('Invalid GeoJSON data:', data);
+            } else {
+              console.log('Successfully loaded GeoJSON data with', data.features.length, 'features');
+            }
+          },
+          updateTriggers: {
+            getElevation: [],
+            data: []
+          }
+        } as any)
+      ],
+      onError: (error) => {
+        console.error('Deck.gl error:', error);
+      },
+      onViewStateChange: ({ viewState }) => {
+        const { latitude, longitude, zoom } = viewState;
+        map.setView([latitude, longitude], zoom, { animate: false });
+      }
+    });
+
+    // Sync deck.gl view with Leaflet
+    const onMapMove = () => {
+      const center = map.getCenter();
+      deckRef.current?.setProps({
+        viewState: {
+          latitude: center.lat,
+          longitude: center.lng,
+          zoom: map.getZoom(),
+          pitch: 45,
+          bearing: 0
+        }
+      });
+    };
+
+    map.on('move', onMapMove);
+
+    return () => {
+      map.off('move', onMapMove);
+      deckRef.current?.finalize();
+      deckRef.current = null;
+    };
+  }, [map, buildings3dLayer?.enabled]);
+
+  return (
+    <canvas
+      id="deck-canvas"
+      className={`deck-canvas ${buildings3dLayer?.enabled ? 'z-[1000]' : '-z-10'}`}
+    />
+  );
+}
+
 export function MapView() {
   const mapRef = useRef<L.Map | null>(null);
   
@@ -388,6 +632,8 @@ export function MapView() {
       <MapClickHandler />
       <OverlayLayers />
       <PropertyBoundary />
+      <MapLayerController />
+      <Buildings3D />
       <LayersControl position="topright">
         <LayersControl.BaseLayer checked name="Carto">
           <TileLayer
@@ -422,4 +668,23 @@ export function MapView() {
       </LayersControl>
     </MapContainer>
   );
+}
+
+function getLayerDescription(layerId: string): { name: string; description: string; source: string; link: string } {
+  const descriptions: Record<string, { name: string; description: string; source: string; link: string }> = {
+    // ... existing descriptions ...
+    'buildings3d': {
+      name: '3D Buildings',
+      description: 'OpenStreetMap 3D building models showing building footprints and heights',
+      source: 'OpenStreetMap Contributors',
+      link: 'https://osmbuildings.org/'
+    }
+  };
+  
+  return descriptions[layerId] || {
+    name: 'Unknown Layer',
+    description: 'No description available',
+    source: 'Unknown',
+    link: ''
+  };
 }
