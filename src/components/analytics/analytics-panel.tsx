@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useMapStore } from '@/lib/map-store';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { MapPin, Building2, FileText, AlertTriangle, DollarSign, Coffee, Users } from 'lucide-react';
+import { MapPin, Building2, FileText, AlertTriangle, DollarSign, Coffee, Users, FileDown } from 'lucide-react';
 import { OverviewTab } from './tabs/overview-tab';
 import { DevelopmentTab } from './tabs/development-tab';
 import { PlanningTab } from './tabs/planning-tab';
@@ -9,11 +9,14 @@ import { ConstraintsTab } from './tabs/constraints-tab';
 import { SalesTab } from './tabs/sales-tab';
 import { AmenitiesTab } from './tabs/amenities-tab';
 import { DemographicsTab } from './tabs/demographics-tab';
+import { ReporterTab } from './tabs/reporter-tab';
+import { cn } from '@/lib/utils';
 
 export function AnalyticsPanel() {
   const selectedProperty = useMapStore((state) => state.selectedProperty);
   const [headerAddress, setHeaderAddress] = useState<string | null>(null);
   const currentTab = useMapStore((state) => state.currentTab);
+  const [isReporterActive, setIsReporterActive] = useState(false);
 
   const getHeaderText = (tab: string) => {
     const headerMap: { [key: string]: string } = {
@@ -23,7 +26,8 @@ export function AnalyticsPanel() {
       constraints: "Site Constraints",
       sales: "Sales History",
       amenities: "Nearby Amenities",
-      demographics: "Local Demographics"
+      demographics: "Local Demographics",
+      reporter: "Generate Report"
     };
     return headerMap[tab] || "Property Details";
   };
@@ -58,12 +62,19 @@ export function AnalyticsPanel() {
         value={currentTab}
         defaultValue="overview" 
         orientation="vertical" 
-        className="h-full flex"
         onValueChange={(value) => {
           useMapStore.getState().setCurrentTab(value);
+          setIsReporterActive(value === "reporter");
         }}
+        className={cn(
+          "h-full flex",
+          isReporterActive && "!fixed inset-0 z-50 bg-background"
+        )}
       >
-        <div className="border-r w-[60px] flex flex-col">
+        <div className={cn(
+          "border-r w-[60px] flex flex-col",
+          isReporterActive && "border-r-0"
+        )}>
           <div className="h-[175px] border-b"></div>
           <TabsList className="flex flex-col gap-6 p-4">
             <TabsTrigger value="overview" className="w-10 h-10 p-0 relative group">
@@ -108,10 +119,19 @@ export function AnalyticsPanel() {
                 Demographics
               </span>
             </TabsTrigger>
+            <TabsTrigger value="reporter" className="w-10 h-10 p-0 relative group">
+              <FileDown className="h-6 w-6" />
+              <span className="absolute left-[calc(100%+0.5rem)] bg-popover text-popover-foreground px-2 py-1 rounded-md text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 shadow-md z-50">
+                Report
+              </span>
+            </TabsTrigger>
           </TabsList>
         </div>
 
-        <div className="flex-1 flex flex-col overflow-hidden">
+        <div className={cn(
+          "flex-1 flex flex-col overflow-hidden",
+          isReporterActive && "w-[calc(100vw-60px)]"
+        )}>
           <div className="p-4 border-b">
             <h2 className="font-semibold">{getHeaderText(currentTab)}</h2>
             {headerAddress && (
@@ -126,6 +146,7 @@ export function AnalyticsPanel() {
             <TabsContent value="sales"><SalesTab /></TabsContent>
             <TabsContent value="amenities"><AmenitiesTab /></TabsContent>
             <TabsContent value="demographics"><DemographicsTab /></TabsContent>
+            <TabsContent value="reporter"><ReporterTab /></TabsContent>
           </div>
         </div>
       </Tabs>

@@ -80,6 +80,33 @@ app.get("/api/proxy", async (req, res) => {
   }
 });
 
+app.post("/api/proxy", async (req, res) => {
+  try {
+    const targetUrl = req.headers['url'] as string;
+    if (!targetUrl) {
+      return res.status(400).json({ error: 'URL header is required' });
+    }
+
+    const response = await axios.post(targetUrl, req.body, {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+
+    res.json(response.data);
+  } catch (error: any) {
+    console.error("❌ Proxy Error:", {
+      status: error.response?.status,
+      data: error.response?.data,
+      message: error.message
+    });
+    res.status(error.response?.status || 500).json({
+      error: error.response?.data || "Internal Server Error",
+      message: error.message,
+    });
+  }
+});
+
 app.post("/api/proxy/spatial", async (req, res) => {
   try {
     const { service, params } = req.body;

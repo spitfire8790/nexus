@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import * as L from 'leaflet';
 
 export interface MapLayer {
   id: string;

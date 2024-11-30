@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useMapStore } from '@/lib/map-store';
-import { Alert, AlertTitle } from '@/components/ui/alert';
+import { Alert, AlertTitle} from '@/components/ui/alert';
 import { Loader2 } from 'lucide-react';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 
 interface PermittedUses {
   withConsent: string[] | null;
@@ -49,7 +50,6 @@ export function PlanningTab() {
           lgaName: zoningLayer.results[0]["LGA Name"]
         };
 
-        // Update global store
         setZoneInfo(zoneInfo);
 
         // Fetch permitted uses
@@ -94,10 +94,24 @@ export function PlanningTab() {
           throw new Error('Failed to fetch permitted uses');
         }
 
-        const permittedData = await permittedResponse.json();
+        const jsonData = await permittedResponse.json();
+        const precinct = jsonData?.[0]?.Precinct?.[0];
+        const zone = precinct?.Zone?.find((z: any) => z.ZoneCode === zoneCode);
+        const landUse = zone?.LandUse?.[0] || {};
+
+        // Remove duplicates and sort alphabetically
+        const withConsentSet: Set<string> = new Set(
+          (landUse.PermittedWithConsent || [])
+            .map((use: { Landuse: string }) => use.Landuse)
+        );
+        const withoutConsentSet: Set<string> = new Set(
+          (landUse.PermittedWithoutConsent || [])
+            .map((use: { Landuse: string }) => use.Landuse)
+        );
+
         setPermittedUses({
-          withConsent: permittedData.withConsent || [],
-          withoutConsent: permittedData.withoutConsent || [],
+          withConsent: [...withConsentSet].sort((a, b) => a.localeCompare(b)),
+          withoutConsent: [...withoutConsentSet].sort((a, b) => a.localeCompare(b)),
           loading: false,
           error: null
         });
@@ -144,42 +158,59 @@ export function PlanningTab() {
   }
 
   return (
-    <div className="p-4 space-y-6">
-      {zoneInfo && (
-        <div>
-          <h3 className="font-semibold mb-2">Zoning</h3>
-          <div className="text-sm space-y-1">
-            <p><span className="text-muted-foreground">Zone:</span> {zoneInfo.zoneName}</p>
-            <p><span className="text-muted-foreground">LGA:</span> {zoneInfo.lgaName}</p>
+    <div className="p-4 space-y-4">
+      <Card>
+        <CardHeader>
+          <CardTitle>Zoning</CardTitle>
+          <CardDescription>Current planning controls for this property</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {zoneInfo ? (
+            <div className="space-y-2">
+              <p><strong>Zone:</strong> {zoneInfo.zoneName}</p>
+              <p><strong>LGA:</strong> {zoneInfo.lgaName}</p>
+            </div>
+          ) : (
+            <p className="text-muted-foreground">No zoning information available</p>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Permitted Uses</CardTitle>
+          <CardDescription>Land uses permitted in this zone</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div>
+              <h4 className="font-medium mb-2">Permitted Without Consent</h4>
+              {permittedUses.withoutConsent?.length ? (
+                <ul className="list-disc list-inside text-sm space-y-1">
+                  {permittedUses.withoutConsent.map((use, index) => (
+                    <li key={index}>{use}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-muted-foreground">No uses permitted without consent</p>
+              )}
+            </div>
+
+            <div>
+              <h4 className="font-medium mb-2">Permitted With Consent</h4>
+              {permittedUses.withConsent?.length ? (
+                <ul className="list-disc list-inside text-sm space-y-1">
+                  {permittedUses.withConsent.map((use, index) => (
+                    <li key={index}>{use}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-muted-foreground">No uses permitted with consent</p>
+              )}
+            </div>
           </div>
-        </div>
-      )}
-
-      <div>
-        <h3 className="font-semibold mb-2">Permitted Without Consent</h3>
-        {permittedUses.withoutConsent?.length ? (
-          <ul className="list-disc list-inside text-sm space-y-1">
-            {permittedUses.withoutConsent.map((use, index) => (
-              <li key={index}>{use}</li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-sm text-muted-foreground">No uses permitted without consent</p>
-        )}
-      </div>
-
-      <div>
-        <h3 className="font-semibold mb-2">Permitted With Consent</h3>
-        {permittedUses.withConsent?.length ? (
-          <ul className="list-disc list-inside text-sm space-y-1">
-            {permittedUses.withConsent.map((use, index) => (
-              <li key={index}>{use}</li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-sm text-muted-foreground">No uses permitted with consent</p>
-        )}
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

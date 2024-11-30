@@ -2,10 +2,27 @@ import { useEffect, useRef, useState } from 'react';
 import { useMapStore } from '@/lib/map-store';
 import { Alert, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Loader2, MapPin } from 'lucide-react';
 import { getPropertyBounds } from '../utils/property-utils';
 import * as L from 'leaflet';
+import * as turf from '@turf/turf';
+
+// Helper function for price formatting
+function formatPrice(price: number): string {
+  if (price >= 1000000) {
+    return `$${(price / 1000000).toFixed(1)}M`;
+  }
+  return `$${(price / 1000).toFixed(0)}K`;
+}
+
+interface Sale {
+  bp_address: string;
+  sale_date: string;
+  price: number;
+  distance: number;
+  coordinates: [number, number];
+}
 
 interface SaleData {
   loading: boolean;
@@ -14,13 +31,43 @@ interface SaleData {
     lastSaleDate: string | null;
     lastSalePrice: number | null;
   };
-  nearbySales: Array<{
-    bp_address: string;
-    sale_date: string;
-    price: number;
-    distance: number;
-    coordinates: [number, number];
-  }> | null;
+  nearbySales: Array<Sale> | null;
+}
+
+// SaleCard component for consistent sale display
+function SaleCard({ sale, index }: { sale: Sale; index: number }) {
+  const [streetAddress, locality] = sale.bp_address.split(',').map(s => s.trim());
+  
+  return (
+    <div className="flex items-center py-1.5">
+      <div className="w-6 h-6 flex-shrink-0 border border-red-500 rounded-full flex items-center justify-center text-xs font-medium text-red-500">
+        {index + 1}
+      </div>
+      <div className="grid grid-cols-12 flex-1 gap-0 min-w-0 ml-2">
+        <div className="col-span-6">
+          <div className="text-xs truncate" title={streetAddress}>
+            {streetAddress}
+          </div>
+          <div className="text-xs text-muted-foreground truncate" title={locality}>
+            {locality}
+          </div>
+        </div>
+        <div className="col-span-3 text-xs">
+          {new Date(sale.sale_date).toLocaleDateString('en-AU', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric'
+          })}
+        </div>
+        <div className="col-span-2 text-xs font-semibold text-blue-600">
+          {formatPrice(sale.price)}
+        </div>
+        <div className="col-span-1 text-xs text-muted-foreground text-right">
+          {Math.round(sale.distance)}m
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export function SalesTab() {
@@ -49,75 +96,65 @@ export function SalesTab() {
   }, [selectedProperty, map]);
 
   const handleToggleOnMap = async () => {
-    if (!salesData.nearbySales?.length || !map) return;
+    console.log('Toggle button clicked');
+    console.log('Sales data:', salesData.nearbySales);
+    console.log('Map instance:', map);
+
+    if (!salesData.nearbySales?.length || !map) {
+        console.log('❌ Missing required data:', {
+            hasSales: Boolean(salesData.nearbySales?.length),
+            hasMap: Boolean(map)
+        });
+        return;
+    }
     
     setIsLayerLoading(true);
     try {
-      // Remove existing markers if they exist
-      if (salesLayerRef.current) {
-        map.removeLayer(salesLayerRef.current);
-        salesLayerRef.current = null;
-        setIsShowingOnMap(false);
-        return;
-      }
-
-      // Create a layer group only after ensuring map is ready
-      await new Promise(resolve => {
-        if (map.getContainer()) {
-          resolve(true);
-        } else {
-          map.once('load', () => resolve(true));
+        // Remove existing markers if they exist
+        if (salesLayerRef.current) {
+            console.log('Removing existing layer');
+            map.removeLayer(salesLayerRef.current);
+            salesLayerRef.current = null;
+            setIsShowingOnMap(false);
+            return;
         }
-      });
 
-      salesLayerRef.current = L.layerGroup();
-      const bounds = L.latLngBounds([]);
+        console.log('Creating new layer');
+        salesLayerRef.current = L.layerGroup();
+        const bounds = L.latLngBounds([]);
 
-      // Add markers for each sale
-      salesData.nearbySales.forEach((sale, index) => {
-        const point = L.point(sale.coordinates[0], sale.coordinates[1]);
-        const latLng = L.CRS.EPSG3857.unproject(point);
-        bounds.extend(latLng);
+        // Add markers for each sale
+        salesData.nearbySales.forEach((sale, index) => {
+            console.log('Adding marker for sale:', sale);
+            const latLng = L.latLng(sale.coordinates[1], sale.coordinates[0]);
+            console.log('LatLng:', latLng);
+            bounds.extend(latLng);
 
-        const icon = L.divIcon({
-          className: 'custom-div-icon',
-          html: `<div class="w-6 h-6 flex items-center justify-center rounded-full bg-white border-2 border-red-500 text-red-500 text-xs font-medium">${index + 1}</div>`,
-          iconSize: [24, 24],
-          iconAnchor: [12, 12]
+            const icon = L.divIcon({
+                className: 'custom-div-icon',
+                html: `<div class="w-6 h-6 flex items-center justify-center rounded-full bg-white border-2 border-red-500 text-red-500 text-xs font-medium">${index + 1}</div>`,
+                iconSize: [24, 24],
+                iconAnchor: [12, 12]
+            });
+            
+            const marker = L.marker(latLng, { icon });
+            salesLayerRef.current?.addLayer(marker);
         });
-        
-        const marker = L.marker(latLng, { icon })
-          .bindPopup(`
-            <div class="text-sm">
-              <div class="font-medium">${sale.bp_address}</div>
-              <div>${new Date(sale.sale_date).toLocaleDateString()}</div>
-              <div class="font-semibold text-blue-600">$${sale.price.toLocaleString()}</div>
-              <div>${(sale.distance/1000).toFixed(1)}km away</div>
-            </div>
-          `);
-        
-        salesLayerRef.current?.addLayer(marker);
-      });
 
-      // Add selected property to bounds
-      if (selectedProperty?.geometry) {
-        const propertyBounds = getPropertyBounds(selectedProperty.geometry);
-        if (propertyBounds) {
-          bounds.extend(propertyBounds);
-        }
-      }
-
-      // Add layer to map
-      if (salesLayerRef.current) {
+        console.log('Adding layer to map');
         salesLayerRef.current.addTo(map);
-        map.fitBounds(bounds, { padding: [50, 50] });
+        
+        if (!bounds.isEmpty()) {
+            console.log('Fitting bounds:', bounds);
+            map.fitBounds(bounds, { padding: [50, 50] });
+        }
+        
         setIsShowingOnMap(true);
-      }
 
     } catch (error) {
-      console.error('Error showing sales on map:', error);
+        console.error('Error showing sales on map:', error);
     } finally {
-      setIsLayerLoading(false);
+        setIsLayerLoading(false);
     }
   };
 
@@ -141,19 +178,22 @@ export function SalesTab() {
         return;
       }
 
-      console.log('🔄 Starting sales data fetch for property:', selectedProperty.propId);
-      
+      // Clear previous data and show loading state
       if (isMounted) {
         setSalesData(prev => ({
           ...prev,
           loading: true,
-          error: null
+          error: null,
+          propertyData: {
+            lastSaleDate: null,
+            lastSalePrice: null
+          },
+          nearbySales: null
         }));
       }
 
       try {
         // First fetch the selected property's sale data using propId
-        console.log('🎯 Fetching selected property sale data for propId:', selectedProperty.propId);
         const propertyResponse = await fetch(
           `https://maps.six.nsw.gov.au/arcgis/rest/services/public/Valuation/MapServer/1/query?where=propid=${selectedProperty.propId}&outFields=sale_date,price&f=json`,
           { signal: controller.signal }
@@ -164,17 +204,25 @@ export function SalesTab() {
         }
 
         const propertyData = await propertyResponse.json();
-        console.log('📊 Property sales data:', propertyData);
 
-        // Now fetch nearby sales
+        // Then fetch nearby sales using geometry
+        const rings = selectedProperty.geometry.rings[0].map((coord: number[]) => {
+          const x = (coord[0] * 180) / 20037508.34;
+          const y = (Math.atan(Math.exp((coord[1] * Math.PI) / 20037508.34)) * 360 / Math.PI - 90);
+          return [x, y];
+        });
+
+        const centerX = rings.reduce((sum, coord) => sum + coord[0], 0) / rings.length;
+        const centerY = rings.reduce((sum, coord) => sum + coord[1], 0) / rings.length;
+
+        const bufferDegrees = 0.01; // roughly 1km
+        const bbox = `${centerX-bufferDegrees},${centerY-bufferDegrees},${centerX+bufferDegrees},${centerY+bufferDegrees}`;
+
         const response = await fetch(
-          `https://mapprod3.environment.nsw.gov.au/arcgis/rest/services/ePlanning/Planning_Portal_Property/MapServer/1/query?` +
-          `geometry=${encodeURIComponent(JSON.stringify(selectedProperty.geometry))}` +
-          `&geometryType=esriGeometryPolygon` +
-          `&spatialRel=esriSpatialRelIntersects` +
-          `&outFields=*` +
-          `&returnGeometry=true` +
-          `&f=json`,
+          `https://maps.six.nsw.gov.au/arcgis/rest/services/public/Valuation/MapServer/1/query?` +
+          `where=1=1&geometry=${bbox}&geometryType=esriGeometryEnvelope&inSR=4326&` +
+          `spatialRel=esriSpatialRelIntersects&outFields=sale_date,price,bp_address&` +
+          `returnGeometry=true&outSR=4326&f=json`,
           { signal: controller.signal }
         );
 
@@ -183,8 +231,35 @@ export function SalesTab() {
         }
 
         const data = await response.json();
-        console.log('📊 Nearby sales data:', data);
 
+        const today = new Date();
+        const twelveMonthsAgo = new Date(today.setMonth(today.getMonth() - 12));
+
+        const nearbySalesFiltered = data.features
+          ?.filter((f: any) => {
+            const sale = {
+              ...f.attributes,
+              date: new Date(f.attributes.sale_date)
+            };
+            return sale.date >= twelveMonthsAgo && f.attributes.propid !== selectedProperty.propId;
+          })
+          .map((f: any) => {
+            return {
+              sale_date: f.attributes.sale_date,
+              price: f.attributes.price,
+              bp_address: f.attributes.bp_address,
+              distance: turf.distance(
+                turf.point([centerX, centerY]),
+                turf.point([f.geometry.x, f.geometry.y]),
+                { units: 'meters' }
+              ),
+              coordinates: [f.geometry.x, f.geometry.y]
+            };
+          })
+          .sort((a: any, b: any) => a.distance - b.distance)
+          .slice(0, 10);
+
+        // Only update state if the component is still mounted
         if (isMounted) {
           setSalesData({
             loading: false,
@@ -193,25 +268,25 @@ export function SalesTab() {
               lastSaleDate: propertyData.features?.[0]?.attributes?.sale_date || null,
               lastSalePrice: propertyData.features?.[0]?.attributes?.price || null
             },
-            nearbySales: data.features
-              ?.map((feature: any) => ({
-                bp_address: feature.attributes.bp_address,
-                sale_date: feature.attributes.sale_date,
-                price: feature.attributes.price,
-                distance: feature.attributes.distance || 0,
-                coordinates: [feature.geometry.x, feature.geometry.y]
-              }))
-              .sort((a: any, b: any) => b.sale_date - a.sale_date)
-              .slice(0, 10) || null
+            nearbySales: nearbySalesFiltered
           });
         }
       } catch (error: any) {
-        console.error('Error fetching sales data:', error);
+        // Don't update state if the error is due to abort
+        if (error.name === 'AbortError') {
+          return;
+        }
+        
         if (isMounted) {
           setSalesData(prev => ({
             ...prev,
             loading: false,
-            error: error.message || 'Failed to fetch sales data'
+            error: error.message || 'Failed to fetch sales data',
+            propertyData: {
+              lastSaleDate: null,
+              lastSalePrice: null
+            },
+            nearbySales: null
           }));
         }
       }
@@ -253,70 +328,77 @@ export function SalesTab() {
   }
 
   return (
-    <div className="p-4 space-y-6">
-      {salesData.propertyData.lastSalePrice && (
-        <Card className="p-4">
-          <h3 className="font-semibold mb-2">Last Sale</h3>
-          <div className="text-sm space-y-1">
-            <p className="text-2xl font-bold text-blue-600">
-              ${salesData.propertyData.lastSalePrice.toLocaleString()}
-            </p>
-            {salesData.propertyData.lastSaleDate && (
-              <p className="text-muted-foreground">
-                {new Date(salesData.propertyData.lastSaleDate).toLocaleDateString()}
+    <div className="p-4 space-y-4">
+      <Card>
+        <CardHeader>
+          <CardTitle>Property Sales History</CardTitle>
+          <CardDescription>Last recorded sale for this property</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {salesData.propertyData.lastSalePrice ? (
+            <div className="space-y-2">
+              <p>
+                <strong>Last Sale Date:</strong>{' '}
+                {new Date(salesData.propertyData.lastSaleDate!).toLocaleDateString('en-AU', {
+                  day: '2-digit',
+                  month: 'short',
+                  year: 'numeric'
+                })}
               </p>
-            )}
-          </div>
-        </Card>
-      )}
+              <p>
+                <strong>Sale Price:</strong>{' '}
+                {formatPrice(salesData.propertyData.lastSalePrice)}
+              </p>
+            </div>
+          ) : (
+            <p className="text-muted-foreground">No sales history found</p>
+          )}
+        </CardContent>
+      </Card>
 
-      {salesData.nearbySales?.length ? (
-        <>
-          <div className="flex items-center justify-between">
-            <h3 className="font-semibold">Recent Nearby Sales</h3>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleToggleOnMap}
-              disabled={isLayerLoading}
-            >
-              {isLayerLoading ? (
+      <Card>
+        <CardHeader>
+          <CardTitle>Nearby Sales</CardTitle>
+          <CardDescription>Recent sales within 1km radius</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {salesData.nearbySales && salesData.nearbySales.length > 0 ? (
+            <div className="space-y-2">
+              <div className="grid grid-cols-12 text-xs font-medium text-muted-foreground mb-2">
+                <div className="col-span-6 pl-8">Address</div>
+                <div className="col-span-3 pl-[32px]">Date</div>
+                <div className="col-span-2 pl-[16px]">Price</div>
+                <div className="col-span-1 text-right">Dist.</div>
+              </div>
+              {salesData.nearbySales.map((sale, index) => (
+                <SaleCard key={index} sale={sale} index={index} />
+              ))}
+            </div>
+          ) : (
+            <p className="text-muted-foreground">No nearby sales found</p>
+          )}
+        </CardContent>
+        <CardFooter>
+          <Button
+            onClick={handleToggleOnMap}
+            className="w-full"
+            disabled={isLayerLoading || !salesData.nearbySales?.length}
+            variant={isShowingOnMap ? "secondary" : "default"}
+          >
+            {isLayerLoading ? (
+              <span className="flex items-center justify-center gap-2">
                 <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <>
-                  <MapPin className="h-4 w-4 mr-2" />
-                  {isShowingOnMap ? 'Hide on Map' : 'Show on Map'}
-                </>
-              )}
-            </Button>
-          </div>
-
-          <div className="space-y-4">
-            {salesData.nearbySales.map((sale, index) => (
-              <Card key={index} className="p-4">
-                <div className="flex items-start justify-between">
-                  <div className="space-y-1">
-                    <p className="font-medium">{sale.bp_address}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {new Date(sale.sale_date).toLocaleDateString()}
-                    </p>
-                    <p className="text-lg font-semibold text-blue-600">
-                      ${sale.price.toLocaleString()}
-                    </p>
-                  </div>
-                  <span className="text-sm text-muted-foreground">
-                    {(sale.distance/1000).toFixed(1)}km away
-                  </span>
-                </div>
-              </Card>
-            ))}
-          </div>
-        </>
-      ) : (
-        <Alert>
-          <AlertTitle>No recent sales found in this area</AlertTitle>
-        </Alert>
-      )}
+                {isShowingOnMap ? "Removing from map..." : "Adding to map..."}
+              </span>
+            ) : (
+              <span className="flex items-center justify-center gap-2">
+                <MapPin className="h-4 w-4" />
+                {isShowingOnMap ? "Hide on Map" : "Show on Map"}
+              </span>
+            )}
+          </Button>
+        </CardFooter>
+      </Card>
     </div>
   );
 }

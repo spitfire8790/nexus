@@ -7,7 +7,7 @@ import { ResizablePanelGroup, ResizablePanel, ResizeHandle } from "@/components/
 import { MapLayout } from "@/components/map-layout";
 import { SearchPanel } from "@/components/search-panel";
 import { LayerControl } from "@/components/layer-control";
-import { AnalyticsPanel } from "@/components/analytics-panel";
+import { AnalyticsPanel } from "@/components/analytics/analytics-panel";
 import { GripVertical, MessageCircle } from "lucide-react";
 import { useState, useEffect } from 'react';
 import { ChatPanel } from "@/components/chat/chat-panel";
@@ -17,10 +17,12 @@ import { Routes, Route } from 'react-router-dom';
 import { AuthCallback } from '@/components/auth/callback';
 import { Card } from "@/components/ui/card";
 import { Logo } from "@/components/ui/logo";
+import { cn } from "@/lib/utils";
 
 function App() {
   const [isVerticalDisplay, setIsVerticalDisplay] = useState(false);
   const { user, loading } = useAuth();
+  const [isReporterActive, setIsReporterActive] = useState(false);
 
   useEffect(() => {
     const checkOrientation = () => {
@@ -117,9 +119,10 @@ function App() {
                   </ResizeHandle>
                   {/* Analytics panel - 35% width */}
                   <ResizablePanel 
-                    defaultSize={isVerticalDisplay ? 25 : 30} 
-                    minSize={isVerticalDisplay ? 20 : 15} 
-                    maxSize={50}
+                    className={cn(
+                      "transition-all duration-300",
+                      isReporterActive ? "!w-screen" : ""
+                    )}
                   >
                     <AnalyticsPanel />
                   </ResizablePanel>

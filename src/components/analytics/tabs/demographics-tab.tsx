@@ -1,16 +1,67 @@
 import { useEffect, useState } from 'react';
 import { useMapStore } from '@/lib/map-store';
 import { Alert, AlertTitle } from '@/components/ui/alert';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
+import { TooltipProvider } from '@/components/ui/tooltip';
+import { loadPopulationData } from '@/lib/population-data';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  ResponsiveContainer,
+  Tooltip as RechartsTooltip,
+  Legend,
+  ComposedChart,
+  Line,
+  ReferenceArea
+} from 'recharts';
 
 interface DemographicData {
   totalPopulation: number;
   medianAge: number;
   medianIncome: number;
   householdSize: number;
+  genderData: { name: string; value: number }[];
+  ageData: { name: string; value: number }[];
   loading: boolean;
   error: string | null;
+}
+
+interface PopulationData {
+  year: number;
+  population: number;
+}
+
+const COLORS = ['#C084FC', '#44B9FF'];
+
+function normalizeGeometry(geometry: any) {
+  // If the geometry is already in Web Mercator (wkid: 102100), return it
+  if (geometry.spatialReference?.wkid === 102100) {
+    return geometry;
+  }
+
+  // If it's in WGS84 (wkid: 4326), convert it
+  if (geometry.spatialReference?.wkid === 4326) {
+    const convertedRings = geometry.rings.map((ring: number[][]) =>
+      ring.map(([lon, lat]) => [
+        (lon * 20037508.34) / 180,
+        Math.log(Math.tan((90 + lat) * Math.PI / 360)) / (Math.PI / 180) * 20037508.34 / 180
+      ])
+    );
+
+    return {
+      rings: convertedRings,
+      spatialReference: { wkid: 102100 }
+    };
+  }
+
+  // If no spatial reference, assume Web Mercator and add it
+  return {
+    ...geometry,
+    spatialReference: { wkid: 102100 }
+  };
 }
 
 export function DemographicsTab() {
@@ -20,9 +71,12 @@ export function DemographicsTab() {
     medianAge: 0,
     medianIncome: 0,
     householdSize: 0,
+    genderData: [],
+    ageData: [],
     loading: false,
     error: null
   });
+  const [populationData, setPopulationData] = useState<PopulationData[]>([]);
 
   useEffect(() => {
     async function fetchDemographicData() {
@@ -31,36 +85,118 @@ export function DemographicsTab() {
       setDemographicData(prev => ({ ...prev, loading: true, error: null }));
 
       try {
-        const response = await fetch(
-          `https://mapprod3.environment.nsw.gov.au/arcgis/rest/services/ePlanning/Planning_Portal_Census/MapServer/0/query?` +
-          `geometry=${encodeURIComponent(JSON.stringify(selectedProperty.geometry))}` +
-          `&geometryType=esriGeometryPolygon` +
-          `&spatialRel=esriSpatialRelIntersects` +
-          `&outFields=*` +
-          `&returnGeometry=false` +
-          `&f=json`
-        );
+        // Convert Web Mercator to WGS84 coordinates
+        const rings = selectedProperty.geometry.rings[0];
+        const centerX = rings.reduce((sum: number, coord: number[]) => sum + coord[0], 0) / rings.length;
+        const centerY = rings.reduce((sum: number, coord: number[]) => sum + coord[1], 0) / rings.length;
 
-        if (!response.ok) {
+        // Convert to WGS84
+        const longitude = (centerX * 180) / 20037508.34;
+        const latitude = (Math.atan(Math.exp((centerY * Math.PI) / 20037508.34)) * 360 / Math.PI - 90);
+
+        // Fetch both demographic and population data
+        const [censusResponse, populationResponse] = await Promise.all([
+          fetch(
+            `https://services1.arcgis.com/v8Kimc579yljmjSP/ArcGIS/rest/services/ABS_2021_Census_G01_Selected_person_characteristics_by_sex_Beta/FeatureServer/5/query?` +
+            `geometry=${longitude},${latitude}&` +
+            `geometryType=esriGeometryPoint&` +
+            `inSR=4326&` +
+            `spatialRel=esriSpatialRelIntersects&` +
+            `outFields=*&` +
+            `returnGeometry=false&` +
+            `f=json`
+          ),
+          fetch(
+            `https://services1.arcgis.com/v8Kimc579yljmjSP/ArcGIS/rest/services/ABS_Estimated_resident_population_2001_2021_Beta/FeatureServer/0/query?` +
+            `geometry=${longitude},${latitude}&` +
+            `geometryType=esriGeometryPoint&` +
+            `inSR=4326&` +
+            `spatialRel=esriSpatialRelIntersects&` +
+            `outFields=*&` +
+            `returnGeometry=false&` +
+            `f=json`
+          )
+        ]);
+
+        if (!censusResponse.ok || !populationResponse.ok) {
           throw new Error('Failed to fetch demographic data');
         }
 
-        const data = await response.json();
-        
-        if (!data.features?.[0]?.attributes) {
+        const censusData = await censusResponse.json();
+        const populationData = await populationResponse.json();
+
+        console.log('Census Data:', censusData);
+        console.log('Population Data:', populationData);
+
+        if (!censusData.features?.[0]?.attributes) {
           throw new Error('No demographic data found for this area');
         }
 
-        const attributes = data.features[0].attributes;
-        
+        const attributes = censusData.features[0].attributes;
+
+        // Calculate gender distribution using correct field names
+        const total = (attributes.Tot_P_F || 0) + (attributes.Tot_P_M || 0);
+        const genderData = [
+          { name: 'Female', value: total ? (attributes.Tot_P_F || 0) / total : 0 },
+          { name: 'Male', value: total ? (attributes.Tot_P_M || 0) / total : 0 }
+        ];
+
+        // Calculate age distribution
+        const ageData = [
+          { name: '0-4', value: attributes.Age_0_4_yr_P || 0 },
+          { name: '5-14', value: attributes.Age_5_14_yr_P || 0 },
+          { name: '15-19', value: attributes.Age_15_19_yr_P || 0 },
+          { name: '20-24', value: attributes.Age_20_24_yr_P || 0 },
+          { name: '25-34', value: attributes.Age_25_34_yr_P || 0 },
+          { name: '35-44', value: attributes.Age_35_44_yr_P || 0 },
+          { name: '45-54', value: attributes.Age_45_54_yr_P || 0 },
+          { name: '55-64', value: attributes.Age_55_64_yr_P || 0 },
+          { name: '65-74', value: attributes.Age_65_74_yr_P || 0 },
+          { name: '75-84', value: attributes.Age_75_84_yr_P || 0 },
+          { name: '85+', value: attributes.Age_85ov_P || 0 }
+        ];
+
         setDemographicData({
-          totalPopulation: attributes.total_population || 0,
-          medianAge: attributes.median_age || 0,
-          medianIncome: attributes.median_household_income || 0,
-          householdSize: attributes.average_household_size || 0,
+          totalPopulation: total,
+          medianAge: attributes.Median_age_persons || 0,
+          medianIncome: attributes.Median_tot_prsnl_inc_weekly || 0,
+          householdSize: attributes.Average_household_size || 0,
+          genderData,
+          ageData,
           loading: false,
           error: null
         });
+
+        // Fetch SA2 name for population projections
+        const sa2Response = await fetch(
+          `https://services1.arcgis.com/v8Kimc579yljmjSP/ArcGIS/rest/services/ASGS_2021_SA2/FeatureServer/0/query?` +
+          `geometry=${longitude},${latitude}&` +
+          `geometryType=esriGeometryPoint&` +
+          `inSR=4326&` +
+          `spatialRel=esriSpatialRelIntersects&` +
+          `outFields=SA2_NAME_2021&` +
+          `returnGeometry=false&` +
+          `f=json`
+        );
+
+        const sa2Data = await sa2Response.json();
+        const sa2Name = sa2Data.features?.[0]?.attributes?.SA2_NAME_2021;
+
+        if (sa2Name) {
+          const populationProjections = await loadPopulationData();
+          const yearlyData = populationProjections[sa2Name];
+
+          if (yearlyData) {
+            setPopulationData(
+              Object.entries(yearlyData)
+                .map(([year, population]) => ({
+                  year: Number(year),
+                  population: Number(population)
+                }))
+                .sort((a, b) => a.year - b.year)
+            );
+          }
+        }
 
       } catch (error: any) {
         console.error('Error fetching demographic data:', error);
@@ -104,33 +240,178 @@ export function DemographicsTab() {
   }
 
   return (
-    <div className="p-4 grid gap-4 sm:grid-cols-2">
-      <Card className="p-4">
-        <h3 className="text-sm font-medium text-muted-foreground mb-1">Population</h3>
-        <p className="text-2xl font-bold">
-          {demographicData.totalPopulation.toLocaleString()}
-        </p>
+    <div className="p-2 space-y-4">
+      <Card>
+        <CardHeader>
+          <CardTitle>Gender Distribution</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {demographicData.loading ? (
+            <div className="flex items-center justify-center h-[60px]">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : demographicData.genderData.length > 0 ? (
+            <div className="space-y-4">
+              <div className="flex h-8">
+                <div 
+                  className="h-full" 
+                  style={{ 
+                    width: `${demographicData.genderData[0].value * 100}%`,
+                    backgroundColor: COLORS[0]
+                  }} 
+                />
+                <div 
+                  className="h-full" 
+                  style={{ 
+                    width: `${demographicData.genderData[1].value * 100}%`,
+                    backgroundColor: COLORS[1]
+                  }} 
+                />
+              </div>
+              <div className="flex justify-between text-sm">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3" style={{ backgroundColor: COLORS[0] }}></div>
+                  Female {(demographicData.genderData[0].value * 100).toFixed(1)}%
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3" style={{ backgroundColor: COLORS[1] }}></div>
+                  Male {(demographicData.genderData[1].value * 100).toFixed(1)}%
+                </div>
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">No demographic data available</p>
+          )}
+        </CardContent>
       </Card>
 
-      <Card className="p-4">
-        <h3 className="text-sm font-medium text-muted-foreground mb-1">Median Age</h3>
-        <p className="text-2xl font-bold">
-          {demographicData.medianAge.toFixed(1)}
-        </p>
+      <Card>
+        <CardHeader>
+          <CardTitle>Age Distribution</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {demographicData.loading ? (
+            <div className="flex items-center justify-center h-[300px]">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : demographicData.ageData.length > 0 ? (
+            <div className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart 
+                  data={demographicData.ageData}
+                  margin={{ top: 20, right: 10, left: 10, bottom: 20 }}
+                >
+                  <XAxis 
+                    dataKey="name"
+                    tick={{ fontSize: 12 }}
+                  />
+                  <YAxis 
+                    tickFormatter={(value) => `${value}%`}
+                    tick={{ fontSize: 12 }}
+                  />
+                  <RechartsTooltip />
+                  <Bar 
+                    dataKey="value" 
+                    fill="#1E4FD9"
+                    radius={[4, 4, 0, 0]}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">No age data available</p>
+          )}
+        </CardContent>
       </Card>
 
-      <Card className="p-4">
-        <h3 className="text-sm font-medium text-muted-foreground mb-1">Median Household Income</h3>
-        <p className="text-2xl font-bold">
-          ${demographicData.medianIncome.toLocaleString()}
-        </p>
-      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>Population Over Time</CardTitle>
+          <CardDescription>Historical and projected population for this SA2 region</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <ResponsiveContainer width="100%" height={300}>
+              <ComposedChart data={populationData}>
+                <ReferenceArea
+                  x1="2020"
+                  x2="2022"
+                  fill="#d7153a"
+                  fillOpacity={0.1}
+                  label={{
+                    value: "COVID-19 Period",
+                    position: "insideTop",
+                    fill: "#d7153a",
+                    fontSize: 12
+                  }}
+                />
+                <XAxis
+                  dataKey="year"
+                  type="number"
+                  domain={['dataMin', 'dataMax']}
+                  tickFormatter={(value) => value.toString()}
+                  tick={{ fontSize: 11 }}
+                />
+                <YAxis 
+                  domain={['auto', 'auto']} 
+                  tickFormatter={(value) => value.toLocaleString()}
+                  tick={{ fontSize: 11 }}
+                />
+                <RechartsTooltip 
+                  content={({ active, payload, label }) => {
+                    if (active && payload && payload.length > 0) {
+                      const relevantData = payload.find(p => 
+                        label <= 2024 ? p.name === "Historical" : p.name === "Projected"
+                      );
+                      
+                      if (!relevantData) return null;
 
-      <Card className="p-4">
-        <h3 className="text-sm font-medium text-muted-foreground mb-1">Average Household Size</h3>
-        <p className="text-2xl font-bold">
-          {demographicData.householdSize.toFixed(1)}
-        </p>
+                      return (
+                        <div className="bg-popover text-popover-foreground rounded-md shadow-md p-2 text-sm">
+                          <div>{label}</div>
+                          <div className="font-medium">
+                            {relevantData.name}: {relevantData.value.toLocaleString()}
+                          </div>
+                        </div>
+                      );
+                    }
+                    return null;
+                  }}
+                />
+                <Legend />
+                <Line
+                  name="Historical"
+                  type="monotone"
+                  data={populationData.filter(d => d.year <= 2024)}
+                  dataKey="population"
+                  stroke="#1E4FD9"
+                  strokeWidth={2}
+                  dot={false}
+                />
+                <Line
+                  name="Projected"
+                  type="monotone"
+                  data={populationData.filter(d => d.year > 2024)}
+                  dataKey="population"
+                  stroke="#9CA3AF"
+                  strokeWidth={2}
+                  strokeDasharray="5 5"
+                  dot={false}
+                />
+              </ComposedChart>
+            </ResponsiveContainer>
+            <div className="text-xs text-muted-foreground italic">
+              <a 
+                href="https://www.planning.nsw.gov.au/research-and-demography/population-projections/explore-the-data"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:underline"
+              >
+                Source: NSW Department of Planning, Housing and Infrastructure
+              </a>
+            </div>
+          </div>
+        </CardContent>
       </Card>
     </div>
   );
