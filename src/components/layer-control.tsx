@@ -45,12 +45,15 @@ interface SortableLayerItemProps {
   onUpdateZones: (id: string, zones: string[]) => void;
   onUpdateOpacity: (id: string, opacity: number) => void;
   onUpdateLayerUrl: (id: string, url: string) => void;
+  onUpdateFSRRange: (id: string, range: { min: number; max: number } | null) => void;
 }
 
-function SortableLayerItem({ layer, onToggle, onUpdateZones, onUpdateOpacity, onUpdateLayerUrl }: SortableLayerItemProps) {
+function SortableLayerItem({ layer, onToggle, onUpdateZones, onUpdateOpacity, onUpdateLayerUrl, onUpdateFSRRange }: SortableLayerItemProps) {
   const [showFilter, setShowFilter] = useState(false);
   const [opacityValue, setOpacityValue] = useState(layer.opacity ? Math.round(layer.opacity * 100) : 100);
   const [metromapToken, setMetromapToken] = useState('');
+  const [minFSR, setMinFSR] = useState('');
+  const [maxFSR, setMaxFSR] = useState('');
   
   // Add this line to allow toggling for custom layers
   const canToggle = layer.type === 'dynamic' || layer.type === 'tile' || layer.type === 'geojson' || layer.type === 'custom';
@@ -160,11 +163,17 @@ function SortableLayerItem({ layer, onToggle, onUpdateZones, onUpdateOpacity, on
         </Label>
         {layer.enabled && (
           <>
-            {layer.id === 'zoning' && (
+            {(layer.id === 'zoning' || layer.id === 'fsr') && (
               <Button
                 variant="ghost"
                 size="icon"
-                className={`h-6 w-6 ${hasActiveFilter ? 'bg-primary text-primary-foreground' : 'text-muted-foreground'}`}
+                className={cn(
+                  "h-6 w-6",
+                  ((layer.id === 'zoning' && layer.selectedZones?.length > 0) || 
+                   (layer.id === 'fsr' && layer.fsrRange)) 
+                    ? 'bg-primary text-primary-foreground' 
+                    : 'text-muted-foreground'
+                )}
                 onClick={() => setShowFilter(!showFilter)}
               >
                 <Filter className="h-4 w-4" />
@@ -277,6 +286,57 @@ function SortableLayerItem({ layer, onToggle, onUpdateZones, onUpdateOpacity, on
           </Command>
         </div>
       )}
+      {layer.id === 'fsr' && layer.enabled && showFilter && (
+        <div className="filter-dropdown space-y-2 pt-2">
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            const min = parseFloat(minFSR);
+            const max = parseFloat(maxFSR);
+            
+            if (!isNaN(min) && !isNaN(max) && min <= max) {
+              onUpdateFSRRange(layer.id, { min, max });
+            }
+          }} className="space-y-2">
+            <div className="flex gap-2 items-center">
+              <Input
+                type="number"
+                placeholder="Min FSR"
+                value={minFSR}
+                onChange={(e) => setMinFSR(e.target.value)}
+                className="h-8"
+                step="0.1"
+              />
+              <span>to</span>
+              <Input
+                type="number"
+                placeholder="Max FSR"
+                value={maxFSR}
+                onChange={(e) => setMaxFSR(e.target.value)}
+                className="h-8"
+                step="0.1"
+              />
+              <Button type="submit" size="sm" className="h-8">
+                Filter
+              </Button>
+            </div>
+          </form>
+          {layer.fsrRange && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full justify-start text-muted-foreground hover:text-foreground"
+              onClick={() => {
+                onUpdateFSRRange(layer.id, null);
+                setMinFSR('');
+                setMaxFSR('');
+              }}
+            >
+              <X className="h-4 w-4 mr-1" />
+              Clear filter
+            </Button>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -349,6 +409,7 @@ interface CollapsibleGroupProps {
   onUpdateZones: (id: string, zones: string[]) => void;
   onUpdateOpacity: (id: string, opacity: number) => void;
   onUpdateLayerUrl: (id: string, url: string) => void;
+  onUpdateFSRRange: (id: string, range: { min: number; max: number } | null) => void;
 }
 
 function CollapsibleGroup({ 
@@ -358,7 +419,8 @@ function CollapsibleGroup({
   onLayerToggle, 
   onUpdateZones, 
   onUpdateOpacity, 
-  onUpdateLayerUrl 
+  onUpdateLayerUrl, 
+  onUpdateFSRRange 
 }: CollapsibleGroupProps) {
   return (
     <div className="space-y-2">
@@ -384,6 +446,7 @@ function CollapsibleGroup({
                 onUpdateZones={onUpdateZones}
                 onUpdateOpacity={onUpdateOpacity}
                 onUpdateLayerUrl={onUpdateLayerUrl}
+                onUpdateFSRRange={onUpdateFSRRange}
               />
             ))}
         </div>
@@ -393,7 +456,14 @@ function CollapsibleGroup({
 }
 
 export function LayerControl() {
-  const { layerGroups, toggleLayer, updateSelectedZones, updateLayerOpacity, updateLayerUrl } = useMapStore();
+  const { 
+    layerGroups, 
+    toggleLayer, 
+    updateSelectedZones, 
+    updateLayerOpacity, 
+    updateLayerUrl,
+    updateFSRRange 
+  } = useMapStore();
   const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
 
   const toggleGroup = (groupId: string) => {
@@ -421,6 +491,7 @@ export function LayerControl() {
               onUpdateZones={updateSelectedZones}
               onUpdateOpacity={updateLayerOpacity}
               onUpdateLayerUrl={updateLayerUrl}
+              onUpdateFSRRange={updateFSRRange}
             />
           ))}
         </div>

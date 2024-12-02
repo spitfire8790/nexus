@@ -17,6 +17,7 @@ import {
   Line,
   ReferenceArea
 } from 'recharts';
+import { usePropertyDataStore } from '@/lib/property-data-store';
 
 interface DemographicData {
   totalPopulation: number;
@@ -66,24 +67,16 @@ function normalizeGeometry(geometry: any) {
 
 export function DemographicsTab() {
   const selectedProperty = useMapStore((state) => state.selectedProperty);
-  const [demographicData, setDemographicData] = useState<DemographicData>({
-    totalPopulation: 0,
-    medianAge: 0,
-    medianIncome: 0,
-    householdSize: 0,
-    genderData: [],
-    ageData: [],
-    loading: false,
-    error: null
-  });
-  const [populationData, setPopulationData] = useState<PopulationData[]>([]);
+  const { propertyData, setPropertyData, setLoading, setError } = usePropertyDataStore();
 
   useEffect(() => {
-    async function fetchDemographicData() {
-      if (!selectedProperty?.geometry) return;
+    if (!selectedProperty?.geometry) {
+      return;
+    }
 
-      setDemographicData(prev => ({ ...prev, loading: true, error: null }));
-
+    const fetchData = async () => {
+      setLoading(true);
+      setError(null);
       try {
         // Convert Web Mercator to WGS84 coordinates
         const rings = selectedProperty.geometry.rings[0];
@@ -156,16 +149,14 @@ export function DemographicsTab() {
           { name: '85+', value: attributes.Age_85ov_P || 0 }
         ];
 
-        setDemographicData({
+        const demographicData = {
           totalPopulation: total,
           medianAge: attributes.Median_age_persons || 0,
           medianIncome: attributes.Median_tot_prsnl_inc_weekly || 0,
           householdSize: attributes.Average_household_size || 0,
           genderData,
           ageData,
-          loading: false,
-          error: null
-        });
+        };
 
         // Fetch SA2 name for population projections
         const sa2Response = await fetch(
@@ -187,41 +178,32 @@ export function DemographicsTab() {
           const yearlyData = populationProjections[sa2Name];
 
           if (yearlyData) {
-            setPopulationData(
-              Object.entries(yearlyData)
-                .map(([year, population]) => ({
-                  year: Number(year),
-                  population: Number(population)
-                }))
-                .sort((a, b) => a.year - b.year)
-            );
-          }
-        }
+            const populationData = Object.entries(yearlyData)
+              .map(([year, population]) => ({
+                year: Number(year),
+                population: Number(population)
+              }))
+              .sort((a, b) => a.year - b.year);
 
+            setPropertyData('demographics', { ...demographicData, populationData });
+          } else {
+            setPropertyData('demographics', demographicData);
+          }
+        } else {
+          setPropertyData('demographics', demographicData);
+        }
       } catch (error: any) {
         console.error('Error fetching demographic data:', error);
-        setDemographicData(prev => ({
-          ...prev,
-          loading: false,
-          error: error.message || 'Failed to fetch demographic data'
-        }));
+        setError(error instanceof Error ? error.message : 'Failed to fetch demographic data');
+      } finally {
+        setLoading(false);
       }
-    }
+    };
 
-    fetchDemographicData();
-  }, [selectedProperty?.geometry]);
+    fetchData();
+  }, [selectedProperty?.geometry, setPropertyData, setLoading, setError]);
 
-  if (!selectedProperty) {
-    return (
-      <div className="p-4">
-        <Alert>
-          <AlertTitle>Select a property to view local demographics</AlertTitle>
-        </Alert>
-      </div>
-    );
-  }
-
-  if (demographicData.loading) {
+  if (propertyData.loading) {
     return (
       <div className="flex items-center justify-center p-8">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -229,14 +211,19 @@ export function DemographicsTab() {
     );
   }
 
-  if (demographicData.error) {
+  if (propertyData.error) {
     return (
       <div className="p-4">
         <Alert variant="destructive">
-          <AlertTitle>{demographicData.error}</AlertTitle>
+          <AlertTitle>{propertyData.error}</AlertTitle>
         </Alert>
       </div>
     );
+  }
+
+  const data = propertyData.demographics;
+  if (!data) {
+    return null;
   }
 
   return (
@@ -246,24 +233,24 @@ export function DemographicsTab() {
           <CardTitle>Gender Distribution</CardTitle>
         </CardHeader>
         <CardContent>
-          {demographicData.loading ? (
+          {data.loading ? (
             <div className="flex items-center justify-center h-[60px]">
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
-          ) : demographicData.genderData.length > 0 ? (
+          ) : data.genderData.length > 0 ? (
             <div className="space-y-4">
               <div className="flex h-8">
                 <div 
                   className="h-full" 
                   style={{ 
-                    width: `${demographicData.genderData[0].value * 100}%`,
+                    width: `${data.genderData[0].value * 100}%`,
                     backgroundColor: COLORS[0]
                   }} 
                 />
                 <div 
                   className="h-full" 
                   style={{ 
-                    width: `${demographicData.genderData[1].value * 100}%`,
+                    width: `${data.genderData[1].value * 100}%`,
                     backgroundColor: COLORS[1]
                   }} 
                 />
@@ -271,11 +258,11 @@ export function DemographicsTab() {
               <div className="flex justify-between text-sm">
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3" style={{ backgroundColor: COLORS[0] }}></div>
-                  Female {(demographicData.genderData[0].value * 100).toFixed(1)}%
+                  Female {(data.genderData[0].value * 100).toFixed(1)}%
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3" style={{ backgroundColor: COLORS[1] }}></div>
-                  Male {(demographicData.genderData[1].value * 100).toFixed(1)}%
+                  Male {(data.genderData[1].value * 100).toFixed(1)}%
                 </div>
               </div>
             </div>
@@ -290,15 +277,15 @@ export function DemographicsTab() {
           <CardTitle>Age Distribution</CardTitle>
         </CardHeader>
         <CardContent>
-          {demographicData.loading ? (
+          {data.loading ? (
             <div className="flex items-center justify-center h-[300px]">
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
-          ) : demographicData.ageData.length > 0 ? (
+          ) : data.ageData.length > 0 ? (
             <div className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart 
-                  data={demographicData.ageData}
+                  data={data.ageData}
                   margin={{ top: 20, right: 10, left: 10, bottom: 20 }}
                 >
                   <XAxis 
@@ -331,75 +318,79 @@ export function DemographicsTab() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <ResponsiveContainer width="100%" height={300}>
-              <ComposedChart data={populationData}>
-                <ReferenceArea
-                  x1="2020"
-                  x2="2022"
-                  fill="#d7153a"
-                  fillOpacity={0.1}
-                  label={{
-                    value: "COVID-19 Period",
-                    position: "insideTop",
-                    fill: "#d7153a",
-                    fontSize: 12
-                  }}
-                />
-                <XAxis
-                  dataKey="year"
-                  type="number"
-                  domain={['dataMin', 'dataMax']}
-                  tickFormatter={(value) => value.toString()}
-                  tick={{ fontSize: 11 }}
-                />
-                <YAxis 
-                  domain={['auto', 'auto']} 
-                  tickFormatter={(value) => value.toLocaleString()}
-                  tick={{ fontSize: 11 }}
-                />
-                <RechartsTooltip 
-                  content={({ active, payload, label }) => {
-                    if (active && payload && payload.length > 0) {
-                      const relevantData = payload.find(p => 
-                        label <= 2024 ? p.name === "Historical" : p.name === "Projected"
-                      );
-                      
-                      if (!relevantData) return null;
+            {data.populationData ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <ComposedChart data={data.populationData}>
+                  <ReferenceArea
+                    x1="2020"
+                    x2="2022"
+                    fill="#d7153a"
+                    fillOpacity={0.1}
+                    label={{
+                      value: "COVID-19 Period",
+                      position: "insideTop",
+                      fill: "#d7153a",
+                      fontSize: 12
+                    }}
+                  />
+                  <XAxis
+                    dataKey="year"
+                    type="number"
+                    domain={['dataMin', 'dataMax']}
+                    tickFormatter={(value) => value.toString()}
+                    tick={{ fontSize: 11 }}
+                  />
+                  <YAxis 
+                    domain={['auto', 'auto']} 
+                    tickFormatter={(value) => value.toLocaleString()}
+                    tick={{ fontSize: 11 }}
+                  />
+                  <RechartsTooltip 
+                    content={({ active, payload, label }) => {
+                      if (active && payload && payload.length > 0) {
+                        const relevantData = payload.find(p => 
+                          label <= 2024 ? p.name === "Historical" : p.name === "Projected"
+                        );
+                        
+                        if (!relevantData) return null;
 
-                      return (
-                        <div className="bg-popover text-popover-foreground rounded-md shadow-md p-2 text-sm">
-                          <div>{label}</div>
-                          <div className="font-medium">
-                            {relevantData.name}: {relevantData.value.toLocaleString()}
+                        return (
+                          <div className="bg-popover text-popover-foreground rounded-md shadow-md p-2 text-sm">
+                            <div>{label}</div>
+                            <div className="font-medium">
+                              {relevantData.name}: {relevantData.value.toLocaleString()}
+                            </div>
                           </div>
-                        </div>
-                      );
-                    }
-                    return null;
-                  }}
-                />
-                <Legend />
-                <Line
-                  name="Historical"
-                  type="monotone"
-                  data={populationData.filter(d => d.year <= 2024)}
-                  dataKey="population"
-                  stroke="#1E4FD9"
-                  strokeWidth={2}
-                  dot={false}
-                />
-                <Line
-                  name="Projected"
-                  type="monotone"
-                  data={populationData.filter(d => d.year > 2024)}
-                  dataKey="population"
-                  stroke="#9CA3AF"
-                  strokeWidth={2}
-                  strokeDasharray="5 5"
-                  dot={false}
-                />
-              </ComposedChart>
-            </ResponsiveContainer>
+                        );
+                      }
+                      return null;
+                    }}
+                  />
+                  <Legend />
+                  <Line
+                    name="Historical"
+                    type="monotone"
+                    data={data.populationData.filter(d => d.year <= 2024)}
+                    dataKey="population"
+                    stroke="#1E4FD9"
+                    strokeWidth={2}
+                    dot={false}
+                  />
+                  <Line
+                    name="Projected"
+                    type="monotone"
+                    data={data.populationData.filter(d => d.year > 2024)}
+                    dataKey="population"
+                    stroke="#9CA3AF"
+                    strokeWidth={2}
+                    strokeDasharray="5 5"
+                    dot={false}
+                  />
+                </ComposedChart>
+              </ResponsiveContainer>
+            ) : (
+              <p className="text-sm text-muted-foreground">No population data available</p>
+            )}
             <div className="text-xs text-muted-foreground italic">
               <a 
                 href="https://www.planning.nsw.gov.au/research-and-demography/population-projections/explore-the-data"

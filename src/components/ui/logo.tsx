@@ -1,8 +1,13 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
+import { cn } from '@/lib/utils'
 
-export function Logo() {
+interface LogoProps extends React.HTMLAttributes<HTMLDivElement> {
+  className?: string;
+}
+
+export function Logo({ className, ...props }: LogoProps) {
   const [text, setText] = useState('')
   const fullText = 'NEXUS'
 
@@ -21,7 +26,7 @@ export function Logo() {
   }, [])
 
   return (
-    <div className="flex items-center gap-1 h-14">
+    <div className={cn("flex items-center gap-1 h-14", className)} {...props}>
       <div className="h-14 w-14">
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -36,14 +41,14 @@ export function Logo() {
             </linearGradient>
           </defs>
 
-          {/* Orbital paths - increased strokeWidth from 1 to 2 */}
+          {/* Orbital paths */}
           <g stroke="hsl(var(--muted-foreground)/20)" fill="none" strokeWidth="2">
             <ellipse cx="50" cy="50" rx="35" ry="20" transform="rotate(-30 50 50)" />
             <ellipse cx="50" cy="50" rx="35" ry="20" transform="rotate(30 50 50)" />
             <ellipse cx="50" cy="50" rx="35" ry="20" transform="rotate(90 50 50)" />
           </g>
 
-          {/* Orbiting points - increased radius from 3 to 4 */}
+          {/* Orbiting points */}
           <g fill="hsl(var(--primary))">
             {/* First orbit */}
             <circle cx="50" cy="30" r="4">
@@ -116,7 +121,7 @@ export function Logo() {
             </circle>
           </g>
 
-          {/* Glowing effect for points - increased radius from 4 to 5 */}
+          {/* Glowing effect for points */}
           <g fill="hsl(var(--primary))" fillOpacity="0.3">
             {[0, 60, 120, 180, 240, 300].map((angle) => (
               <circle key={angle} cx="50" cy="30" r="5">

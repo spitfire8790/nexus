@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { MapPin, FileText } from "lucide-react";
+import { MapPin, FileText, MousePointerClick, X } from "lucide-react";
 import { loggedFetch } from '@/lib/api-logger';
 
 interface AddressSuggestion {
@@ -25,6 +25,9 @@ export function SearchPanel() {
   const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([]);
   const [lotSuggestions, setLotSuggestions] = useState<LotSuggestion[]>([]);
   const { selectedProperty, setSelectedProperty } = useMapStore();
+  const mapSelectMode = useMapStore((state) => state.mapSelectMode);
+  const setMapSelectMode = useMapStore((state) => state.setMapSelectMode);
+  const setHeaderAddress = useMapStore((state) => state.setHeaderAddress);
 
   const displayValue = selectedProperty?.address || searchValue || `Search by ${searchMode}...`;
 
@@ -144,8 +147,8 @@ export function SearchPanel() {
   };
 
   return (
-    <div className="h-full bg-card flex items-center px-4">
-      <div className="flex gap-2 items-center">
+    <div className="w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/75">
+      <div className="container flex items-center gap-2 p-2">
         <ToggleGroup type="single" value={searchMode} onValueChange={(value) => {
           if (value) {
             setSearchMode(value);
@@ -210,6 +213,29 @@ export function SearchPanel() {
             </Command>
           </PopoverContent>
         </Popover>
+
+        <Button
+          variant={mapSelectMode ? "default" : "outline"}
+          size="sm"
+          className="gap-2"
+          onClick={() => setMapSelectMode(!mapSelectMode)}
+        >
+          <MousePointerClick className="h-4 w-4" />
+          Search on map
+        </Button>
+
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-2"
+          onClick={() => {
+            setSelectedProperty(null);
+            setHeaderAddress(null);
+          }}
+        >
+          <X className="h-4 w-4" />
+          Clear
+        </Button>
       </div>
     </div>
   );

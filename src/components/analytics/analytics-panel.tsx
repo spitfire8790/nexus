@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useMapStore } from '@/lib/map-store';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { MapPin, Building2, FileText, AlertTriangle, DollarSign, Coffee, Users, FileDown } from 'lucide-react';
+import { MapPin, Building2, FileText, AlertTriangle, DollarSign, Coffee, Users, FileDown, Cloud, Clock } from 'lucide-react';
 import { OverviewTab } from './tabs/overview-tab';
 import { DevelopmentTab } from './tabs/development-tab';
 import { PlanningTab } from './tabs/planning-tab';
@@ -10,11 +10,14 @@ import { SalesTab } from './tabs/sales-tab';
 import { AmenitiesTab } from './tabs/amenities-tab';
 import { DemographicsTab } from './tabs/demographics-tab';
 import { ReporterTab } from './tabs/reporter-tab';
+import { ClimateTab } from './tabs/climate-tab';
+import { ImageryTab } from './tabs/imagery-tab';
 import { cn } from '@/lib/utils';
 
 export function AnalyticsPanel() {
   const selectedProperty = useMapStore((state) => state.selectedProperty);
-  const [headerAddress, setHeaderAddress] = useState<string | null>(null);
+  const headerAddress = useMapStore((state) => state.headerAddress);
+  const setHeaderAddress = useMapStore((state) => state.setHeaderAddress);
   const currentTab = useMapStore((state) => state.currentTab);
   const [isReporterActive, setIsReporterActive] = useState(false);
 
@@ -27,7 +30,9 @@ export function AnalyticsPanel() {
       sales: "Sales History",
       amenities: "Nearby Amenities",
       demographics: "Local Demographics",
-      reporter: "Generate Report"
+      reporter: "Generate Report",
+      climate: "Climate",
+      imagery: "Historical Imagery"
     };
     return headerMap[tab] || "Property Details";
   };
@@ -50,11 +55,13 @@ export function AnalyticsPanel() {
           console.error('Error fetching address:', error);
           setHeaderAddress(null);
         }
+      } else {
+        setHeaderAddress(null);
       }
     }
 
     fetchAddress();
-  }, [selectedProperty?.propId]);
+  }, [selectedProperty?.propId, setHeaderAddress]);
 
   return (
     <div className="h-full bg-card shadow-lg">
@@ -83,14 +90,8 @@ export function AnalyticsPanel() {
                 Overview
               </span>
             </TabsTrigger>
-            <TabsTrigger value="development" className="w-10 h-10 p-0 relative group">
-              <Building2 className="h-6 w-6" />
-              <span className="absolute left-[calc(100%+0.5rem)] bg-popover text-popover-foreground px-2 py-1 rounded-md text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 shadow-md z-50">
-                Development
-              </span>
-            </TabsTrigger>
             <TabsTrigger value="planning" className="w-10 h-10 p-0 relative group">
-              <FileText className="h-6 w-6" />
+              <Building2 className="h-6 w-6" />
               <span className="absolute left-[calc(100%+0.5rem)] bg-popover text-popover-foreground px-2 py-1 rounded-md text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 shadow-md z-50">
                 Planning
               </span>
@@ -125,6 +126,18 @@ export function AnalyticsPanel() {
                 Report
               </span>
             </TabsTrigger>
+            <TabsTrigger value="climate" className="w-10 h-10 p-0 relative group">
+              <Cloud className="h-6 w-6" />
+              <span className="absolute left-[calc(100%+0.5rem)] bg-popover text-popover-foreground px-2 py-1 rounded-md text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 shadow-md z-50">
+                Climate
+              </span>
+            </TabsTrigger>
+            <TabsTrigger value="imagery" className="w-10 h-10 p-0 relative group">
+              <Clock className="h-6 w-6" />
+              <span className="absolute left-[calc(100%+0.5rem)] bg-popover text-popover-foreground px-2 py-1 rounded-md text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 shadow-md z-50">
+                Imagery
+              </span>
+            </TabsTrigger>
           </TabsList>
         </div>
 
@@ -140,13 +153,14 @@ export function AnalyticsPanel() {
           </div>
           <div className="flex-1 overflow-y-auto">
             <TabsContent value="overview"><OverviewTab /></TabsContent>
-            <TabsContent value="development"><DevelopmentTab /></TabsContent>
             <TabsContent value="planning"><PlanningTab /></TabsContent>
             <TabsContent value="constraints"><ConstraintsTab /></TabsContent>
             <TabsContent value="sales"><SalesTab /></TabsContent>
             <TabsContent value="amenities"><AmenitiesTab /></TabsContent>
             <TabsContent value="demographics"><DemographicsTab /></TabsContent>
             <TabsContent value="reporter"><ReporterTab /></TabsContent>
+            <TabsContent value="climate"><ClimateTab /></TabsContent>
+            <TabsContent value="imagery"><ImageryTab /></TabsContent>
           </div>
         </div>
       </Tabs>

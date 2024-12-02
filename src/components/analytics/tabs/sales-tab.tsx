@@ -70,6 +70,17 @@ function SaleCard({ sale, index }: { sale: Sale; index: number }) {
   );
 }
 
+const ensureMapPanes = (map: L.Map) => {
+  if (!map.getPane('sales-pane')) {
+    map.createPane('sales-pane');
+    map.getPane('sales-pane')!.style.zIndex = '600';
+  }
+  if (!map.getPane('sales-popup-pane')) {
+    map.createPane('sales-popup-pane');
+    map.getPane('sales-popup-pane')!.style.zIndex = '650';
+  }
+};
+
 export function SalesTab() {
   const map = useMapStore((state) => state.mapInstance);
   const selectedProperty = useMapStore((state) => state.selectedProperty);
@@ -96,65 +107,82 @@ export function SalesTab() {
   }, [selectedProperty, map]);
 
   const handleToggleOnMap = async () => {
-    console.log('Toggle button clicked');
-    console.log('Sales data:', salesData.nearbySales);
-    console.log('Map instance:', map);
-
-    if (!salesData.nearbySales?.length || !map) {
-        console.log('❌ Missing required data:', {
-            hasSales: Boolean(salesData.nearbySales?.length),
-            hasMap: Boolean(map)
-        });
-        return;
-    }
+    if (!salesData.nearbySales?.length || !map) return;
     
     setIsLayerLoading(true);
+    
     try {
-        // Remove existing markers if they exist
+      // Ensure panes exist
+      ensureMapPanes(map);
+
+      // If markers are showing, remove them
+      if (isShowingOnMap) {
         if (salesLayerRef.current) {
-            console.log('Removing existing layer');
-            map.removeLayer(salesLayerRef.current);
-            salesLayerRef.current = null;
-            setIsShowingOnMap(false);
-            return;
+          map.removeLayer(salesLayerRef.current);
+          salesLayerRef.current = null;
         }
+        setIsShowingOnMap(false);
+        return;
+      }
 
-        console.log('Creating new layer');
-        salesLayerRef.current = L.layerGroup();
-        const bounds = L.latLngBounds([]);
+      // Create a new layer group
+      salesLayerRef.current = L.layerGroup();
+      const bounds = L.latLngBounds([]);
 
-        // Add markers for each sale
-        salesData.nearbySales.forEach((sale, index) => {
-            console.log('Adding marker for sale:', sale);
-            const latLng = L.latLng(sale.coordinates[1], sale.coordinates[0]);
-            console.log('LatLng:', latLng);
-            bounds.extend(latLng);
-
-            const icon = L.divIcon({
-                className: 'custom-div-icon',
-                html: `<div class="w-6 h-6 flex items-center justify-center rounded-full bg-white border-2 border-red-500 text-red-500 text-xs font-medium">${index + 1}</div>`,
-                iconSize: [24, 24],
-                iconAnchor: [12, 12]
-            });
-            
-            const marker = L.marker(latLng, { icon });
-            salesLayerRef.current?.addLayer(marker);
+      // Add markers for each sale
+      salesData.nearbySales.forEach((sale, index) => {
+        const latLng = L.latLng(sale.coordinates[1], sale.coordinates[0]);
+        bounds.extend(latLng);
+        
+        const marker = L.marker(latLng, {
+          icon: createMarkerIcon(index),
+          pane: 'sales-pane'
         });
 
-        console.log('Adding layer to map');
-        salesLayerRef.current.addTo(map);
+        marker.bindPopup(`
+          <div class="p-2">
+            <h3 class="font-bold">${sale.bp_address}</h3>
+            <p class="text-sm text-gray-600">
+              ${new Date(sale.sale_date).toLocaleDateString('en-AU', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric'
+              })}
+            </p>
+            <p class="text-sm font-semibold text-blue-600">
+              ${formatPrice(sale.price)}
+            </p>
+            <p class="text-sm text-gray-600">
+              Distance: ${(sale.distance).toFixed(0)}m
+            </p>
+          </div>
+        `, {
+          pane: 'sales-popup-pane'
+        });
         
-        if (!bounds.isEmpty()) {
-            console.log('Fitting bounds:', bounds);
-            map.fitBounds(bounds, { padding: [50, 50] });
+        salesLayerRef.current?.addLayer(marker);
+      });
+
+      // Add selected property to bounds
+      if (selectedProperty?.geometry) {
+        const propertyBounds = getPropertyBounds(selectedProperty.geometry);
+        if (propertyBounds) {
+          bounds.extend(propertyBounds);
         }
-        
+      }
+
+      // Add layer to map and fit bounds
+      if (salesLayerRef.current) {
+        salesLayerRef.current.addTo(map);
+        map.fitBounds(bounds, { padding: [50, 50] });
         setIsShowingOnMap(true);
+      }
 
     } catch (error) {
-        console.error('Error showing sales on map:', error);
+      console.error('Error showing sales on map:', error);
+      setIsShowingOnMap(false);
     } finally {
-        setIsLayerLoading(false);
+      setIsLayerLoading(false);
     }
   };
 
@@ -402,3 +430,19 @@ export function SalesTab() {
     </div>
   );
 }
+
+const createMarkerIcon = (index: number) => {
+  return L.divIcon({
+    html: `
+      <div class="flex flex-col items-center">
+        <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center" style="border: 2px solid #ef4444">
+          <span class="text-sm font-medium" style="color: #ef4444">${index + 1}</span>
+        </div>
+      </div>
+    `,
+    className: 'sale-marker',
+    iconSize: [32, 32],
+    iconAnchor: [16, 16],
+    popupAnchor: [0, -16]
+  });
+};

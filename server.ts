@@ -125,7 +125,7 @@ app.post("/api/proxy/spatial", async (req, res) => {
     const response = await axios({
       method: 'POST',
       url,
-      data: new URLSearchParams(params),
+      data: params,
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
         'Accept': 'application/json'

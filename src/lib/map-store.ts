@@ -18,6 +18,11 @@ export interface MapLayer {
   hidden?: boolean;
   data?: GeoJSON.GeoJsonObject;
   tooltipKey?: string;
+  selectedRanges?: string[];
+  fsrRange?: {
+    min: number;
+    max: number;
+  } | null;
 }
 
 interface PropertyData {
@@ -55,6 +60,18 @@ interface MapState {
   setSearchRadius: (radius: number) => void;
   buildings3D: boolean;
   setBuildings3D: (enabled: boolean) => void;
+  mapSelectMode: boolean;
+  setMapSelectMode: (enabled: boolean) => void;
+  headerAddress: string | null;
+  setHeaderAddress: (address: string | null) => void;
+  updateSelectedRanges: (id: string, ranges: string[]) => void;
+  updateFSRRange: (id: string, range: { min: number; max: number } | null) => void;
+  isShowingAmenities: boolean;
+  setIsShowingAmenities: (value: boolean) => void;
+  showAmenityLabels: boolean;
+  setShowAmenityLabels: (show: boolean) => void;
+  measureMode: 'none' | 'distance' | 'area';
+  setMeasureMode: (mode: 'none' | 'distance' | 'area') => void;
 }
 
 export interface ZoneOption {
@@ -170,7 +187,7 @@ export const useMapStore = create<MapState>((set) => ({
           type: 'tile',
           hidden: true,
           opacity: 0.7,
-          attribution: '© Metromap'
+          attribution: ' Metromap'
         },
         {
           id: 'imagery',
@@ -179,7 +196,7 @@ export const useMapStore = create<MapState>((set) => ({
           enabled: false,
           type: 'tile',
           opacity: 1,
-          attribution: '© NSW Government - Department of Customer Service',
+          attribution: ' NSW Government - Department of Customer Service',
           className: 'seamless-tiles'
         }
       ]
@@ -197,7 +214,7 @@ export const useMapStore = create<MapState>((set) => ({
           layerId: 8,
           opacity: 1,
           showLabels: false,
-          attribution: '© NSW Government - Department of Customer Service'
+          attribution: ' NSW Government - Department of Customer Service'
         }
       ]
     },
@@ -214,7 +231,7 @@ export const useMapStore = create<MapState>((set) => ({
           layerId: 19,
           opacity: 0.7,
           selectedZones: [],
-          attribution: '© NSW Government - Department of Planning, Housing and Infrastructure'
+          attribution: ' NSW Government - Department of Planning, Housing and Infrastructure'
         },
         {
           id: 'fsr',
@@ -224,7 +241,8 @@ export const useMapStore = create<MapState>((set) => ({
           type: 'dynamic',
           layerId: 11,
           opacity: 0.7,
-          attribution: '© NSW Government - Department of Planning, Housing and Infrastructure'
+          fsrRange: null,
+          attribution: ' NSW Government - Department of Planning, Housing and Infrastructure'
         },
         {
           id: 'height',
@@ -234,7 +252,7 @@ export const useMapStore = create<MapState>((set) => ({
           type: 'dynamic',
           layerId: 14,
           opacity: 0.7,
-          attribution: '© NSW Government - Department of Planning, Housing and Infrastructure'
+          attribution: ' NSW Government - Department of Planning, Housing and Infrastructure'
         },
         {
           id: 'heritage',
@@ -244,7 +262,7 @@ export const useMapStore = create<MapState>((set) => ({
           type: 'dynamic',
           layerId: 16,
           opacity: 0.7,
-          attribution: '© NSW Government - Department of Planning, Housing and Infrastructure'
+          attribution: ' NSW Government - Department of Planning, Housing and Infrastructure'
         }
       ]
     },
@@ -260,7 +278,7 @@ export const useMapStore = create<MapState>((set) => ({
           type: 'dynamic',
           layerId: 229,
           opacity: 0.7,
-          attribution: '© NSW Government - Department of Planning, Housing and Infrastructure'
+          attribution: ' NSW Government - Department of Planning, Housing and Infrastructure'
         },
         {
           id: 'contamination',
@@ -270,7 +288,7 @@ export const useMapStore = create<MapState>((set) => ({
           type: 'dynamic',
           layerId: 1,
           opacity: 0.7,
-          attribution: '© NSW Government - EPA'
+          attribution: ' NSW Government - EPA'
         },
         {
           id: 'epa-licenses',
@@ -280,7 +298,7 @@ export const useMapStore = create<MapState>((set) => ({
           type: 'dynamic',
           layerId: 2,
           opacity: 0.7,
-          attribution: '© NSW Government - EPA'
+          attribution: ' NSW Government - EPA'
         }
       ]
     },
@@ -294,7 +312,7 @@ export const useMapStore = create<MapState>((set) => ({
           type: 'custom',
           enabled: false,
           opacity: 1,
-          attribution: '© OSM Buildings',
+          attribution: ' OSM Buildings',
           tooltipKey: 'buildings3d'
         }
       ]
@@ -364,8 +382,46 @@ export const useMapStore = create<MapState>((set) => ({
   setMapInstance: (map) => set({ mapInstance: map }),
   currentTab: 'overview',
   setCurrentTab: (tab) => set({ currentTab: tab }),
-  searchRadius: 2,
+  searchRadius: 1.5,
   setSearchRadius: (radius) => set({ searchRadius: radius }),
   buildings3D: false,
-  setBuildings3D: (enabled) => set({ buildings3D: enabled })
+  setBuildings3D: (enabled) => set({ buildings3D: enabled }),
+  mapSelectMode: false,
+  setMapSelectMode: (enabled) => set({ mapSelectMode: enabled }),
+  headerAddress: null,
+  setHeaderAddress: (address) => set({ headerAddress: address }),
+  updateSelectedRanges: (id, ranges) => {
+    set((state) => ({
+      layerGroups: state.layerGroups.map(group => ({
+        ...group,
+        layers: group.layers.map(layer =>
+          layer.id === id ? {
+            ...layer,
+            selectedRanges: ranges,
+            filter: ranges.length > 0 ? `FSR_RANGE IN ('${ranges.join("','")}')` : ''
+          } : layer
+        )
+      }))
+    }));
+  },
+  updateFSRRange: (id, range) => {
+    set((state) => ({
+      layerGroups: state.layerGroups.map(group => ({
+        ...group,
+        layers: group.layers.map(layer =>
+          layer.id === id ? {
+            ...layer,
+            fsrRange: range,
+            filter: range ? `FSR >= ${range.min} AND FSR <= ${range.max}` : ''
+          } : layer
+        )
+      }))
+    }));
+  },
+  isShowingAmenities: false,
+  setIsShowingAmenities: (value) => set({ isShowingAmenities: value }),
+  showAmenityLabels: true,
+  setShowAmenityLabels: (show) => set({ showAmenityLabels: show }),
+  measureMode: 'none',
+  setMeasureMode: (mode) => set({ measureMode: mode })
 }));

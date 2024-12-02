@@ -10,6 +10,8 @@ import 'esri-leaflet-geocoder/dist/esri-leaflet-geocoder.css';
 import { useMapStore } from '@/lib/map-store';
 import { Deck } from '@deck.gl/core';
 import { GeoJsonLayer } from '@deck.gl/layers';
+import { MapLegends } from '@/components/map/map-legends';
+import { AmenitiesLegend } from './analytics/tabs/amenities-tab';
 
 // Fix for default marker icons in Leaflet with Vite
 import icon from 'leaflet/dist/images/marker-icon.png';
@@ -36,12 +38,20 @@ const OVERLAY_PANE_Z_INDEX = 400;
 const BOUNDARY_PANE = 'boundary';
 const BOUNDARY_PANE_Z_INDEX = 600;
 const RADIUS_PANE = 'radius-pane';
+const RADIUS_PANE_Z_INDEX = 399;
+const AMENITIES_PANE = 'amenities-pane';
+const AMENITIES_PANE_Z_INDEX = 650;
+export const AMENITIES_POPUP_PANE = 'amenities-popup-pane';
+export const AMENITIES_POPUP_PANE_Z_INDEX = 675;
 
 function MapClickHandler() {
   const { setSelectedProperty } = useMapStore();
+  const mapSelectMode = useMapStore((state) => state.mapSelectMode);
 
   useMapEvents({
     click: async (e) => {
+      if (!mapSelectMode) return;
+      
       try {
         // Convert clicked point to Web Mercator coordinates
         const point = L.CRS.EPSG3857.project(e.latlng);
@@ -64,10 +74,8 @@ function MapClickHandler() {
         }
         
         const propId = await response.text();
-        console.log('Property ID:', propId);
         
         if (propId) {
-          // Fetch both boundary and lots data
           const [boundaryResponse, lotsResponse] = await Promise.all([
             fetch(`https://api.apps1.nsw.gov.au/planning/viewersf/V1/ePlanningApi/boundary?id=${propId}&Type=property`),
             fetch(`https://api.apps1.nsw.gov.au/planning/viewersf/V1/ePlanningApi/lot?propId=${propId}`)
@@ -79,9 +87,6 @@ function MapClickHandler() {
 
           const [boundaryData] = await boundaryResponse.json();
           const lotsData = await lotsResponse.json();
-          
-          console.log('Boundary data:', boundaryData);
-          console.log('Lots data:', lotsData);
           
           if (boundaryData?.geometry) {
             setSelectedProperty({
@@ -135,6 +140,16 @@ function MapController() {
     if (!map.getPane(RADIUS_PANE)) {
       map.createPane(RADIUS_PANE);
       map.getPane(RADIUS_PANE)!.style.zIndex = '399';
+    }
+
+    if (!map.getPane(AMENITIES_PANE)) {
+      map.createPane(AMENITIES_PANE);
+      map.getPane(AMENITIES_PANE)!.style.zIndex = AMENITIES_PANE_Z_INDEX.toString();
+    }
+
+    if (!map.getPane(AMENITIES_POPUP_PANE)) {
+      map.createPane(AMENITIES_POPUP_PANE);
+      map.getPane(AMENITIES_POPUP_PANE)!.style.zIndex = AMENITIES_POPUP_PANE_Z_INDEX.toString();
     }
 
     // Initialize Leaflet.Geoman controls
@@ -409,9 +424,8 @@ export function SearchRadiusCircle({ radius = 2000 }: SearchRadiusCircleProps) {
       // Fit map to combined bounds with smooth animation
       const bounds = circleBounds.extend(propertyBounds);
       map.fitBounds(bounds, {
-        padding: [50, 50],
-        duration: 1.2, // animation duration in seconds
-        easeLinearity: 0.25
+        padding: [100, 100],
+        duration: 0.8
       });
     }
 
@@ -618,55 +632,62 @@ function Buildings3D() {
 
 export function MapView() {
   const mapRef = useRef<L.Map | null>(null);
+  const isShowingAmenities = useMapStore((state) => state.isShowingAmenities);
   
   return (
-    <MapContainer
-      center={[-33.8688, 151.2093]}
-      zoom={13}
-      maxZoom={19}
-      className="w-full h-full"
-      ref={mapRef}
-      style={{ background: '#f8f9fa' }}
-    >
-      <MapController />
-      <MapClickHandler />
-      <OverlayLayers />
-      <PropertyBoundary />
-      <MapLayerController />
-      <Buildings3D />
-      <LayersControl position="topright">
-        <LayersControl.BaseLayer checked name="Carto">
-          <TileLayer
-            url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@3x.png"
-            maxZoom={19}
-            attribution='© OpenStreetMap contributors, © CARTO'
-            maxNativeZoom={19}
-            crossOrigin={true}
-            pane={BASE_PANE}
-          />
-        </LayersControl.BaseLayer>
-        <LayersControl.BaseLayer name="NSW Imagery">
-          <TileLayer
-            url="https://maps.six.nsw.gov.au/arcgis/rest/services/public/NSW_Imagery/MapServer/tile/{z}/{y}/{x}"
-            maxZoom={19}
-            maxNativeZoom={19}
-            attribution='© NSW Government - Maps NSW'
-            tileSize={256}
-            crossOrigin={true}
-            className="seamless-tiles"
-            pane={BASE_PANE}
-          />
-        </LayersControl.BaseLayer>
-        <LayersControl.BaseLayer name="OpenStreetMap">
-          <TileLayer
-            attribution='© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            maxZoom={19}
-            pane={BASE_PANE}
-          />
-        </LayersControl.BaseLayer>
-      </LayersControl>
-    </MapContainer>
+    <div className="relative w-full h-full">
+      <MapContainer
+        center={[-33.8688, 151.2093]}
+        zoom={13}
+        maxZoom={19}
+        className="w-full h-full"
+        ref={mapRef}
+        style={{ background: '#f8f9fa' }}
+      >
+        <MapController />
+        <MapClickHandler />
+        <OverlayLayers />
+        <PropertyBoundary />
+        <MapLayerController />
+        <Buildings3D />
+        <LayersControl position="topright">
+          <LayersControl.BaseLayer checked name="Carto">
+            <TileLayer
+              url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png"
+              maxZoom={19}
+              attribution='&copy; OpenStreetMap contributors, &copy; CARTO'
+              maxNativeZoom={19}
+              crossOrigin={true}
+              className="seamless-tiles"
+              pane={BASE_PANE}
+            />
+          </LayersControl.BaseLayer>
+          <LayersControl.BaseLayer name="NSW Imagery">
+            <TileLayer
+              url="https://maps.six.nsw.gov.au/arcgis/rest/services/public/NSW_Imagery/MapServer/tile/{z}/{y}/{x}"
+              maxZoom={19}
+              maxNativeZoom={19}
+              attribution='&copy; NSW Government - Maps NSW'
+              tileSize={256}
+              crossOrigin={true}
+              className="seamless-tiles"
+              pane={BASE_PANE}
+            />
+          </LayersControl.BaseLayer>
+          <LayersControl.BaseLayer name="OpenStreetMap">
+            <TileLayer
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              maxZoom={19}
+              pane={BASE_PANE}
+            />
+          </LayersControl.BaseLayer>
+        </LayersControl>
+        <MapInitializer />
+        <MapLegends />
+        <AmenitiesLegend visible={isShowingAmenities} />
+      </MapContainer>
+    </div>
   );
 }
 
@@ -687,4 +708,17 @@ function getLayerDescription(layerId: string): { name: string; description: stri
     source: 'Unknown',
     link: ''
   };
+}
+
+function MapInitializer() {
+  const map = useMap();
+  const setMapInstance = useMapStore((state) => state.setMapInstance);
+
+  useEffect(() => {
+    console.log('Map initialized:', map);
+    setMapInstance(map);
+    return () => setMapInstance(null);
+  }, [map, setMapInstance]);
+
+  return null;
 }

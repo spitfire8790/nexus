@@ -119,42 +119,26 @@ function ContaminationRisk() {
     setError(null);
     
     try {
-      // Fetch contaminated sites through proxy
+      // Fetch contaminated sites
       const contaminatedResponse = await fetch(
-        `/api/proxy`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'URL': 'https://maptest2.environment.nsw.gov.au/arcgis/rest/services/EPA/EPACS/MapServer/1/query'
-          },
-          body: JSON.stringify({
-            geometry: selectedProperty.geometry,
-            geometryType: 'esriGeometryPolygon',
-            spatialRel: 'esriSpatialRelIntersects',
-            outFields: 'SiteName',
-            returnGeometry: false,
-            f: 'json'
-          })
-        }
+        `https://maptest2.environment.nsw.gov.au/arcgis/rest/services/EPA/EPACS/MapServer/1/query?` +
+        `geometry=${encodeURIComponent(JSON.stringify(selectedProperty.geometry))}` +
+        `&geometryType=esriGeometryPolygon` +
+        `&spatialRel=esriSpatialRelIntersects` +
+        `&outFields=SiteName` +
+        `&returnGeometry=false` +
+        `&f=json`
       );
 
-      // Fetch EPA licenses through proxy
+      // Fetch EPA licenses
       const licensesResponse = await fetch(
-        `/api/proxy`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'URL': 'https://maptest1.environment.nsw.gov.au/arcgis/rest/services/EPA/Environment_Protection_Licences/FeatureServer/2/query'
-          },
-          body: JSON.stringify({
-            geometry: selectedProperty.geometry,
-            geometryType: 'esriGeometryPolygon',
-            spatialRel: 'esriSpatialRelIntersects',
-            outFields: 'APName,LocationName,PrimaryFeebasedActivity',
-            returnGeometry: false,
-            f: 'json'
-          })
-        }
+        `https://maptest1.environment.nsw.gov.au/arcgis/rest/services/EPA/Environment_Protection_Licences/FeatureServer/2/query?` +
+        `geometry=${encodeURIComponent(JSON.stringify(selectedProperty.geometry))}` +
+        `&geometryType=esriGeometryPolygon` +
+        `&spatialRel=esriSpatialRelIntersects` +
+        `&outFields=APName,LocationName,PrimaryFeebasedActivity` +
+        `&returnGeometry=false` +
+        `&f=json`
       );
 
       if (!contaminatedResponse.ok || !licensesResponse.ok) {

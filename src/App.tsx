@@ -11,7 +11,7 @@ import { AnalyticsPanel } from "@/components/analytics/analytics-panel";
 import { GripVertical, MessageCircle } from "lucide-react";
 import { useState, useEffect } from 'react';
 import { ChatPanel } from "@/components/chat/chat-panel";
-import { AuthProvider, useAuth } from './lib/auth';
+import { useAuth } from './lib/auth';
 import { SplashPage } from '@/components/auth/splash-page';
 import { Routes, Route } from 'react-router-dom';
 import { AuthCallback } from '@/components/auth/callback';
@@ -22,7 +22,7 @@ import { cn } from "@/lib/utils";
 function App() {
   const [isVerticalDisplay, setIsVerticalDisplay] = useState(false);
   const { user, loading } = useAuth();
-  const [isReporterActive, setIsReporterActive] = useState(false);
+  const [isReporterActive] = useState(false);
 
   useEffect(() => {
     const checkOrientation = () => {
