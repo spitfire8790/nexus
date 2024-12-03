@@ -416,7 +416,6 @@ const convertToGeoJSON = (geometry: any) => {
     properties: {}
   };
 };
-
 export function ReporterTab() {
   const { selectedProperty, headerAddress, mapInstance } = useMapStore();
   const { propertyData } = usePropertyDataStore();
@@ -1359,3 +1358,4 @@ export function ReporterTab() {
     </div>
   );
 }
+

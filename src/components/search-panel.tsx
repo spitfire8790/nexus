@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { MapPin, FileText, MousePointerClick, X } from "lucide-react";
+import { MapPin, FileText, MousePointerClick, X, MessageCircle, BookmarkPlus } from "lucide-react";
 import { loggedFetch } from '@/lib/api-logger';
+import { convertToGeoJSON } from '@/lib/geometry-utils';
 
 interface AddressSuggestion {
   address: string;
@@ -24,10 +25,12 @@ export function SearchPanel() {
   const [searchValue, setSearchValue] = useState("");
   const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([]);
   const [lotSuggestions, setLotSuggestions] = useState<LotSuggestion[]>([]);
-  const { selectedProperty, setSelectedProperty } = useMapStore();
+  const { selectedProperty, setSelectedProperty, addSavedProperty } = useMapStore();
   const mapSelectMode = useMapStore((state) => state.mapSelectMode);
   const setMapSelectMode = useMapStore((state) => state.setMapSelectMode);
   const setHeaderAddress = useMapStore((state) => state.setHeaderAddress);
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const toggleChat = useMapStore((state) => state.toggleChat);
 
   const displayValue = selectedProperty?.address || searchValue || `Search by ${searchMode}...`;
 
@@ -235,6 +238,40 @@ export function SearchPanel() {
         >
           <X className="h-4 w-4" />
           Clear
+        </Button>
+
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-2"
+          onClick={() => {
+            if (!selectedProperty) return;
+            
+            const geojson = convertToGeoJSON(selectedProperty.geometry);
+            if (!geojson) return;
+            
+            const savedProperty = {
+              id: selectedProperty.propId || crypto.randomUUID(),
+              address: selectedProperty.address || 'Unknown Address',
+              geometry: geojson
+            };
+            
+            addSavedProperty(savedProperty);
+          }}
+          disabled={!selectedProperty}
+        >
+          <BookmarkPlus className="h-4 w-4" />
+          Save Property
+        </Button>
+
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-2"
+          onClick={() => toggleChat()}
+        >
+          <MessageCircle className="h-4 w-4" />
+          Chat
         </Button>
       </div>
     </div>

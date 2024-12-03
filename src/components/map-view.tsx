@@ -12,6 +12,9 @@ import { Deck } from '@deck.gl/core';
 import { GeoJsonLayer } from '@deck.gl/layers';
 import { MapLegends } from '@/components/map/map-legends';
 import { AmenitiesLegend } from './analytics/tabs/amenities-tab';
+import { TemperatureControls } from './map/temperature-controls';
+import { TemperatureLegend } from './map/temperature-legend';
+import { TrainStationsLayer } from './map/train-stations-layer';
 
 // Fix for default marker icons in Leaflet with Vite
 import icon from 'leaflet/dist/images/marker-icon.png';
@@ -76,23 +79,26 @@ function MapClickHandler() {
         const propId = await response.text();
         
         if (propId) {
-          const [boundaryResponse, lotsResponse] = await Promise.all([
+          const [boundaryResponse, lotsResponse, addressResponse] = await Promise.all([
             fetch(`https://api.apps1.nsw.gov.au/planning/viewersf/V1/ePlanningApi/boundary?id=${propId}&Type=property`),
-            fetch(`https://api.apps1.nsw.gov.au/planning/viewersf/V1/ePlanningApi/lot?propId=${propId}`)
+            fetch(`https://api.apps1.nsw.gov.au/planning/viewersf/V1/ePlanningApi/lot?propId=${propId}`),
+            fetch(`https://api.apps1.nsw.gov.au/planning/viewersf/V1/ePlanningApi/address?id=${propId}&Type=property`)
           ]);
 
-          if (!boundaryResponse.ok || !lotsResponse.ok) {
+          if (!boundaryResponse.ok || !lotsResponse.ok || !addressResponse.ok) {
             throw new Error('Failed to fetch property details');
           }
 
           const [boundaryData] = await boundaryResponse.json();
           const lotsData = await lotsResponse.json();
+          const address = await addressResponse.text();
           
           if (boundaryData?.geometry) {
             setSelectedProperty({
               ...boundaryData,
               propId,
-              lots: lotsData || []
+              lots: lotsData || [],
+              address: address.replace(/^"|"$/g, '')
             });
           }
         }
@@ -492,148 +498,43 @@ function MapLayerController() {
   return null;
 }
 
-function Buildings3D() {
-  const map = useMap();
-  const layerGroups = useMapStore((state) => state.layerGroups);
-  const buildings3dLayer = layerGroups
-    .find(g => g.id === '3d')
-    ?.layers.find(l => l.id === 'buildings3d');
-  const deckRef = useRef<Deck | null>(null);
-
-  useEffect(() => {
-    if (!map || !buildings3dLayer?.enabled) return;
-
-    deckRef.current = new Deck({
-      canvas: 'deck-canvas',
-      initialViewState: {
-        latitude: map.getCenter().lat,
-        longitude: map.getCenter().lng,
-        zoom: map.getZoom(),
-        pitch: 45,
-        bearing: 0
-      },
-      controller: false,
-      layers: [
-        new GeoJsonLayer({
-          id: 'buildings3d',
-          // Provide initial empty GeoJSON structure with explicit typing
-          data: {
-            type: 'FeatureCollection' as const,
-            features: [] as any[]
-          },
-          dataTransform: async (data: any) => {
-            try {
-              const response = await fetch(
-                'https://services-ap1.arcgis.com/iA7fZQOnjY9D67Zx/arcgis/rest/services/OSM_AU_Buildings/FeatureServer/0/query?where=1%3D1&outFields=height,building_height&geometryType=esriGeometryPolygon&spatialRel=esriSpatialRelIntersects&outSR=4326&f=geojson'
-              );
-              const jsonData = await response.json();
-              
-              // Check if response has the expected structure
-              if (!jsonData || !jsonData.features) {
-                console.error('Invalid response data:', jsonData);
-                return {
-                  type: 'FeatureCollection' as const,
-                  features: []
-                };
-              }
-
-              // Transform the data
-              return {
-                type: 'FeatureCollection' as const,
-                features: Array.isArray(jsonData.features) ? jsonData.features.map((feature: any) => ({
-                  type: 'Feature',
-                  geometry: {
-                    type: feature.geometry?.type || 'Polygon',
-                    coordinates: feature.geometry?.coordinates || []
-                  },
-                  properties: feature.properties || {}
-                })) : []
-              };
-            } catch (error) {
-              console.error('Error loading GeoJSON data:', error);
-              return {
-                type: 'FeatureCollection' as const,
-                features: []
-              };
-            }
-          },
-          getFillColor: [255, 255, 255, 255],
-          getLineColor: [0, 0, 0, 255],
-          getLineWidth: () => 1,
-          lineWidthMinPixels: 1,
-          getElevation: (d: any) => {
-            if (!d?.properties) return 10;
-            return Number(d.properties.height) || Number(d.properties.building_height) || 10;
-          },
-          elevationScale: 1,
-          pickable: true,
-          autoHighlight: true,
-          wireframe: true,
-          loadOptions: {
-            fetch: {
-              method: 'GET',
-              headers: {
-                'Accept': 'application/json'
-              }
-            }
-          },
-          onDataLoad: (data: any) => {
-            if (!data || !data.features) {
-              console.error('Invalid GeoJSON data:', data);
-            } else {
-              console.log('Successfully loaded GeoJSON data with', data.features.length, 'features');
-            }
-          },
-          updateTriggers: {
-            getElevation: [],
-            data: []
-          }
-        } as any)
-      ],
-      onError: (error) => {
-        console.error('Deck.gl error:', error);
-      },
-      onViewStateChange: ({ viewState }) => {
-        const { latitude, longitude, zoom } = viewState;
-        map.setView([latitude, longitude], zoom, { animate: false });
-      }
-    });
-
-    // Sync deck.gl view with Leaflet
-    const onMapMove = () => {
-      const center = map.getCenter();
-      deckRef.current?.setProps({
-        viewState: {
-          latitude: center.lat,
-          longitude: center.lng,
-          zoom: map.getZoom(),
-          pitch: 45,
-          bearing: 0
-        }
-      });
-    };
-
-    map.on('move', onMapMove);
-
-    return () => {
-      map.off('move', onMapMove);
-      deckRef.current?.finalize();
-      deckRef.current = null;
-    };
-  }, [map, buildings3dLayer?.enabled]);
-
-  return (
-    <canvas
-      id="deck-canvas"
-      className={`deck-canvas ${buildings3dLayer?.enabled ? 'z-[1000]' : '-z-10'}`}
-    />
-  );
-}
-
 export function MapView() {
   const mapRef = useRef<L.Map | null>(null);
+  const savedLayersRef = useRef<{ [key: string]: L.GeoJSON }>({});
   const isShowingAmenities = useMapStore((state) => state.isShowingAmenities);
+  const savedProperties = useMapStore((state) => state.savedProperties);
   
+  useEffect(() => {
+    if (!mapRef.current) return;
+    const map = mapRef.current;
+
+    // Remove all existing saved property layers
+    Object.values(savedLayersRef.current).forEach(layer => {
+      if (map.hasLayer(layer)) {
+        map.removeLayer(layer);
+      }
+    });
+    savedLayersRef.current = {};
+
+    // Add new layers for each saved property
+    savedProperties.forEach(property => {
+      const layerId = `saved-property-${property.id}`;
+      
+      const layer = L.geoJSON(property.geometry, {
+        style: {
+          color: '#2563eb',
+          weight: 2,
+          opacity: 0.7,
+          fillOpacity: 0.1
+        }
+      })
+      .bindPopup(property.address)
+      .addTo(map);
+
+      savedLayersRef.current[layerId] = layer;
+    });
+  }, [mapRef, savedProperties]);
+
   return (
     <div className="relative w-full h-full">
       <MapContainer
@@ -649,7 +550,6 @@ export function MapView() {
         <OverlayLayers />
         <PropertyBoundary />
         <MapLayerController />
-        <Buildings3D />
         <LayersControl position="topright">
           <LayersControl.BaseLayer checked name="Carto">
             <TileLayer
@@ -683,9 +583,12 @@ export function MapView() {
             />
           </LayersControl.BaseLayer>
         </LayersControl>
+        <TrainStationsLayer />
         <MapInitializer />
         <MapLegends />
         <AmenitiesLegend visible={isShowingAmenities} />
+        <TemperatureControls />
+        <TemperatureLegend />
       </MapContainer>
     </div>
   );

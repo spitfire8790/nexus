@@ -6,7 +6,6 @@ import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import { Play, Pause, Loader2 } from 'lucide-react';
 import * as L from 'leaflet';
-import * as EL from 'esri-leaflet';
 
 interface ImageryLayer {
   year: number;
@@ -15,57 +14,144 @@ interface ImageryLayer {
 }
 
 const IMAGERY_LAYERS: ImageryLayer[] = [
-  { year: 1947, url: 'https://portal.spatial.nsw.gov.au/tileservices/Hosted/HistoricalImagery1947/MapServer', available: true },
-  { year: 1951, url: 'https://portal.spatial.nsw.gov.au/tileservices/Hosted/HistoricalImagery1951/MapServer', available: true },
-  { year: 1955, url: 'https://portal.spatial.nsw.gov.au/tileservices/Hosted/HistoricalImagery1955/MapServer', available: true },
-  { year: 1965, url: 'https://portal.spatial.nsw.gov.au/tileservices/Hosted/HistoricalImagery1965/MapServer', available: true },
-  { year: 1966, url: 'https://portal.spatial.nsw.gov.au/tileservices/Hosted/HistoricalImagery1966/MapServer', available: true },
-  { year: 1971, url: 'https://portal.spatial.nsw.gov.au/tileservices/Hosted/HistoricalImagery1971/MapServer', available: true },
-  { year: 1975, url: 'https://portal.spatial.nsw.gov.au/tileservices/Hosted/HistoricalImagery1975/MapServer', available: true },
-  { year: 1976, url: 'https://portal.spatial.nsw.gov.au/tileservices/Hosted/HistoricalImagery1976/MapServer', available: true },
-  { year: 1978, url: 'https://portal.spatial.nsw.gov.au/tileservices/Hosted/HistoricalImagery1978/MapServer', available: true },
-  { year: 1980, url: 'https://portal.spatial.nsw.gov.au/tileservices/Hosted/HistoricalImagery1980/MapServer', available: true },
-  { year: 2004, url: 'https://portal.spatial.nsw.gov.au/tileservices/Hosted/HistoricalImagery2004/MapServer', available: true },
-  { year: 2005, url: 'https://portal.spatial.nsw.gov.au/tileservices/Hosted/HistoricalImagery2005/MapServer', available: true }
+  { 
+    year: 1947, 
+    url: '/nsw-spatial/tileservices/Hosted/HistoricalImagery1947/MapServer/WMTS/tile/1.0.0/HistoricalImagery1947/default/default028mm/{z}/{y}/{x}', 
+    available: true 
+  },
+  { 
+    year: 1951, 
+    url: '/nsw-spatial/tileservices/Hosted/HistoricalImagery1951/MapServer/WMTS/tile/1.0.0/HistoricalImagery1951/default/default028mm/{z}/{y}/{x}', 
+    available: true 
+  },
+  { 
+    year: 1955, 
+    url: '/nsw-spatial/tileservices/Hosted/HistoricalImagery1955/MapServer/WMTS/tile/1.0.0/HistoricalImagery1955/default/default028mm/{z}/{y}/{x}', 
+    available: true 
+  },
+  { 
+    year: 1965, 
+    url: '/nsw-spatial/tileservices/Hosted/HistoricalImagery1965/MapServer/WMTS/tile/1.0.0/HistoricalImagery1965/default/default028mm/{z}/{y}/{x}', 
+    available: true 
+  },
+  { 
+    year: 1966, 
+    url: '/nsw-spatial/tileservices/Hosted/HistoricalImagery1966/MapServer/WMTS/tile/1.0.0/HistoricalImagery1966/default/default028mm/{z}/{y}/{x}', 
+    available: true 
+  },
+  { 
+    year: 1971, 
+    url: '/nsw-spatial/tileservices/Hosted/HistoricalImagery1971/MapServer/WMTS/tile/1.0.0/HistoricalImagery1971/default/default028mm/{z}/{y}/{x}', 
+    available: true 
+  },
+  { 
+    year: 1975, 
+    url: '/nsw-spatial/tileservices/Hosted/HistoricalImagery1975/MapServer/WMTS/tile/1.0.0/HistoricalImagery1975/default/default028mm/{z}/{y}/{x}', 
+    available: true 
+  },
+  { 
+    year: 1976, 
+    url: '/nsw-spatial/tileservices/Hosted/HistoricalImagery1976/MapServer/WMTS/tile/1.0.0/HistoricalImagery1976/default/default028mm/{z}/{y}/{x}', 
+    available: true 
+  },
+  { 
+    year: 1978, 
+    url: '/nsw-spatial/tileservices/Hosted/HistoricalImagery1978/MapServer/WMTS/tile/1.0.0/HistoricalImagery1978/default/default028mm/{z}/{y}/{x}', 
+    available: true 
+  },
+  { 
+    year: 1980, 
+    url: '/nsw-spatial/tileservices/Hosted/HistoricalImagery1980/MapServer/WMTS/tile/1.0.0/HistoricalImagery1980/default/default028mm/{z}/{y}/{x}', 
+    available: true 
+  },
+  { 
+    year: 2004, 
+    url: '/nsw-spatial/tileservices/Hosted/HistoricalImagery2004/MapServer/WMTS/tile/1.0.0/HistoricalImagery2004/default/default028mm/{z}/{y}/{x}', 
+    available: true 
+  },
+  { 
+    year: 2005, 
+    url: '/nsw-spatial/tileservices/Hosted/HistoricalImagery2005/MapServer/WMTS/tile/1.0.0/HistoricalImagery2005/default/default028mm/{z}/{y}/{x}', 
+    available: true 
+  }
 ];
 
+// Add this function at the top level
+const ensureMapPanes = (map: L.Map) => {
+  if (!map.getPane('imagery-pane')) {
+    map.createPane('imagery-pane');
+    map.getPane('imagery-pane')!.style.zIndex = '400';
+  }
+};
+
+// Function to check layer availability
+const checkLayerAvailability = async (layer: ImageryLayer): Promise<boolean> => {
+  try {
+    const baseUrl = layer.url.split('/WMTS')[0];
+    const response = await fetch(`${baseUrl}?f=json`);
+    const data = await response.json();
+    return !data.error;
+  } catch {
+    return false;
+  }
+};
+
 export function ImageryTab() {
-  const map = useMapStore((state) => state.mapInstance);
   const selectedProperty = useMapStore((state) => state.selectedProperty);
   const [currentLayerIndex, setCurrentLayerIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [currentLayer, setCurrentLayer] = useState<L.Layer | null>(null);
+  const [currentLayer, setCurrentLayer] = useState<L.TileLayer | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [hasError, setHasError] = useState(false);
+  const [imageryMap, setImageryMap] = useState<L.Map | null>(null);
+  const [availableLayers, setAvailableLayers] = useState<ImageryLayer[]>(IMAGERY_LAYERS);
 
+  // Initialize map after component mounts
   useEffect(() => {
-    if (!selectedProperty || !map) return;
+    // Wait for next tick to ensure container is mounted
+    const container = document.getElementById('imagery-map');
+    if (!container) return;
 
-    try {
-      const coordinates = selectedProperty.lots?.[0]?.geometry?.rings?.[0];
-      
-      if (!coordinates || !Array.isArray(coordinates)) {
-        throw new Error('No valid coordinates found');
+    const map = L.map(container, {
+      center: [
+        selectedProperty?.latitude || -33.8688,
+        selectedProperty?.longitude || 151.2093
+      ],
+      zoom: 16,
+      zoomControl: true,
+      attributionControl: true,
+      maxZoom: 18,
+      minZoom: 10
+    });
+
+    // Add a base tile layer first
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', {
+      attribution: ' OpenStreetMap, CartoDB',
+      maxZoom: 18
+    }).addTo(map);
+
+    // Force a resize and set state
+    map.invalidateSize();
+    setImageryMap(map);
+
+    return () => {
+      if (map) {
+        map.eachLayer((layer) => map.removeLayer(layer));
+        map.remove();
+        setImageryMap(null);
       }
+    };
+  }, []);
 
-      // Convert Web Mercator coordinates to LatLng
-      const latLngs = coordinates.map((coord: number[]) => {
-        const point = L.point(coord[0], coord[1]);
-        return L.CRS.EPSG3857.unproject(point);
-      });
-
-      const bounds = L.latLngBounds(latLngs);
-      map.fitBounds(bounds, { padding: [50, 50] });
-
-    } catch (error) {
-      console.error('Error processing geometry:', error);
-      
-      if (selectedProperty.latitude && selectedProperty.longitude) {
-        const center = L.latLng(selectedProperty.latitude, selectedProperty.longitude);
-        map.setView(center, 18);
-      }
-    }
-  }, [selectedProperty, map]);
+  // Separate effect for updating view when property changes
+  useEffect(() => {
+    if (!imageryMap || !selectedProperty?.latitude || !selectedProperty?.longitude) return;
+    
+    imageryMap.setView(
+      [selectedProperty.latitude, selectedProperty.longitude],
+      16
+    );
+  }, [imageryMap, selectedProperty]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -73,7 +159,7 @@ export function ImageryTab() {
     if (isPlaying) {
       interval = setInterval(() => {
         setCurrentLayerIndex(current => 
-          current === IMAGERY_LAYERS.length - 1 ? 0 : current + 1
+          current === availableLayers.length - 1 ? 0 : current + 1
         );
       }, 2000);
     }
@@ -83,47 +169,68 @@ export function ImageryTab() {
     };
   }, [isPlaying]);
 
+  // Query available layers on mount
   useEffect(() => {
-    if (!map) return;
+    const queryLayers = async () => {
+      setIsLoading(true);
+      try {
+        const checkedLayers = await Promise.all(
+          IMAGERY_LAYERS.map(async (layer) => ({
+            ...layer,
+            available: await checkLayerAvailability(layer)
+          }))
+        );
+        setAvailableLayers(checkedLayers.filter(l => l.available));
+      } catch (error) {
+        console.error('Error checking layer availability:', error);
+        setAvailableLayers(IMAGERY_LAYERS);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    queryLayers();
+  }, []);
 
-    setIsLoading(true);
-    setHasError(false);
-
-    // Remove current layer if it exists
-    if (currentLayer && map.hasLayer(currentLayer)) {
-      map.removeLayer(currentLayer);
-    }
-
+  useEffect(() => {
+    if (!imageryMap) return;
+    
     try {
-      // Create new layer using esri-leaflet tiledMapLayer
-      const layer = EL.tiledMapLayer({
-        url: IMAGERY_LAYERS[currentLayerIndex].url,
-        opacity: 1,
-        useCors: false
-      }).addTo(map);
+      // Remove previous layer
+      if (currentLayer && imageryMap.hasLayer(currentLayer)) {
+        imageryMap.removeLayer(currentLayer);
+      }
 
-      // Handle load events
+      const currentLayerData = availableLayers[currentLayerIndex];
+      
+      // Create and add new layer
+      const layer = L.tileLayer(currentLayerData.url, {
+        tileSize: 256,
+        attribution: ' NSW Spatial Services'
+      }).addTo(imageryMap);
+
       layer.on('loading', () => setIsLoading(true));
       layer.on('load', () => setIsLoading(false));
-      layer.on('error', (e) => {
-        console.error('Layer load error:', e);
+      layer.on('error', (error) => {
+        console.error('Layer loading error:', error);
         setHasError(true);
         setIsLoading(false);
       });
 
       setCurrentLayer(layer);
 
-      return () => {
-        if (layer && map.hasLayer(layer)) {
-          map.removeLayer(layer);
-        }
-      };
+      if (selectedProperty?.latitude && selectedProperty?.longitude) {
+        imageryMap.setView(
+          [selectedProperty.latitude, selectedProperty.longitude],
+          16
+        );
+      }
+
     } catch (error) {
       console.error('Error creating layer:', error);
       setHasError(true);
       setIsLoading(false);
     }
-  }, [map, currentLayerIndex]);
+  }, [imageryMap, currentLayerIndex, availableLayers, selectedProperty]);
 
   if (!selectedProperty) {
     return (
@@ -137,12 +244,21 @@ export function ImageryTab() {
 
   return (
     <div className="p-4 space-y-4">
+      <div 
+        id="imagery-map" 
+        className="w-full h-[400px] rounded-lg border"
+        style={{ 
+          position: 'relative',
+          backgroundColor: '#f5f5f5'
+        }} 
+      />
+      
       <Card className="p-4">
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium">
-                Year: {IMAGERY_LAYERS[currentLayerIndex].year}
+                Year: {availableLayers[currentLayerIndex]?.year || ''}
               </span>
               {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
             </div>
@@ -150,7 +266,7 @@ export function ImageryTab() {
               variant="outline"
               size="sm"
               onClick={() => setIsPlaying(!isPlaying)}
-              disabled={isLoading || hasError}
+              disabled={isLoading || hasError || availableLayers.length === 0}
             >
               {isPlaying ? (
                 <><Pause className="h-4 w-4 mr-2" /> Pause</>
@@ -162,37 +278,42 @@ export function ImageryTab() {
           
           {hasError && (
             <Alert variant="destructive">
-              <AlertTitle>Failed to load imagery for this year</AlertTitle>
+              <AlertTitle>Failed to load imagery. Please try again later.</AlertTitle>
+            </Alert>
+          )}
+
+          {availableLayers.length === 0 && !isLoading && (
+            <Alert>
+              <AlertTitle>No historical imagery available for this location</AlertTitle>
             </Alert>
           )}
           
           <Slider
             value={[currentLayerIndex]}
-            max={IMAGERY_LAYERS.length - 1}
+            max={availableLayers.length - 1}
             step={1}
             onValueChange={(value) => {
               setCurrentLayerIndex(value[0]);
               setIsPlaying(false);
             }}
-            disabled={isLoading}
+            disabled={isLoading || availableLayers.length === 0}
           />
 
-          <div className="flex justify-between text-sm text-muted-foreground">
-            {IMAGERY_LAYERS.map((layer, index) => (
-              <span
+          <div className="grid grid-cols-12 gap-1 text-xs text-muted-foreground mt-2">
+            {availableLayers.map((layer, index) => (
+              <div
                 key={layer.year}
-                className={index === currentLayerIndex ? 'font-bold' : ''}
+                className={`text-center ${index === currentLayerIndex ? 'font-bold text-primary' : ''}`}
                 style={{ 
-                  transform: 'rotate(-45deg)',
-                  transformOrigin: 'top left'
+                  gridColumn: `span ${Math.floor(12 / availableLayers.length)} / span ${Math.floor(12 / availableLayers.length)}`
                 }}
               >
                 {layer.year}
-              </span>
+              </div>
             ))}
           </div>
         </div>
       </Card>
     </div>
   );
-} 
+}

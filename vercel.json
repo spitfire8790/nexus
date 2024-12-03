@@ -1,6 +1,6 @@
 {
   "framework": "vite",
-  "buildCommand": "npm run build", 
+  "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "rewrites": [
     {
@@ -22,9 +22,9 @@
     {
       "source": "/api/proxy",
       "has": [
-        { 
-          "type": "header", 
-          "key": "EPINAME" 
+        {
+          "type": "header",
+          "key": "EPINAME"
         },
         {
           "type": "header",
@@ -36,17 +36,13 @@
     {
       "source": "/api/tiles/:path*",
       "destination": "https://tiles.opencitymodel.org/data/v1/:path*"
-    }
-  ],
-  "headers": [
+    },
     {
-      "source": "/api/(.*)",
-      "headers": [
-        { "key": "Access-Control-Allow-Origin", "value": "*" },
-        { "key": "Access-Control-Allow-Methods", "value": "GET, POST, OPTIONS" },
-        { "key": "Access-Control-Allow-Headers", "value": "Content-Type, Accept, EPINAME, ZONECODE" },
-        { "key": "Access-Control-Expose-Headers", "value": "Content-Type, Accept, EPINAME, ZONECODE" }
-      ]
+      "source": "/api/transport/:path*",
+      "destination": "https://api.transport.nsw.gov.au/v2/gtfs/vehiclepos/:path*",
+      "headers": {
+        "Authorization": "apikey eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJqdGkiOiJvU2d0cm1TYmFBYkpxSUJRMnN4Z3diOVBjcjRqMmRJZTFVVnB5cXNoMzQ4IiwiaWF0IjoxNzMzMjQ3MTAxfQ.6S3G_xrpfZqw7hMJ0YApvMjvyKwubJV_nWoZNMZoFnE"
+      }
     }
   ]
 }

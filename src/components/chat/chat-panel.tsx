@@ -13,7 +13,7 @@ export function ChatPanel() {
   const [currentTab, setCurrentTab] = useState("general");
 
   return (
-    <div className="h-full">
+    <div className="h-full flex flex-col">
       <Tabs 
         value={currentTab} 
         onValueChange={setCurrentTab}

@@ -47,6 +47,26 @@ export default defineConfig({
             console.log('Received:', proxyRes.statusCode, req.url);
           });
         }
+      },
+      '/nsw-spatial': {
+        target: 'https://portal.spatial.nsw.gov.au',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/nsw-spatial/, ''),
+        configure: (proxy, _options) => {
+          proxy.on('error', (err, req, res) => {
+            console.log('NSW Spatial proxy error:', err);
+            if (!res.headersSent) {
+              res.writeHead(500, {
+                'Content-Type': 'application/json',
+              });
+              res.end(JSON.stringify({ error: err.message }));
+            }
+          });
+          proxy.on('proxyReq', (proxyReq, req, _res) => {
+            console.log('Proxying NSW Spatial:', req.method, req.url, '→', proxyReq.path);
+          });
+        }
       }
     }
   }

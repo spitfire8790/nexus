@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import * as L from 'leaflet';
+import { supabase } from '@/lib/supabase';
 
 export interface MapLayer {
   id: string;
@@ -23,6 +24,8 @@ export interface MapLayer {
     min: number;
     max: number;
   } | null;
+  timeIndex?: number;
+  emissionScenario?: 'low' | 'high';
 }
 
 interface PropertyData {
@@ -58,8 +61,6 @@ interface MapState {
   setCurrentTab: (tab: string) => void;
   searchRadius: number;
   setSearchRadius: (radius: number) => void;
-  buildings3D: boolean;
-  setBuildings3D: (enabled: boolean) => void;
   mapSelectMode: boolean;
   setMapSelectMode: (enabled: boolean) => void;
   headerAddress: string | null;
@@ -72,6 +73,14 @@ interface MapState {
   setShowAmenityLabels: (show: boolean) => void;
   measureMode: 'none' | 'distance' | 'area';
   setMeasureMode: (mode: 'none' | 'distance' | 'area') => void;
+  updateTimeIndex: (id: string, index: number) => void;
+  updateEmissionScenario: (id: string, scenario: 'low' | 'high') => void;
+  isChatOpen: boolean;
+  toggleChat: () => void;
+  savedProperties: SavedProperty[];
+  setSavedProperties: (properties: SavedProperty[]) => void;
+  addSavedProperty: (property: Omit<SavedProperty, 'id'>) => Promise<void>;
+  removeSavedProperty: (id: string) => Promise<void>;
 }
 
 export interface ZoneOption {
@@ -173,7 +182,13 @@ interface LayerGroup {
   layers: MapLayer[];
 }
 
-export const useMapStore = create<MapState>((set) => ({
+interface SavedProperty {
+  id: string;
+  address: string;
+  geometry: GeoJSON.Feature;
+}
+
+export const useMapStore = create<MapState>((set, get) => ({
   layerGroups: [
     {
       id: 'basemaps',
@@ -303,17 +318,36 @@ export const useMapStore = create<MapState>((set) => ({
       ]
     },
     {
-      id: '3d',
-      name: '3D Features',
+      id: 'climate',
+      name: 'Climate',
       layers: [
         {
-          id: 'buildings3d',
-          name: '3D Buildings',
-          type: 'custom',
+          id: 'temperature',
+          name: 'Average Temperature',
+          url: 'https://mapprod.environment.nsw.gov.au/arcgis/rest/services/NARCliM2/Tas/MapServer',
           enabled: false,
+          type: 'dynamic',
+          layerId: 0,
+          opacity: 0.7,
+          timeIndex: 0,
+          emissionScenario: 'low',
+          attribution: ' NSW Government - Department of Planning, Housing and Infrastructure'
+        }
+      ]
+    },
+    {
+      id: 'transport',
+      name: 'Transport',
+      layers: [
+        {
+          id: 'train-stations',
+          name: 'Train Stations',
+          url: 'https://portal.spatial.nsw.gov.au/server/rest/services/NSW_FOI_Transport_Facilities/FeatureServer/1',
+          enabled: false,
+          type: 'custom',
           opacity: 1,
-          attribution: ' OSM Buildings',
-          tooltipKey: 'buildings3d'
+          attribution: '© Transport for NSW',
+          data: null
         }
       ]
     }
@@ -384,8 +418,6 @@ export const useMapStore = create<MapState>((set) => ({
   setCurrentTab: (tab) => set({ currentTab: tab }),
   searchRadius: 1.5,
   setSearchRadius: (radius) => set({ searchRadius: radius }),
-  buildings3D: false,
-  setBuildings3D: (enabled) => set({ buildings3D: enabled }),
   mapSelectMode: false,
   setMapSelectMode: (enabled) => set({ mapSelectMode: enabled }),
   headerAddress: null,
@@ -423,5 +455,77 @@ export const useMapStore = create<MapState>((set) => ({
   showAmenityLabels: true,
   setShowAmenityLabels: (show) => set({ showAmenityLabels: show }),
   measureMode: 'none',
-  setMeasureMode: (mode) => set({ measureMode: mode })
+  setMeasureMode: (mode) => set({ measureMode: mode }),
+  updateTimeIndex: (id, index) => {
+    set((state) => ({
+      layerGroups: state.layerGroups.map(group => ({
+        ...group,
+        layers: group.layers.map(layer =>
+          layer.id === id ? {
+            ...layer,
+            layerId: layer.emissionScenario === 'low' ? index : index + 35
+          } : layer
+        )
+      }))
+    }));
+  },
+  updateEmissionScenario: (id, scenario) => {
+    set((state) => ({
+      layerGroups: state.layerGroups.map(group => ({
+        ...group,
+        layers: group.layers.map(layer =>
+          layer.id === id ? {
+            ...layer,
+            emissionScenario: scenario,
+            layerId: scenario === 'low' ? layer.timeIndex : layer.timeIndex + 35
+          } : layer
+        )
+      }))
+    }));
+  },
+  isChatOpen: false,
+  toggleChat: () => set((state) => ({ isChatOpen: !state.isChatOpen })),
+  savedProperties: [],
+  setSavedProperties: (properties) => set({ savedProperties: properties }),
+  
+  addSavedProperty: async (property) => {
+    try {
+      const { data, error } = await supabase
+        .from('saved_properties')
+        .insert({
+          address: property.address,
+          geometry: property.geometry,
+          user_id: (await supabase.auth.getUser()).data.user?.id
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      set((state) => ({
+        savedProperties: [...state.savedProperties, data]
+      }));
+    } catch (error) {
+      console.error('Error saving property:', error);
+      throw error;
+    }
+  },
+
+  removeSavedProperty: async (id) => {
+    try {
+      const { error } = await supabase
+        .from('saved_properties')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      set((state) => ({
+        savedProperties: state.savedProperties.filter(p => p.id !== id)
+      }));
+    } catch (error) {
+      console.error('Error removing property:', error);
+      throw error;
+    }
+  }
 }));

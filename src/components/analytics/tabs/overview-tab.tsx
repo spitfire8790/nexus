@@ -320,20 +320,18 @@ export function OverviewTab() {
 
           {/* Lots */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-shrink-0 w-[200px]">
               <Layers className="h-4 w-4" />
               <span className="font-semibold">Lots</span>
               <TooltipWrapper tooltipKey="lotsInfo" showIcon />
             </div>
-            <div>
+            <div className="w-[300px] text-right">
               {selectedProperty?.lots && selectedProperty.lots.length > 0 ? (
-                <div className="text-right">
-                  {selectedProperty.lots.map((lot: Lot) => (
-                    <div key={lot.attributes.LotDescription}>
-                      {lot.attributes.LotDescription}
-                    </div>
-                  ))}
-                </div>
+                <span>
+                  {selectedProperty.lots
+                    .map((lot: Lot) => lot.attributes.LotDescription)
+                    .join(', ')}
+                </span>
               ) : (
                 <span className="text-muted-foreground">No lot information</span>
               )}

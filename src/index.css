@@ -330,3 +330,12 @@ html, body {
 .leaflet-popup {
   transition: all 1s ease-in-out;
 }
+
+.custom-station-icon {
+  pointer-events: none;
+}
+
+.custom-station-icon > div {
+  color: #1d4ed8;
+  transform: translateY(-50%);
+}

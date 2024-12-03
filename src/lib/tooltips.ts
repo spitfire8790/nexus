@@ -162,6 +162,20 @@ export const TOOLTIPS: { [key: string]: TooltipConfig } = {
     description: "OpenStreetMap 3D building models showing building footprints and heights",
     source: "OpenStreetMap Contributors",
     link: "https://osmbuildings.org/"
+  },
+
+  temperature: {
+    name: "Average Temperature",
+    description: "Projected changes in average temperature across NSW based on NARCliM2.0 climate projections for different emission scenarios.",
+    source: "NSW Department of Planning, Housing and Infrastructure",
+    link: "https://mapprod.environment.nsw.gov.au/arcgis/rest/services/NARCliM2/Tas/MapServer"
+  },
+
+  "live-transport": {
+    name: "Live Transport",
+    description: "Real-time positions of public transport vehicles in NSW",
+    source: "Transport for NSW Open Data Hub",
+    link: "https://opendata.transport.nsw.gov.au/"
   }
 };
 

@@ -18,8 +18,12 @@ import { AuthCallback } from '@/components/auth/callback';
 import { Card } from "@/components/ui/card";
 import { Logo } from "@/components/ui/logo";
 import { cn } from "@/lib/utils";
+import { FloatingChat } from "@/components/chat/floating-chat";
+import { SavedPropertiesPane } from "@/components/saved-properties-pane";
+import { useSavedProperties } from '@/hooks/use-saved-properties';
 
 function App() {
+  useSavedProperties();
   const [isVerticalDisplay, setIsVerticalDisplay] = useState(false);
   const { user, loading } = useAuth();
   const [isReporterActive] = useState(false);
@@ -86,17 +90,8 @@ function App() {
                       <ResizablePanel defaultSize={67}>
                         <LayerControl />
                       </ResizablePanel>
-                      <ResizeHandle withHandle />
                       <ResizablePanel defaultSize={33}>
-                        <Card className="h-full bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/75">
-                          <div className="p-4 border-b flex items-center gap-2">
-                            <MessageCircle className="h-5 w-5" />
-                            <h2 className="font-semibold text-left">Chat</h2>
-                          </div>
-                          <div className="h-[calc(100%-60px)]">
-                            <ChatPanel />
-                          </div>
-                        </Card>
+                        <SavedPropertiesPane />
                       </ResizablePanel>
                     </ResizablePanelGroup>
                   </ResizablePanel>
@@ -130,6 +125,7 @@ function App() {
               </ResizablePanel>
             </ResizablePanelGroup>
           </main>
+          <FloatingChat />
         </div>
       } />
     </Routes>
