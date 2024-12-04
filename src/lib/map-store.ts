@@ -342,12 +342,36 @@ export const useMapStore = create<MapState>((set, get) => ({
         {
           id: 'train-stations',
           name: 'Train Stations',
-          url: 'https://portal.spatial.nsw.gov.au/server/rest/services/NSW_FOI_Transport_Facilities/FeatureServer/1',
           enabled: false,
           type: 'custom',
           opacity: 1,
           attribution: '© Transport for NSW',
-          data: null
+        },
+        {
+          id: 'metro-stations',
+          name: 'Metro Stations',
+          enabled: false,
+          type: 'custom',
+          opacity: 1,
+          attribution: '© Transport for NSW',
+        },
+        {
+          id: 'light-rail-stops',
+          name: 'Light Rail Stops',
+          enabled: false,
+          type: 'custom',
+          opacity: 1,
+          attribution: '© Transport for NSW',
+        },
+        {
+          id: 'rail-lines',
+          name: 'Rail Lines',
+          url: 'https://portal.spatial.nsw.gov.au/server/rest/services/NSW_Transport_Theme/MapServer',
+          enabled: false,
+          type: 'dynamic',
+          layerId: 7,
+          opacity: 1,
+          attribution: '© Transport for NSW'
         }
       ]
     }

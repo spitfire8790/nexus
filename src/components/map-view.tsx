@@ -4,8 +4,6 @@ import * as L from 'leaflet';
 import * as EL from 'esri-leaflet';
 import * as ELG from 'esri-leaflet-geocoder';
 import 'leaflet/dist/leaflet.css';
-import '@geoman-io/leaflet-geoman-free';
-import '@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css';
 import 'esri-leaflet-geocoder/dist/esri-leaflet-geocoder.css';
 import { useMapStore } from '@/lib/map-store';
 import { Deck } from '@deck.gl/core';
@@ -15,6 +13,8 @@ import { AmenitiesLegend } from './analytics/tabs/amenities-tab';
 import { TemperatureControls } from './map/temperature-controls';
 import { TemperatureLegend } from './map/temperature-legend';
 import { TrainStationsLayer } from './map/train-stations-layer';
+import { LightRailStopsLayer } from './map/light-rail-stops-layer';
+import { MetroStationsLayer } from './map/sydney-metro-station-layer';
 
 // Fix for default marker icons in Leaflet with Vite
 import icon from 'leaflet/dist/images/marker-icon.png';
@@ -33,19 +33,56 @@ let DefaultIcon = L.Icon.extend({
 
 L.Marker.prototype.options.icon = new DefaultIcon();
 
+// Initialize Leaflet-Geoman
+const initGeoman = (map: L.Map) => {
+  return new Promise((resolve, reject) => {
+    try {
+      // Dynamically import Geoman
+      require('@geoman-io/leaflet-geoman-free');
+      require('@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css');
+      
+      // Wait for next tick to ensure plugin is loaded
+      setTimeout(() => {
+        if (map.pm) {
+          map.pm.addControls({
+            position: 'topleft',
+            drawCircle: false,
+            drawCircleMarker: false,
+            drawPolyline: false,
+            drawRectangle: false,
+            drawPolygon: false,
+            drawMarker: false,
+            cutPolygon: false,
+            rotateMode: false,
+          });
+          resolve(true);
+        } else {
+          reject(new Error('Geoman not initialized properly'));
+        }
+      }, 100);
+    } catch (error) {
+      reject(error);
+    }
+  });
+};
+
 // Constants for pane management
 const BASE_PANE = 'base-pane';
-const BASE_PANE_Z_INDEX = 200;
+const BASE_PANE_Z_INDEX = 1;
 const OVERLAY_PANE = 'overlay-pane';
-const OVERLAY_PANE_Z_INDEX = 400;
+const OVERLAY_PANE_Z_INDEX = 200;
 const BOUNDARY_PANE = 'boundary';
-const BOUNDARY_PANE_Z_INDEX = 600;
+const BOUNDARY_PANE_Z_INDEX = 300;
 const RADIUS_PANE = 'radius-pane';
-const RADIUS_PANE_Z_INDEX = 399;
+const RADIUS_PANE_Z_INDEX = 350;
 const AMENITIES_PANE = 'amenities-pane';
-const AMENITIES_PANE_Z_INDEX = 650;
+const AMENITIES_PANE_Z_INDEX = 400;
 export const AMENITIES_POPUP_PANE = 'amenities-popup-pane';
-export const AMENITIES_POPUP_PANE_Z_INDEX = 675;
+export const AMENITIES_POPUP_PANE_Z_INDEX = 450;
+const WIKI_PANE = 'wiki-pane';
+const WIKI_PANE_Z_INDEX = 1000;
+export const WIKI_POPUP_PANE = 'wiki-popup-pane';
+export const WIKI_POPUP_PANE_Z_INDEX = 1001;
 
 function MapClickHandler() {
   const { setSelectedProperty } = useMapStore();
@@ -158,60 +195,34 @@ function MapController() {
       map.getPane(AMENITIES_POPUP_PANE)!.style.zIndex = AMENITIES_POPUP_PANE_Z_INDEX.toString();
     }
 
+    if (!map.getPane(WIKI_PANE)) {
+      map.createPane(WIKI_PANE);
+      map.getPane(WIKI_PANE)!.style.zIndex = WIKI_PANE_Z_INDEX.toString();
+    }
+
+    if (!map.getPane(WIKI_POPUP_PANE)) {
+      map.createPane(WIKI_POPUP_PANE);
+      map.getPane(WIKI_POPUP_PANE)!.style.zIndex = WIKI_POPUP_PANE_Z_INDEX.toString();
+    }
+
     // Initialize Leaflet.Geoman controls
-    map.pm.addControls({
-      position: 'topleft',
-      drawControls: false,
-      editControls: false,
-      customControls: false,
-    });
+    let isGeomanInitialized = false;
 
-    // Add Esri Geocoder control
-    const searchControl = (ELG as any).geosearch({
-      position: 'topleft',
-      placeholder: 'Search for places or addresses',
-      useMapBounds: false,
-      providers: [
-        (ELG as any).arcgisOnlineProvider({
-          nearby: {
-            lat: -33.8688,
-            lng: 151.2093
-          }
-        })
-      ]
-    }).addTo(map);
-
-    searchControlRef.current = searchControl;
-
-    // Add search result handler
-    searchControl.on('results', (data: any) => {
-      console.log('Search results:', data);
-      if (data.results && data.results.length > 0) {
-        const result = data.results[0];
-        console.log('Selected search result:', result);
+    const initializeGeoman = async () => {
+      try {
+        await initGeoman(map);
+        isGeomanInitialized = true;
+      } catch (error) {
+        console.error('Error initializing Geoman:', error);
       }
-    });
-
-    // Add mousemove handler
-    const onMouseMove = (e: L.LeafletMouseEvent) => {
-      setMousePosition(e.latlng);
     };
 
-    map.on('mousemove', onMouseMove);
-
-    // Trigger a resize event after the map is loaded
-    const resizeTimer = setTimeout(() => {
-      map.invalidateSize();
-    }, 100);
+    initializeGeoman();
 
     return () => {
-      clearTimeout(resizeTimer);
-      map.pm.removeControls();
-      if (searchControlRef.current) {
-        searchControlRef.current.remove();
+      if (isGeomanInitialized && map.pm) {
+        map.pm.removeControls();
       }
-      map.off('mousemove', onMouseMove);
-      map.off('moveend', onMoveEnd);
     };
   }, [map]);
 
@@ -584,6 +595,8 @@ export function MapView() {
           </LayersControl.BaseLayer>
         </LayersControl>
         <TrainStationsLayer />
+        <LightRailStopsLayer />
+        <MetroStationsLayer />
         <MapInitializer />
         <MapLegends />
         <AmenitiesLegend visible={isShowingAmenities} />

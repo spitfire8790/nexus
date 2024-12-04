@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils";
 import { FloatingChat } from "@/components/chat/floating-chat";
 import { SavedPropertiesPane } from "@/components/saved-properties-pane";
 import { useSavedProperties } from '@/hooks/use-saved-properties';
+import { UserCursors } from "@/components/admin/user-cursors";
 
 function App() {
   useSavedProperties();
@@ -58,76 +59,84 @@ function App() {
   return (
     <Routes>
       <Route path="/auth/callback" element={<AuthCallback />} />
-      <Route path="/*" element={
-        <div className="h-screen w-screen flex flex-col overflow-hidden m-0 p-0">
-          {/* Header bar with app title and description */}
-          <header className="border-b bg-card shadow-sm">
-            <div className="px-4 flex h-14 items-center">
-              <Logo />
-              <span className="text-sm text-muted-foreground ml-2">Property and Planning Analytics</span>
-            </div>
-          </header>
-          <main className="flex-1 flex flex-col h-full overflow-hidden">
-            {/* Main layout with vertical direction */} 
-            <ResizablePanelGroup direction="vertical" className="h-full">
-              {/* Search panel - fixed 8% height */}
-              <ResizablePanel defaultSize={6} minSize={6} maxSize={6} className="border-b">
-                <SearchPanel />
-              </ResizablePanel>
-              {/* Main panel group - 92% height */}
-              <ResizablePanel defaultSize={92}>
-                <ResizablePanelGroup 
-                  direction={isVerticalDisplay ? 'vertical' : 'horizontal'} 
-                  className="h-full"
-                >
-                  {/* Left panel group - increasing from 15% to 20% width */}
-                  <ResizablePanel 
-                    defaultSize={isVerticalDisplay ? 25 : 20} 
-                    minSize={isVerticalDisplay ? 15 : 10} 
-                    maxSize={isVerticalDisplay ? 40 : 30}
+      <Route 
+        path="/*" 
+        element={
+          <div className="h-screen w-screen flex flex-col overflow-hidden m-0 p-0">
+            {user?.user_metadata?.isAdmin && <UserCursors />}
+            {/* Header bar with app title and description */}
+            <header className="border-b bg-card shadow-sm">
+              <div className="px-4 flex h-14 items-center">
+                <Logo />
+                <span className="text-sm text-muted-foreground ml-2">Property and Planning Analytics</span>
+              </div>
+            </header>
+            <main className="flex-1 flex flex-col h-full overflow-hidden">
+              {/* Main layout with vertical direction */} 
+              <ResizablePanelGroup direction="vertical" className="h-full">
+                {/* Search panel - fixed 8% height */}
+                <ResizablePanel defaultSize={6} minSize={6} maxSize={6} className="border-b">
+                  <SearchPanel />
+                </ResizablePanel>
+                {/* Main panel group - 92% height */}
+                <ResizablePanel defaultSize={92}>
+                  <ResizablePanelGroup 
+                    direction={isVerticalDisplay ? 'vertical' : 'horizontal'} 
+                    className="h-full"
                   >
-                    <ResizablePanelGroup direction="vertical">
-                      <ResizablePanel defaultSize={67}>
-                        <LayerControl />
-                      </ResizablePanel>
-                      <ResizablePanel defaultSize={33}>
-                        <SavedPropertiesPane />
-                      </ResizablePanel>
-                    </ResizablePanelGroup>
-                  </ResizablePanel>
-                  <ResizeHandle withHandle>
-                    <div className={isVerticalDisplay ? 'rotate-90' : ''}>
-                      <GripVertical className="h-4 w-4" />
-                    </div>
-                  </ResizeHandle>
-                  {/* Map panel - reducing from 55% to 50% width */}
-                  <ResizablePanel 
-                    defaultSize={isVerticalDisplay ? 50 : 50} 
-                    minSize={40}
-                  >
-                    <MapLayout />
-                  </ResizablePanel>
-                  <ResizeHandle withHandle>
-                    <div className={isVerticalDisplay ? 'rotate-90' : ''}>
-                      <GripVertical className="h-4 w-4" />
-                    </div>
-                  </ResizeHandle>
-                  {/* Analytics panel - 35% width */}
-                  <ResizablePanel 
-                    className={cn(
-                      "transition-all duration-300",
-                      isReporterActive ? "!w-screen" : ""
-                    )}
-                  >
-                    <AnalyticsPanel />
-                  </ResizablePanel>
-                </ResizablePanelGroup>
-              </ResizablePanel>
-            </ResizablePanelGroup>
-          </main>
-          <FloatingChat />
-        </div>
-      } />
+                    {/* Left panel group - increasing from 15% to 20% width */}
+                    <ResizablePanel 
+                      defaultSize={isVerticalDisplay ? 25 : 20} 
+                      minSize={isVerticalDisplay ? 15 : 10} 
+                      maxSize={isVerticalDisplay ? 40 : 30}
+                    >
+                      <ResizablePanelGroup direction="vertical">
+                        <ResizablePanel defaultSize={75}>
+                          <LayerControl />
+                        </ResizablePanel>
+                        <ResizeHandle withHandle>
+                          <div>
+                            <GripVertical className="h-4 w-4" />
+                          </div>
+                        </ResizeHandle>
+                        <ResizablePanel defaultSize={25}>
+                          <SavedPropertiesPane />
+                        </ResizablePanel>
+                      </ResizablePanelGroup>
+                    </ResizablePanel>
+                    <ResizeHandle withHandle>
+                      <div className={isVerticalDisplay ? 'rotate-90' : ''}>
+                        <GripVertical className="h-4 w-4" />
+                      </div>
+                    </ResizeHandle>
+                    {/* Map panel - reducing from 55% to 50% width */}
+                    <ResizablePanel 
+                      defaultSize={isVerticalDisplay ? 50 : 50} 
+                      minSize={40}
+                    >
+                      <MapLayout />
+                    </ResizablePanel>
+                    <ResizeHandle withHandle>
+                      <div className={isVerticalDisplay ? 'rotate-90' : ''}>
+                        <GripVertical className="h-4 w-4" />
+                      </div>
+                    </ResizeHandle>
+                    {/* Analytics panel - 35% width */}
+                    <ResizablePanel 
+                      className={cn(
+                        "transition-all duration-300",
+                        isReporterActive ? "!w-screen" : ""
+                      )}
+                    >
+                      <AnalyticsPanel />
+                    </ResizablePanel>
+                  </ResizablePanelGroup>
+                </ResizablePanel>
+              </ResizablePanelGroup>
+            </main>
+            <FloatingChat />
+          </div>
+        } />
     </Routes>
   );
 }

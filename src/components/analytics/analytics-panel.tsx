@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useMapStore } from '@/lib/map-store';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { MapPin, Building2, FileText, AlertTriangle, DollarSign, Coffee, Users, FileDown, Cloud, Clock } from 'lucide-react';
+import { MapPin, Building2, FileText, AlertTriangle, DollarSign, Coffee, Users, FileDown, Cloud, Clock, BookOpen } from 'lucide-react';
 import { OverviewTab } from './tabs/overview-tab';
 import { DevelopmentTab } from './tabs/development-tab';
 import { PlanningTab } from './tabs/planning-tab';
@@ -12,6 +12,7 @@ import { DemographicsTab } from './tabs/demographics-tab';
 import { ReporterTab } from './tabs/reporter-tab';
 import { ClimateTab } from './tabs/climate-tab';
 import { ImageryTab } from './tabs/imagery-tab';
+import { WikiTab } from './tabs/wiki-tab';
 import { cn } from '@/lib/utils';
 
 export function AnalyticsPanel() {
@@ -32,7 +33,8 @@ export function AnalyticsPanel() {
       demographics: "Local Demographics",
       reporter: "Generate Report",
       climate: "Climate",
-      imagery: "Historical Imagery"
+      imagery: "Historical Imagery",
+      wiki: "Nearby Wikipedia Articles",
     };
     return headerMap[tab] || "Property Details";
   };
@@ -82,12 +84,13 @@ export function AnalyticsPanel() {
           "border-r w-[60px] flex flex-col",
           isReporterActive && "border-r-0"
         )}>
-          <div className="h-[155px] border-b"></div>
+          <div className="h-[175px] border-b"></div>
           <TabsList className="flex flex-col gap-6 p-4">
             <TabsTrigger value="overview" className="w-10 h-10 p-0 relative group">
               <MapPin className="h-6 w-6" />
               <span className="absolute left-[calc(100%+0.5rem)] bg-popover text-popover-foreground px-2 py-1 rounded-md text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 shadow-md z-50">
                 Overview
+
               </span>
             </TabsTrigger>
             <TabsTrigger value="planning" className="w-10 h-10 p-0 relative group">
@@ -126,6 +129,12 @@ export function AnalyticsPanel() {
                 Climate
               </span>
             </TabsTrigger>
+            <TabsTrigger value="wiki" className="w-10 h-10 p-0 relative group">
+              <BookOpen className="h-6 w-6" />
+              <span className="absolute left-[calc(100%+0.5rem)] bg-popover text-popover-foreground px-2 py-1 rounded-md text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 shadow-md z-50">
+                Wikipedia
+              </span>
+            </TabsTrigger>
           </TabsList>
         </div>
 
@@ -147,6 +156,7 @@ export function AnalyticsPanel() {
             <TabsContent value="amenities"><AmenitiesTab /></TabsContent>
             <TabsContent value="demographics"><DemographicsTab /></TabsContent>
             <TabsContent value="climate"><ClimateTab /></TabsContent>
+            <TabsContent value="wiki"><WikiTab /></TabsContent>
           </div>
         </div>
       </Tabs>

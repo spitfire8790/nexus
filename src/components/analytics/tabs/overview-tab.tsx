@@ -209,7 +209,7 @@ export function OverviewTab() {
               y: centerY
             };
 
-            const [hobResponse, lotSizeResponse, heritageResponse] = await Promise.all([
+            const [hobResponse, lotSizeResponse, fsrResponse, heritageResponse] = await Promise.all([
               fetch(
                 `https://mapprod3.environment.nsw.gov.au/arcgis/rest/services/Planning/Principal_Planning_Layers/MapServer/7/query?` +
                 `geometry=${encodeURIComponent(JSON.stringify(pointGeometry))}` +
@@ -229,6 +229,15 @@ export function OverviewTab() {
                 `&f=json`
               ),
               fetch(
+                `https://mapprod3.environment.nsw.gov.au/arcgis/rest/services/Planning/EPI_Primary_Planning_Layers/MapServer/1/query?` +
+                `geometry=${encodeURIComponent(JSON.stringify(pointGeometry))}` +
+                `&geometryType=esriGeometryPoint` +
+                `&spatialRel=esriSpatialRelIntersects` +
+                `&outFields=FSR` +
+                `&returnGeometry=false` +
+                `&f=json`
+              ),
+              fetch(
                 `https://mapprod3.environment.nsw.gov.au/arcgis/rest/services/Planning/EPI_Primary_Planning_Layers/MapServer/0/query?` +
                 `geometry=${encodeURIComponent(JSON.stringify(pointGeometry))}` +
                 `&geometryType=esriGeometryPoint` +
@@ -239,14 +248,27 @@ export function OverviewTab() {
               )
             ]);
 
-            const [hobData, lotSizeData, heritageData] = await Promise.all([
+            const [hobData, lotSizeData, fsrData, heritageData] = await Promise.all([
               hobResponse.json(),
               lotSizeResponse.json(),
+              fsrResponse.json(),
               heritageResponse.json()
             ]);
 
             const hob = hobData.features?.[0]?.attributes?.MAX_B_H;
             const lotSize = lotSizeData.features?.[0]?.attributes?.LOT_SIZE;
+            const fsr = fsrData.features?.find(f => f.attributes?.FSR !== null)?.attributes?.FSR;
+            console.log('Raw FSR value:', fsr);
+
+            if (fsr !== undefined && fsr !== null) {
+              const formattedFsr = fsr < 0.1 ? fsr.toFixed(2) : // For very small values
+                                   fsr % 1 === 0 ? fsr.toFixed(0) : // For whole numbers
+                                   fsr.toFixed(1); // For all other cases
+              data.floorSpaceRatio = `${formattedFsr}:1`;
+            } else {
+              data.floorSpaceRatio = 'Not specified';
+            }
+
             const heritageFeatures = heritageData.features;
             const heritageItems = heritageFeatures?.length
               ? heritageFeatures.map(feature => ({
@@ -264,6 +286,7 @@ export function OverviewTab() {
             data.maxHeight = 'Error loading';
             data.minLotSize = 'Error loading';
             data.heritage = null;
+            data.floorSpaceRatio = 'Error loading';
           }
         };
 
@@ -407,6 +430,18 @@ export function OverviewTab() {
             </div>
             <div>
               {data.zoneInfo === null ? <LoadingState /> : data.zoneInfo}
+            </div>
+          </div>
+
+          {/* Floor Space Ratio */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Building2 className="h-4 w-4" />
+              <span className="font-semibold">Floor Space Ratio (FSR)</span>
+              <TooltipWrapper tooltipKey="floorSpaceRatio" showIcon />
+            </div>
+            <div>
+              {data.floorSpaceRatio === null ? <LoadingState /> : data.floorSpaceRatio}
             </div>
           </div>
 

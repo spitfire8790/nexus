@@ -3,7 +3,7 @@ import { useMap } from 'react-leaflet';
 import * as L from 'leaflet';
 import { useMapStore } from '@/lib/map-store';
 
-interface TrainStation {
+interface LightRailStop {
   type: string;
   stop_name: string;
   stop_lat: string;
@@ -12,14 +12,14 @@ interface TrainStation {
   route_type: string;
 }
 
-interface StationGroup {
+interface StopGroup {
   name: string;
   lat: number;
   lon: number;
   count: number;
 }
 
-export function TrainStationsLayer() {
+export function LightRailStopsLayer() {
   const map = useMap();
   const layerGroups = useMapStore((state) => state.layerGroups);
   const markersRef = useRef<L.LayerGroup | null>(null);
@@ -27,7 +27,7 @@ export function TrainStationsLayer() {
 
   const isEnabled = layerGroups
     .flatMap(group => group.layers)
-    .find(layer => layer.id === 'train-stations')
+    .find(layer => layer.id === 'light-rail-stops')
     ?.enabled || false;
 
   useEffect(() => {
@@ -52,16 +52,16 @@ export function TrainStationsLayer() {
       return;
     }
 
-    const fetchStations = async () => {
+    const fetchStops = async () => {
       try {
-        const response = await fetch('/data/gtfs/train.csv');
+        const response = await fetch('/data/gtfs/lightrail.csv');
         if (!response.ok) {
-          throw new Error(`Failed to fetch train stations: ${response.status} ${response.statusText}`);
+          throw new Error(`Failed to fetch light rail stops: ${response.status} ${response.statusText}`);
         }
         
         const csvText = await response.text();
         if (!csvText.trim()) {
-          throw new Error('Train stations CSV file is empty');
+          throw new Error('Light rail stops CSV file is empty');
         }
 
         // Split by either \n or \r\n to handle different line endings
@@ -71,7 +71,7 @@ export function TrainStationsLayer() {
           .filter(line => line.length > 0);
 
         if (lines.length < 2) {
-          throw new Error('Train stations CSV file has no data rows');
+          throw new Error('Light rail stops CSV file has no data rows');
         }
 
         const headers = lines[0].split(',').map(h => h.trim());
@@ -103,7 +103,7 @@ export function TrainStationsLayer() {
           return values.map(v => v.replace(/^"|"$/g, '').trim());
         };
 
-        const stations: TrainStation[] = lines.slice(1)
+        const stops: LightRailStop[] = lines.slice(1)
           .map(line => {
             const values = parseCSVLine(line);
             if (values.length !== headers.length) {
@@ -111,40 +111,40 @@ export function TrainStationsLayer() {
               return null;
             }
             
-            const station = headers.reduce((obj: any, header, index) => {
+            const stop = headers.reduce((obj: any, header, index) => {
               obj[header] = values[index];
               return obj;
             }, {});
 
             // Validate coordinates
-            const lat = parseFloat(station.stop_lat);
-            const lon = parseFloat(station.stop_lon);
+            const lat = parseFloat(stop.stop_lat);
+            const lon = parseFloat(stop.stop_lon);
             if (isNaN(lat) || isNaN(lon)) {
-              console.warn(`Invalid coordinates for station: ${station.stop_name}`);
+              console.warn(`Invalid coordinates for stop: ${stop.stop_name}`);
               return null;
             }
 
-            return station;
+            return stop;
           })
-          .filter((station): station is TrainStation => 
-            station !== null && 
-            station.stop_name && 
-            !isNaN(parseFloat(station.stop_lat)) && 
-            !isNaN(parseFloat(station.stop_lon))
+          .filter((stop): stop is LightRailStop => 
+            stop !== null && 
+            stop.stop_name && 
+            !isNaN(parseFloat(stop.stop_lat)) && 
+            !isNaN(parseFloat(stop.stop_lon))
           );
 
-        console.log(`Loaded ${stations.length} valid stations`);
+        console.log(`Loaded ${stops.length} valid light rail stops`);
 
-        if (stations.length === 0) {
-          throw new Error('No valid train stations found in CSV');
+        if (stops.length === 0) {
+          throw new Error('No valid light rail stops found in CSV');
         }
 
-        // Group stations by name (excluding platform info)
-        const stationGroups = stations.reduce((acc: { [key: string]: StationGroup }, station) => {
-          // Extract base station name without platform info
-          const baseName = station.stop_name.split(',')[0].trim();
-          const lat = parseFloat(station.stop_lat);
-          const lon = parseFloat(station.stop_lon);
+        // Group stops by name (excluding platform info)
+        const stopGroups = stops.reduce((acc: { [key: string]: StopGroup }, stop) => {
+          // Extract base stop name without platform info
+          const baseName = stop.stop_name.split(',')[0].trim();
+          const lat = parseFloat(stop.stop_lat);
+          const lon = parseFloat(stop.stop_lon);
           
           if (!acc[baseName]) {
             acc[baseName] = {
@@ -162,24 +162,24 @@ export function TrainStationsLayer() {
           return acc;
         }, {});
 
-        console.log(`Grouped into ${Object.keys(stationGroups).length} unique stations`);
+        console.log(`Grouped into ${Object.keys(stopGroups).length} unique stops`);
 
         // Create new layer group
         const newLayerGroup = L.layerGroup();
 
         // Create markers
-        Object.values(stationGroups).forEach(station => {
-          const avgLat = station.lat / station.count;
-          const avgLon = station.lon / station.count;
+        Object.values(stopGroups).forEach(stop => {
+          const avgLat = stop.lat / stop.count;
+          const avgLon = stop.lon / stop.count;
 
           const createIcon = (showLabel: boolean) => L.divIcon({
             className: 'custom-station-icon',
             html: `
               <div class="flex flex-col items-center">
-                <img src="/Train.png" alt="Train Station" class="w-6 h-6" />
+                <img src="/LightRail.png" alt="Light Rail Stop" class="w-6 h-6" />
                 ${showLabel ? `
-                  <div class="px-2 py-1 rounded-md mt-1 text-xs whitespace-nowrap bg-white/80 text-orange-500 font-semibold shadow-sm">
-                    ${station.name}
+                  <div class="px-2 py-1 rounded-md mt-1 text-xs whitespace-nowrap bg-white/80 text-red-500 font-semibold shadow-sm">
+                    ${stop.name}
                   </div>
                 ` : ''}
               </div>
@@ -192,8 +192,8 @@ export function TrainStationsLayer() {
             icon: createIcon(currentZoom >= 14)
           })
           .bindPopup(`
-            <div class="font-semibold">${station.name}</div>
-            <div class="text-sm text-gray-600">${station.count} platform(s)</div>
+            <div class="font-semibold">${stop.name}</div>
+            <div class="text-sm text-gray-600">${stop.count} platform(s)</div>
           `);
             
           marker.addTo(newLayerGroup);
@@ -216,11 +216,11 @@ export function TrainStationsLayer() {
         markersRef.current = newLayerGroup;
 
       } catch (error) {
-        console.error('Error in TrainStationsLayer:', error);
+        console.error('Error in LightRailStopsLayer:', error);
       }
     };
 
-    fetchStations();
+    fetchStops();
 
     return () => {
       if (markersRef.current) {

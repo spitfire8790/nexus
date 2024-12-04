@@ -176,6 +176,12 @@ export const TOOLTIPS: { [key: string]: TooltipConfig } = {
     description: "Real-time positions of public transport vehicles in NSW",
     source: "Transport for NSW Open Data Hub",
     link: "https://opendata.transport.nsw.gov.au/"
+  },
+
+  wikiArticles: {
+    description: "Shows nearby Wikipedia articles and points of interest",
+    source: "Wikipedia API",
+    link: "https://www.wikipedia.org/"
   }
 };
 

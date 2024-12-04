@@ -1,10 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useMapStore } from '@/lib/map-store';
 import { Alert, AlertTitle } from '@/components/ui/alert';
-import { Card } from '@/components/ui/card';
-import { Loader2 } from 'lucide-react';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Loader2, MapPin, Calendar, FileText } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import * as turf from '@turf/turf';
+import L from 'leaflet';
 
 interface DevelopmentApplication {
   applicationId: string;
@@ -12,169 +14,160 @@ interface DevelopmentApplication {
   status: string;
   lodgementDate: string;
   determinationDate?: string;
+  coordinates?: [number, number];
+  council?: string;
+  address?: string;
 }
 
 export function DevelopmentTab() {
   const selectedProperty = useMapStore((state) => state.selectedProperty);
+  const map = useMapStore((state) => state.map);
   const [applications, setApplications] = useState<DevelopmentApplication[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [count, setCount] = useState<number>(0);
+  const [showOnMap, setShowOnMap] = useState(false);
+  const markersLayerRef = useRef<L.LayerGroup | null>(null);
 
-  console.log('DevelopmentTab rendered with selectedProperty:', selectedProperty);
+  // Create markers layer when map is available
+  useEffect(() => {
+    if (map && !markersLayerRef.current) {
+      markersLayerRef.current = L.layerGroup().addTo(map);
+    }
+    return () => {
+      markersLayerRef.current?.remove();
+      markersLayerRef.current = null;
+    };
+  }, [map]);
+
+  const createDAIcon = (status: string) => {
+    const color = status.toLowerCase().includes('approved') ? 'green' : 
+                 status.toLowerCase().includes('rejected') ? 'red' : 'orange';
+    
+    return L.divIcon({
+      html: `
+        <div class="w-8 h-8 rounded-full bg-${color}-500 flex items-center justify-center text-white shadow-lg border-2 border-white">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+        </div>
+      `,
+      className: 'da-marker',
+      iconSize: [32, 32],
+      iconAnchor: [16, 16]
+    });
+  };
+
+  const toggleMapMarkers = (show: boolean) => {
+    if (!map || !markersLayerRef.current) return;
+
+    if (show) {
+      applications.forEach(app => {
+        if (app.coordinates) {
+          const marker = L.marker(app.coordinates, {
+            icon: createDAIcon(app.status)
+          }).bindPopup(`
+            <div class="p-2">
+              <h3 class="font-bold">${app.address || 'No address'}</h3>
+              <p class="text-sm">${app.description}</p>
+              <p class="text-sm mt-2">
+                <strong>Status:</strong> ${app.status}<br>
+                <strong>Lodged:</strong> ${new Date(app.lodgementDate).toLocaleDateString()}
+              </p>
+            </div>
+          `);
+          markersLayerRef.current?.addLayer(marker);
+        }
+      });
+    } else {
+      markersLayerRef.current.clearLayers();
+    }
+    setShowOnMap(show);
+  };
 
   useEffect(() => {
-    console.log('Full selected property data:', selectedProperty);
-    
-    if (!selectedProperty?.geometry) {
-      console.log('No property geometry');
-      return;
-    }
+    if (!selectedProperty?.geometry) return;
 
-    // Get the property address
-    const address = selectedProperty.attributes?.ADDRESS || selectedProperty.address;
-    if (!address) {
-      console.log('No property address, full attributes:', selectedProperty.attributes);
-      return;
-    }
+    const fetchDevelopmentApplications = async () => {
+      setLoading(true);
+      setError(null);
+      console.log('Fetching DAs for property:', selectedProperty);
 
-    const fetchApplications = async () => {
       try {
-        // Get property center coordinates
-        const propertyGeometry = selectedProperty.geometry;
-        console.log('Property geometry:', propertyGeometry);
+        // Get council information from zoning layer
+        const zoningResponse = await fetch(
+          `https://api.apps1.nsw.gov.au/planning/viewersf/V1/ePlanningApi/layerintersect?type=property&id=${selectedProperty.propId}&layers=epi`
+        );
+
+        if (!zoningResponse.ok) throw new Error('Failed to fetch council information');
         
-        // Convert coordinates if they're in Web Mercator
-        const propertyCenter = convertToLatLong(propertyGeometry);
-        console.log('Property center:', propertyCenter);
+        const zoningData = await zoningResponse.json();
+        console.log('Zoning data:', zoningData);
 
-        if (!propertyCenter) {
-          console.log('Failed to get property center');
-          return;
-        }
+        const council = zoningData.find((l: any) => l.layerName === "Land Zoning Map")
+          ?.results?.[0]?.["LGA Name"];
 
-        const [propertyLon, propertyLat] = propertyCenter;
+        if (!council) throw new Error('Could not determine council area');
+        console.log('Property is in council:', council);
 
-        // Define search bounds
-        const searchBounds = {
-          minLat: propertyLat - 0.002,
-          maxLat: propertyLat + 0.002,
-          minLon: propertyLon - 0.002,
-          maxLon: propertyLon + 0.002
-        };
-
-        console.log('Searching in bounds:', searchBounds);
-
-        // First get applications from City of Sydney without location filtering
-        const { data: initialData, error: initialError } = await supabase
+        // Query all DAs for this council
+        const { data: applications, error: supabaseError } = await supabase
           .from('development_applications')
           .select('*')
-          .eq('council_name', 'City of Sydney')
-          .limit(5);
+          .eq('council_name', council)
+          .order('lodgement_date', { ascending: false });
 
-        if (initialError) {
-          console.error('Initial query error:', initialError);
-          throw initialError;
-        }
+        if (supabaseError) throw supabaseError;
+        console.log(`Found ${applications?.length} DAs in ${council}`);
 
-        // Log the raw data structure to understand location format
-        console.log('Raw data examples:', initialData?.map(app => ({
-          id: app.id,
-          council: app.council_name,
-          address: app.location?.[0]?.FullAddress,
-          rawLocation: app.location?.[0],
-          coordinates: app.location?.[0] ? [
-            parseFloat(app.location[0].X),
-            parseFloat(app.location[0].Y)
-          ] : null
-        })));
+        // Create property polygon for filtering
+        const propertyPolygon = turf.polygon([[
+          ...selectedProperty.geometry.rings[0].map((coord: number[]) => [
+            coord[0] * 180 / 20037508.34,
+            Math.atan(Math.exp(coord[1] * Math.PI / 20037508.34)) * 360 / Math.PI - 90
+          ])
+        ]]);
 
-        // Now try with just lat/lon bounds
-        const { data: boundedData, error: boundedError } = await supabase
-          .from('development_applications')
-          .select('*')
-          .eq('council_name', 'City of Sydney')
-          .gte('location->0->Y', searchBounds.minLat)
-          .lte('location->0->Y', searchBounds.maxLat)
-          .gte('location->0->X', searchBounds.minLon)
-          .lte('location->0->X', searchBounds.maxLon)
-          .limit(100);
-
-        if (boundedError) {
-          console.error('Bounded query error:', boundedError);
-          throw boundedError;
-        }
-
-        console.log('Bounded query results:', {
-          total: boundedData?.length || 0,
-          bounds: searchBounds,
-          examples: boundedData?.slice(0, 3).map(app => ({
-            id: app.id,
-            address: app.location?.[0]?.FullAddress,
+        // Process and filter applications
+        const processedApplications = applications
+          ?.map(app => ({
+            applicationId: app.id,
+            description: app.description || 'No description provided',
+            status: app.application_status || 'Unknown',
+            lodgementDate: app.lodgement_date,
+            determinationDate: app.determination_date,
             coordinates: app.location?.[0] ? [
-              parseFloat(app.location[0].X),
-              parseFloat(app.location[0].Y)
-            ] : null
+              parseFloat(app.location[0].Y),
+              parseFloat(app.location[0].X)
+            ] as [number, number] : undefined,
+            council: app.council_name,
+            address: app.location?.[0]?.FullAddress,
+            isWithinProperty: app.location?.[0] ? turf.booleanPointInPolygon(
+              turf.point([parseFloat(app.location[0].X), parseFloat(app.location[0].Y)]),
+              propertyPolygon
+            ) : false
           }))
-        });
+          .filter(app => app.coordinates) // Only include apps with valid coordinates
+          .sort((a, b) => new Date(b.lodgementDate).getTime() - new Date(a.lodgementDate).getTime());
 
-        // Filter applications client-side
-        const filteredData = boundedData?.filter(app => {
-          if (!app.location?.[0]) {
-            return false;
-          }
-
-          const appLon = parseFloat(app.location[0].X);
-          const appLat = parseFloat(app.location[0].Y);
-
-          if (isNaN(appLon) || isNaN(appLat)) {
-            return false;
-          }
-
-          const distance = turf.distance(
-            turf.point([propertyLon, propertyLat]),
-            turf.point([appLon, appLat]),
-            { units: 'meters' }
-          );
-
-          console.log('Application check:', {
-            id: app.id,
-            address: app.location[0].FullAddress,
-            coordinates: [appLon, appLat],
-            distance,
-            inBounds: distance <= 200,
-            type: app.development_type,
-            status: app.application_status
-          });
-
-          return distance <= 200;
-        }) || [];
-
-        console.log(`Found ${filteredData.length} applications in search area`);
-
-        // Format the matching applications
-        const matchingApplications = filteredData.map(app => ({
-          applicationId: app.id.toString(),
-          description: app.development_type?.[0]?.description || '',
-          status: app.application_status || '',
-          lodgementDate: app.lodgement_date || '',
-          determinationDate: app.determination_date
-        }));
-
-        console.log('Matching applications:', matchingApplications);
-        setApplications(matchingApplications);
-        setCount(matchingApplications.length);
-        
+        console.log('Processed applications:', processedApplications);
+        setApplications(processedApplications || []);
       } catch (error: any) {
         console.error('Error fetching DAs:', error);
-        setError(error.message || 'Failed to fetch development applications');
+        setError(error.message);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchApplications();
-  }, [selectedProperty?.address]);
+    fetchDevelopmentApplications();
+  }, [selectedProperty]);
+
+  // Clean up map markers when component unmounts
+  useEffect(() => {
+    return () => {
+      markersLayerRef.current?.clearLayers();
+    };
+  }, []);
 
   if (!selectedProperty) {
     return (
@@ -204,30 +197,73 @@ export function DevelopmentTab() {
     );
   }
 
+  const propertyDAs = applications.filter(app => app.isWithinProperty);
+
   return (
-    <div className="p-4">
-      <Card className="p-4">
-        <h3 className="text-lg font-semibold mb-2">Development Applications</h3>
-        <p>Found {count} development application(s) for this property.</p>
+    <div className="p-4 space-y-4">
+      <Card>
+        <CardHeader>
+          <CardTitle>Development Applications</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <p className="text-sm text-muted-foreground">
+                Found {propertyDAs.length} application(s) for this property
+                {applications.length > propertyDAs.length && 
+                  ` and ${applications.length - propertyDAs.length} in the surrounding area`}
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => toggleMapMarkers(!showOnMap)}
+              >
+                {showOnMap ? 'Hide on Map' : 'Show on Map'}
+              </Button>
+            </div>
+
+            {applications.map((app, index) => (
+              <Card key={app.applicationId} className={cn(
+                "p-4 hover:bg-accent/50 transition-colors",
+                app.isWithinProperty && "border-primary"
+              )}>
+                <div className="space-y-2">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-start gap-2">
+                      <FileText className="h-4 w-4 mt-1 flex-shrink-0" />
+                      <div>
+                        <p className="font-medium">{app.description}</p>
+                        <p className="text-sm text-muted-foreground">{app.address}</p>
+                      </div>
+                    </div>
+                    <span className={cn(
+                      "text-sm px-2 py-1 rounded-full",
+                      app.status.toLowerCase().includes('approved') && "bg-green-100 text-green-800",
+                      app.status.toLowerCase().includes('rejected') && "bg-red-100 text-red-800",
+                      !app.status.toLowerCase().includes('approved') && 
+                      !app.status.toLowerCase().includes('rejected') && "bg-orange-100 text-orange-800"
+                    )}>
+                      {app.status}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-1">
+                      <Calendar className="h-3 w-3" />
+                      Lodged: {new Date(app.lodgementDate).toLocaleDateString()}
+                    </div>
+                    {app.determinationDate && (
+                      <div className="flex items-center gap-1">
+                        <Calendar className="h-3 w-3" />
+                        Determined: {new Date(app.determinationDate).toLocaleDateString()}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </CardContent>
       </Card>
     </div>
   );
-}
-
-// Convert Web Mercator (EPSG:3857) to WGS84 (EPSG:4326)
-function convertToLatLong(geometry: any): [number, number] | null {
-  if (geometry.rings) {
-    const [x, y] = geometry.rings[0][0];
-    const lon = (x * 180) / 20037508.34;
-    const lat = (Math.atan(Math.exp((y * Math.PI) / 20037508.34)) * 360) / Math.PI - 90;
-    return [lon, lat];
-  } else if (geometry.coordinates) {
-    const [x, y] = geometry.coordinates;
-    const lon = (x * 180) / 20037508.34;
-    const lat = (Math.atan(Math.exp((y * Math.PI) / 20037508.34)) * 360) / Math.PI - 90;
-    return [lon, lat];
-  } else {
-    console.error('Unexpected geometry structure:', geometry);
-    return null;
-  }
 }

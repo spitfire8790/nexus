@@ -1,0 +1,95 @@
+﻿type,stop_name,stop_lat,stop_lon,route_desc,route_type
+Light Rail,Arlington Light Rail,-33.9018422347763,151.138055181999,Sydney Light Rail Network,900
+Light Rail,Arlington Light Rail,-33.9018299721787,151.138151837848,Sydney Light Rail Network,900
+Light Rail,Bridge Street Light Rail,-33.8641497738042,151.207483756096,Sydney Light Rail Network,900
+Light Rail,Bridge Street Light Rail,-33.8641149010507,151.207449641448,Sydney Light Rail Network,900
+Light Rail,Capitol Square Light Rail,-33.8798118386264,151.205553115885,Sydney Light Rail Network,900
+Light Rail,Capitol Square Light Rail,-33.8797703289384,151.20571311068,Sydney Light Rail Network,900
+Light Rail,Central Chalmers Street Light Rail,-33.8842518037219,151.207715870593,Sydney Light Rail Network,900
+Light Rail,Central Chalmers Street Light Rail,-33.8842262953731,151.20767140456,Sydney Light Rail Network,900
+Light Rail,Central Chalmers Street Light Rail,-33.8841925301676,151.207604926734,Sydney Light Rail Network,900
+Light Rail,Central Grand Concourse Light Rail,-33.8824219920822,151.206686052586,Sydney Light Rail Network,900
+Light Rail,Chinatown Light Rail,-33.8785945998064,151.205579711476,Sydney Light Rail Network,900
+Light Rail,Chinatown Light Rail,-33.8785867111694,151.205546917264,Sydney Light Rail Network,900
+Light Rail,Circular Quay Light Rail,-33.8615761299342,151.210024893904,Sydney Light Rail Network,900
+Light Rail,Circular Quay Light Rail,-33.8615124291174,151.210043361994,Sydney Light Rail Network,900
+Light Rail,Circular Quay Light Rail,-33.8614854449916,151.210042035304,Sydney Light Rail Network,900
+Light Rail,Civic Light Rail,-32.9270513239838,151.771761379119,Newcastle Light Rail Network,900
+Light Rail,Civic Light Rail,-32.9269884001847,151.771757993523,Newcastle Light Rail Network,900
+Light Rail,Convention Light Rail,-33.8726324133386,151.198125388685,Sydney Light Rail Network,900
+Light Rail,Convention Light Rail,-33.872573497371,151.198003683104,Sydney Light Rail Network,900
+Light Rail,Crown Street Light Rail,-32.9264366328388,151.777228860662,Newcastle Light Rail Network,900
+Light Rail,Crown Street Light Rail,-32.9263745262357,151.777204153941,Newcastle Light Rail Network,900
+Light Rail,Dulwich Grove Light Rail,-33.9050443782764,151.139020605567,Sydney Light Rail Network,900
+Light Rail,Dulwich Grove Light Rail,-33.9049795944189,151.139071498568,Sydney Light Rail Network,900
+Light Rail,Dulwich Hill Light Rail,-33.910306100907,151.140096671552,Sydney Light Rail Network,900
+Light Rail,ES Marks Light Rail,-33.905832751621,151.223938029941,Sydney Light Rail Network,900
+Light Rail,ES Marks Light Rail,-33.905824868838,151.223905223828,Sydney Light Rail Network,900
+Light Rail,Exhibition Centre Light Rail,-33.8772141574075,151.199570762909,Sydney Light Rail Network,900
+Light Rail,Exhibition Centre Light Rail,-33.8771744965176,151.199676836938,Sydney Light Rail Network,900
+Light Rail,Fish Market Light Rail,-33.8709534384962,151.192404786361,Sydney Light Rail Network,900
+Light Rail,Fish Market Light Rail,-33.8708886368192,151.192455618949,Sydney Light Rail Network,900
+Light Rail,Glebe Light Rail,-33.8772589518494,151.187420632847,Sydney Light Rail Network,900
+Light Rail,Glebe Light Rail,-33.8771690023769,151.187416231665,Sydney Light Rail Network,900
+Light Rail,Hawthorne Light Rail,-33.8797231293805,151.147128987715,Sydney Light Rail Network,900
+Light Rail,Hawthorne Light Rail,-33.8793466821006,151.147337598728,Sydney Light Rail Network,900
+Light Rail,Haymarket Light Rail,-33.8814693048956,151.205299699926,Sydney Light Rail Network,900
+Light Rail,Haymarket Light Rail,-33.8814311137207,151.205362638165,Sydney Light Rail Network,900
+Light Rail,Honeysuckle Light Rail,-32.9264946901204,151.765824985483,Newcastle Light Rail Network,900
+Light Rail,Honeysuckle Light Rail,-32.9264673151623,151.7658341952,Newcastle Light Rail Network,900
+Light Rail,John Street Square Light Rail,-33.8674243205517,151.192059144848,Sydney Light Rail Network,900
+Light Rail,John Street Square Light Rail,-33.8673894431491,151.192025034577,Sydney Light Rail Network,900
+Light Rail,Jubilee Park Light Rail,-33.8754636474894,151.17874528556,Sydney Light Rail Network,900
+Light Rail,Jubilee Park Light Rail,-33.8753826920414,151.178741332955,Sydney Light Rail Network,900
+Light Rail,Juniors Kingsford Light Rail,-33.9251524416182,151.229097400686,Sydney Light Rail Network,900
+Light Rail,Juniors Kingsford Light Rail,-33.9249752375447,151.229272362803,Sydney Light Rail Network,900
+Light Rail,Kensington Light Rail,-33.9093747926795,151.223378254497,Sydney Light Rail Network,900
+Light Rail,Kensington Light Rail,-33.9093672803993,151.223334659339,Sydney Light Rail Network,900
+Light Rail,Kingsford Light Rail,-33.921877770701,151.226860240337,Sydney Light Rail Network,900
+Light Rail,Kingsford Light Rail,-33.9218762867834,151.226903397176,Sydney Light Rail Network,900
+Light Rail,Leichhardt North Light Rail,-33.8750070648722,151.15445106925,Sydney Light Rail Network,900
+Light Rail,Leichhardt North Light Rail,-33.8749544030765,151.153876008043,Sydney Light Rail Network,900
+Light Rail,Lewisham West Light Rail,-33.8939824287552,151.143228372547,Sydney Light Rail Network,900
+Light Rail,Lewisham West Light Rail,-33.8936638651061,151.143591095283,Sydney Light Rail Network,900
+Light Rail,Lilyfield Light Rail,-33.8741786676621,151.165093895122,Sydney Light Rail Network,900
+Light Rail,Lilyfield Light Rail,-33.8741426868283,151.16509214422,Sydney Light Rail Network,900
+Light Rail,Marion Light Rail,-33.8838347762549,151.14516763501,Sydney Light Rail Network,900
+Light Rail,Marion Light Rail,-33.8838286885064,151.145080914836,Sydney Light Rail Network,900
+Light Rail,Moore Park Light Rail,-33.8936640415798,151.221737948391,Sydney Light Rail Network,900
+Light Rail,Moore Park Light Rail,-33.8936621902726,151.221791877025,Sydney Light Rail Network,900
+Light Rail,Newcastle Beach Light Rail,-32.9274869909732,151.786246605367,Newcastle Light Rail Network,900
+Light Rail,Newcastle Interchange Light Rail,-32.924306561162,151.759437953039,Newcastle Light Rail Network,900
+Light Rail,Paddy's Markets Light Rail,-33.8793173329833,151.202623000671,Sydney Light Rail Network,900
+Light Rail,Paddy's Markets Light Rail,-33.8792761955361,151.202772212225,Sydney Light Rail Network,900
+Light Rail,Pyrmont Bay Light Rail,-33.8693669594186,151.19744679219,Sydney Light Rail Network,900
+Light Rail,Pyrmont Bay Light Rail,-33.8693010522823,151.197529968911,Sydney Light Rail Network,900
+Light Rail,Queens Wharf Light Rail,-32.9263941611094,151.781627001266,Newcastle Light Rail Network,900
+Light Rail,Queens Wharf Light Rail,-32.9263218405014,151.781633782723,Newcastle Light Rail Network,900
+Light Rail,QVB Light Rail,-33.871584150123,151.206920242681,Sydney Light Rail Network,900
+Light Rail,QVB Light Rail,-33.8715815688394,151.206995724765,Sydney Light Rail Network,900
+Light Rail,Randwick Light Rail,-33.9171452538752,151.240534638916,Sydney Light Rail Network,900
+Light Rail,Randwick Light Rail,-33.9171178989271,151.240544088251,Sydney Light Rail Network,900
+Light Rail,Royal Randwick Light Rail,-33.9052049590015,151.228834294063,Sydney Light Rail Network,900
+Light Rail,Royal Randwick Light Rail,-33.9051682393128,151.22885408849,Sydney Light Rail Network,900
+Light Rail,Rozelle Bay Light Rail,-33.8719114569732,151.172706660732,Sydney Light Rail Network,900
+Light Rail,Rozelle Bay Light Rail,-33.8718301350933,151.172713498017,Sydney Light Rail Network,900
+Light Rail,Surry Hills Light Rail,-33.8881283231394,151.211860569558,Sydney Light Rail Network,900
+Light Rail,Surry Hills Light Rail,-33.8880728778762,151.211901053018,Sydney Light Rail Network,900
+Light Rail,Taverners Hill Light Rail,-33.8893026283537,151.145205686535,Sydney Light Rail Network,900
+Light Rail,Taverners Hill Light Rail,-33.8887128371816,151.145328360511,Sydney Light Rail Network,900
+Light Rail,The Star Light Rail,-33.8675301288881,151.195034555371,Sydney Light Rail Network,900
+Light Rail,The Star Light Rail,-33.8673533434379,151.195198705635,Sydney Light Rail Network,900
+Light Rail,Town Hall Light Rail,-33.8738721299799,151.206935483941,Sydney Light Rail Network,900
+Light Rail,Town Hall Light Rail,-33.8738567219245,151.206859115631,Sydney Light Rail Network,900
+Light Rail,UNSW Anzac Parade Light Rail,-33.9166588662244,151.225878003133,Sydney Light Rail Network,900
+Light Rail,UNSW Anzac Parade Light Rail,-33.9166480175614,151.225931501141,Sydney Light Rail Network,900
+Light Rail,UNSW High Street Light Rail,-33.9164079066476,151.235526914584,Sydney Light Rail Network,900
+Light Rail,UNSW High Street Light Rail,-33.9163352086212,151.235544924787,Sydney Light Rail Network,900
+Light Rail,Wansey Road Light Rail,-33.9105357186475,151.235203471404,Sydney Light Rail Network,900
+Light Rail,Wansey Road Light Rail,-33.9105256095,151.235235388702,Sydney Light Rail Network,900
+Light Rail,Waratah Mills Light Rail,-33.8988248316454,151.14016742779,Sydney Light Rail Network,900
+Light Rail,Waratah Mills Light Rail,-33.8987726747145,151.14011087722,Sydney Light Rail Network,900
+Light Rail,Wentworth Park Light Rail,-33.8744096174606,151.194097112867,Sydney Light Rail Network,900
+Light Rail,Wentworth Park Light Rail,-33.8743585894295,151.194008198775,Sydney Light Rail Network,900
+Light Rail,Wynyard Light Rail,-33.8666819423683,151.207208571756,Sydney Light Rail Network,900
+Light Rail,Wynyard Light Rail,-33.8666755287207,151.207132651995,Sydney Light Rail Network,900

@@ -78,6 +78,7 @@
     "input-otp": "^1.2.4",
     "leaflet": "^1.9.4",
     "leaflet-draw": "^1.0.4",
+    "leaflet-wikipedia": "^1.1.0",
     "lottie-react": "^2.4.0",
     "lucide-react": "^0.446.0",
     "maplibre-gl": "^3.6.2",

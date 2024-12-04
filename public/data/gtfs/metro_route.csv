@@ -1,0 +1,43 @@
+﻿type,stop_name,stop_lat,stop_lon,route_desc,route_type,route_color
+Metro,"Barangaroo Station, Platform 1",-33.8593142894688,151.202656280078,Sydney Metro Network,401,168388
+Metro,"Barangaroo Station, Platform 2",-33.8593089772396,151.202548021939,Sydney Metro Network,401,168388
+Metro,"Bella Vista Station, Platform 1",-33.7306980315402,150.944122694165,Sydney Metro Network,401,168388
+Metro,"Bella Vista Station, Platform 2",-33.7307187832333,150.944037366504,Sydney Metro Network,401,168388
+Metro,"Castle Hill Station, Platform 1",-33.7314688480355,151.007680215438,Sydney Metro Network,401,168388
+Metro,"Castle Hill Station, Platform 2",-33.7315491226346,151.007705522602,Sydney Metro Network,401,168388
+Metro,"Central Station, Platform 26",-33.8841172820979,151.20638050186,Sydney Metro Network,401,168388
+Metro,"Central Station, Platform 27",-33.8841424221199,151.20643575224,Sydney Metro Network,401,168388
+Metro,"Chatswood Station, Platform 2",-33.7974690885396,151.18098812969,Sydney Metro Network,401,168388
+Metro,"Chatswood Station, Platform 3",-33.7974727462964,151.180880387568,Sydney Metro Network,401,168388
+Metro,"Cherrybrook Station, Platform 1",-33.7367283306946,151.032083986405,Sydney Metro Network,401,168388
+Metro,"Cherrybrook Station, Platform 2",-33.7367923657211,151.032054631565,Sydney Metro Network,401,168388
+Metro,"Crows Nest Station, Platform 1",-33.8258014734669,151.199372087568,Sydney Metro Network,401,168388
+Metro,"Crows Nest Station, Platform 2",-33.8258490214575,151.199298847552,Sydney Metro Network,401,168388
+Metro,"Epping Station, Platform 5",-33.7728752710603,151.082278354366,Sydney Metro Network,401,168388
+Metro,"Epping Station, Platform 6",-33.7729565213617,151.082001688905,Sydney Metro Network,401,168388
+Metro,"Gadigal Station, Platform 1",-33.8738736344955,151.208998656578,Sydney Metro Network,401,168388
+Metro,"Gadigal Station, Platform 2",-33.8738229332452,151.208110435827,Sydney Metro Network,401,168388
+Metro,"Hills Showground Station, Platform 1",-33.7277552616658,150.987427171151,Sydney Metro Network,401,168388
+Metro,"Hills Showground Station, Platform 2",-33.7278171988413,150.987462392912,Sydney Metro Network,401,168388
+Metro,"Kellyville Station, Platform 1",-33.7134879494901,150.935344462725,Sydney Metro Network,401,168388
+Metro,"Kellyville Station, Platform 2",-33.7135187227747,150.935227259087,Sydney Metro Network,401,168388
+Metro,"Macquarie Park Station, Platform 1",-33.7849820801049,151.128337105827,Sydney Metro Network,401,168388
+Metro,"Macquarie Park Station, Platform 2",-33.7850659304279,151.128254810522,Sydney Metro Network,401,168388
+Metro,"Macquarie University Station, Platform 1",-33.7775957533836,151.118314442962,Sydney Metro Network,401,168388
+Metro,"Macquarie University Station, Platform 2",-33.7776522495097,151.118241622326,Sydney Metro Network,401,168388
+Metro,"Martin Place Station, Platform 3",-33.8671346256954,151.210568235217,Sydney Metro Network,401,168388
+Metro,"Martin Place Station, Platform 4",-33.8670825942436,151.209982438945,Sydney Metro Network,401,168388
+Metro,"North Ryde Station, Platform 1",-33.79417061715,151.138059885467,Sydney Metro Network,401,168388
+Metro,"North Ryde Station, Platform 2",-33.7943069996606,151.138023291579,Sydney Metro Network,401,168388
+Metro,"Norwest Station, Platform 1",-33.7342824886202,150.963851342354,Sydney Metro Network,401,168388
+Metro,"Norwest Station, Platform 2",-33.7343343971083,150.963918444238,Sydney Metro Network,401,168388
+Metro,"Rouse Hill Station, Platform 1",-33.6919589141629,150.924357465744,Sydney Metro Network,401,168388
+Metro,"Rouse Hill Station, Platform 2",-33.6920159848907,150.924263043458,Sydney Metro Network,401,168388
+Metro,"Sydenham Station, Platform 1",-33.9137065827257,151.167192201029,Sydney Metro Network,401,168388
+Metro,"Sydenham Station, Platform 2",-33.9137950712879,151.167239743094,Sydney Metro Network,401,168388
+Metro,"Tallawong Station, Platform 2",-33.6917054286045,150.905653308828,Sydney Metro Network,401,168388
+Metro,"Tallawong Station, Platform 3",-33.6917677355164,150.90567769199,Sydney Metro Network,401,168388
+Metro,"Victoria Cross Station, Platform 1",-33.8362188538549,151.20749415557,Sydney Metro Network,401,168388
+Metro,"Victoria Cross Station, Platform 2",-33.8362049173566,151.207374706753,Sydney Metro Network,401,168388
+Metro,"Waterloo Station, Platform 1",-33.8975275482764,151.200211531402,Sydney Metro Network,401,168388
+Metro,"Waterloo Station, Platform 2",-33.8974968798107,151.200318071095,Sydney Metro Network,401,168388

@@ -3,7 +3,7 @@ import { useMap } from 'react-leaflet';
 import * as L from 'leaflet';
 import { useMapStore } from '@/lib/map-store';
 
-interface TrainStation {
+interface MetroStation {
   type: string;
   stop_name: string;
   stop_lat: string;
@@ -19,7 +19,7 @@ interface StationGroup {
   count: number;
 }
 
-export function TrainStationsLayer() {
+export function MetroStationsLayer() {
   const map = useMap();
   const layerGroups = useMapStore((state) => state.layerGroups);
   const markersRef = useRef<L.LayerGroup | null>(null);
@@ -27,7 +27,7 @@ export function TrainStationsLayer() {
 
   const isEnabled = layerGroups
     .flatMap(group => group.layers)
-    .find(layer => layer.id === 'train-stations')
+    .find(layer => layer.id === 'metro-stations')
     ?.enabled || false;
 
   useEffect(() => {
@@ -54,14 +54,14 @@ export function TrainStationsLayer() {
 
     const fetchStations = async () => {
       try {
-        const response = await fetch('/data/gtfs/train.csv');
+        const response = await fetch('/data/gtfs/metro.csv');
         if (!response.ok) {
-          throw new Error(`Failed to fetch train stations: ${response.status} ${response.statusText}`);
+          throw new Error(`Failed to fetch metro stations: ${response.status} ${response.statusText}`);
         }
         
         const csvText = await response.text();
         if (!csvText.trim()) {
-          throw new Error('Train stations CSV file is empty');
+          throw new Error('Metro stations CSV file is empty');
         }
 
         // Split by either \n or \r\n to handle different line endings
@@ -103,7 +103,7 @@ export function TrainStationsLayer() {
           return values.map(v => v.replace(/^"|"$/g, '').trim());
         };
 
-        const stations: TrainStation[] = lines.slice(1)
+        const stations: MetroStation[] = lines.slice(1)
           .map(line => {
             const values = parseCSVLine(line);
             if (values.length !== headers.length) {
@@ -126,7 +126,7 @@ export function TrainStationsLayer() {
 
             return station;
           })
-          .filter((station): station is TrainStation => 
+          .filter((station): station is MetroStation => 
             station !== null && 
             station.stop_name && 
             !isNaN(parseFloat(station.stop_lat)) && 
@@ -136,7 +136,7 @@ export function TrainStationsLayer() {
         console.log(`Loaded ${stations.length} valid stations`);
 
         if (stations.length === 0) {
-          throw new Error('No valid train stations found in CSV');
+          throw new Error('No valid metro stations found in CSV');
         }
 
         // Group stations by name (excluding platform info)
@@ -176,9 +176,9 @@ export function TrainStationsLayer() {
             className: 'custom-station-icon',
             html: `
               <div class="flex flex-col items-center">
-                <img src="/Train.png" alt="Train Station" class="w-6 h-6" />
+                <img src="/Metro.png" alt="Metro Station" class="w-6 h-6" />
                 ${showLabel ? `
-                  <div class="px-2 py-1 rounded-md mt-1 text-xs whitespace-nowrap bg-white/80 text-orange-500 font-semibold shadow-sm">
+                  <div class="px-2 py-1 rounded-md mt-1 text-xs whitespace-nowrap bg-white/80 text-teal-500 font-semibold shadow-sm">
                     ${station.name}
                   </div>
                 ` : ''}
@@ -216,7 +216,7 @@ export function TrainStationsLayer() {
         markersRef.current = newLayerGroup;
 
       } catch (error) {
-        console.error('Error in TrainStationsLayer:', error);
+        console.error('Error in MetroStationsLayer:', error);
       }
     };
 

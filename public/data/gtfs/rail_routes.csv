@@ -1,0 +1,1397 @@
+﻿type,stop_name,stop_lat,stop_lon,route_desc,route_type,route_color
+Train,"Aberdeen Station, Platform 1",-32.1669688462678,150.892015021982,Intercity Trains Network,2,833134
+Train,"Adamstown Station, Platform 1",-32.9336878844108,151.720226585907,Intercity Trains Network,2,D11F2F
+Train,"Adamstown Station, Platform 2",-32.9335987937608,151.720200479414,Intercity Trains Network,2,D11F2F
+Train,"Albion Park Station, Platform 1",-34.5628841668206,150.798639095776,Intercity Trains Network,2,005AA3
+Train,"Albion Park Station, Platform 2",-34.5630899552367,150.798975240581,Intercity Trains Network,2,005AA3
+Train,"Allawah Station, Platform 1",-33.9695140994242,151.114267896886,Sydney Trains Network,2,005AA3
+Train,"Allawah Station, Platform 2",-33.9695691579823,151.114238110231,Sydney Trains Network,2,005AA3
+Train,"Allawah Station, Platform 3",-33.9696781904304,151.114210927204,Sydney Trains Network,2,005AA3
+Train,"Allawah Station, Platform 4",-33.9697512402791,151.11418200835,Sydney Trains Network,2,005AA3
+Light Rail,Arlington Light Rail,-33.9018422347763,151.138055181999,Sydney Light Rail Network,900,BE1622
+Light Rail,Arlington Light Rail,-33.9018299721787,151.138151837848,Sydney Light Rail Network,900,BE1622
+Train,"Arncliffe Station, Platform 1",-33.9364799003227,151.147062018563,Sydney Trains Network,2,005AA3
+Train,"Arncliffe Station, Platform 2",-33.9365287744386,151.147215729961,Sydney Trains Network,2,005AA3
+Train,"Arncliffe Station, Platform 3",-33.9365693813281,151.147347420301,Sydney Trains Network,2,005AA3
+Train,"Arncliffe Station, Platform 4",-33.9366020852261,151.147446297355,Sydney Trains Network,2,005AA3
+Train,"Artarmon Station, Platform 1",-33.8085668271741,151.184777633714,Intercity Trains Network,2,D11F2F
+Train,"Artarmon Station, Platform 1",-33.8085668271741,151.184777633714,Sydney Trains Network,2,D11F2F
+Train,"Artarmon Station, Platform 1",-33.8085668271741,151.184777633714,Sydney Trains Network,2,F99D1C
+Train,"Artarmon Station, Platform 2",-33.8086042723458,151.184736286316,Intercity Trains Network,2,D11F2F
+Train,"Artarmon Station, Platform 2",-33.8086042723458,151.184736286316,Sydney Trains Network,2,D11F2F
+Train,"Artarmon Station, Platform 2",-33.8086042723458,151.184736286316,Sydney Trains Network,2,F99D1C
+Train,"Ashfield Station, Platform 3",-33.8875755720759,151.125556534478,Sydney Trains Network,2,0098CD
+Train,"Ashfield Station, Platform 3",-33.8875755720759,151.125556534478,Sydney Trains Network,2,F37021
+Train,"Ashfield Station, Platform 4",-33.8876396268994,151.125527212175,Sydney Trains Network,2,0098CD
+Train,"Ashfield Station, Platform 5",-33.8877126773595,151.125498323625,Sydney Trains Network,2,0098CD
+Train,"Ashfield Station, Platform 5",-33.8877126773595,151.125498323625,Sydney Trains Network,2,F37021
+Train,"Asquith Station, Platform 1",-33.6886134382997,151.108205374964,Intercity Trains Network,2,D11F2F
+Train,"Asquith Station, Platform 1",-33.6886134382997,151.108205374964,Sydney Trains Network,2,D11F2F
+Train,"Asquith Station, Platform 1",-33.6886134382997,151.108205374964,Sydney Trains Network,2,F99D1C
+Train,"Asquith Station, Platform 2",-33.6885536910499,151.108105519381,Intercity Trains Network,2,D11F2F
+Train,"Asquith Station, Platform 2",-33.6885536910499,151.108105519381,Sydney Trains Network,2,D11F2F
+Train,"Asquith Station, Platform 2",-33.6885536910499,151.108105519381,Sydney Trains Network,2,F99D1C
+Train,"Auburn Station, Platform 1",-33.8492245897177,151.032963969538,Sydney Trains Network,2,0098CD
+Train,"Auburn Station, Platform 1",-33.8492245897177,151.032963969538,Sydney Trains Network,2,F99D1C
+Train,"Auburn Station, Platform 2",-33.8492716933347,151.032901390562,Sydney Trains Network,2,0098CD
+Train,"Auburn Station, Platform 2",-33.8492716933347,151.032901390562,Sydney Trains Network,2,F99D1C
+Train,"Auburn Station, Platform 3",-33.8493285002899,151.032817669519,Sydney Trains Network,2,0098CD
+Train,"Auburn Station, Platform 3",-33.8493285002899,151.032817669519,Sydney Trains Network,2,F99D1C
+Train,"Auburn Station, Platform 4",-33.8493853071959,151.032733948362,Sydney Trains Network,2,0098CD
+Train,"Auburn Station, Platform 4",-33.8493853071959,151.032733948362,Sydney Trains Network,2,F99D1C
+Train,"Austinmer Station, Platform 1",-34.3064872695235,150.929136289051,Intercity Trains Network,2,005AA3
+Train,"Austinmer Station, Platform 2",-34.3064550532727,150.929297662609,Intercity Trains Network,2,005AA3
+Train,"Awaba Station, Platform 1",-33.0130151449251,151.542061403432,Intercity Trains Network,2,D11F2F
+Train,"Awaba Station, Platform 2",-33.0129342174969,151.542057245996,Intercity Trains Network,2,D11F2F
+Train,"Banksia Station, Platform 1",-33.9450389399327,151.140396607178,Sydney Trains Network,2,005AA3
+Train,"Banksia Station, Platform 2",-33.9450720124951,151.140484699011,Sydney Trains Network,2,005AA3
+Train,"Banksia Station, Platform 3",-33.9451047213534,151.140583584238,Sydney Trains Network,2,005AA3
+Train,"Banksia Station, Platform 4",-33.9451377937708,151.1406716762,Sydney Trains Network,2,005AA3
+Train,"Bankstown Station, Platform 1",-33.9178189368846,151.034436398623,Sydney Trains Network,2,F6891F
+Metro,"Barangaroo Station, Platform 1",-33.8593142894688,151.202656280078,Sydney Metro Network,401,168388
+Metro,"Barangaroo Station, Platform 2",-33.8593089772396,151.202548021939,Sydney Metro Network,401,168388
+Train,"Bardwell Park Station, Platform 1",-33.9314811507879,151.12504943478,Sydney Trains Network,2,00954C
+Train,"Bardwell Park Station, Platform 2",-33.9315430334127,151.125084851509,Sydney Trains Network,2,00954C
+Train,"Bargo Station, Platform 1",-34.2910675407126,150.580062426879,Intercity Trains Network,2,00954C
+Train,"Bargo Station, Platform 2",-34.2910199982948,150.580147271937,Intercity Trains Network,2,00954C
+Train,"Bathurst Station, Platform 1",-33.4256323279889,149.5832461465,Intercity Trains Network,2,F99D1C
+Train,"Beecroft Station, Platform 1",-33.7493810034093,151.066590243163,Sydney Trains Network,2,D11F2F
+Train,"Beecroft Station, Platform 2",-33.749356501282,151.066513578788,Sydney Trains Network,2,D11F2F
+Train,"Bell Station, Platform 1",-33.5058428373963,150.279041843325,Intercity Trains Network,2,F99D1C
+Train,"Bell Station, Platform 2",-33.5058625558193,150.278978029251,Intercity Trains Network,2,F99D1C
+Metro,"Bella Vista Station, Platform 1",-33.7306980315402,150.944122694165,Sydney Metro Network,401,168388
+Metro,"Bella Vista Station, Platform 2",-33.7307187832333,150.944037366504,Sydney Metro Network,401,168388
+Train,"Bellambi Station, Platform 1",-34.3627498021252,150.910033084464,Intercity Trains Network,2,005AA3
+Train,"Bellambi Station, Platform 2",-34.3627653670104,150.910109869353,Intercity Trains Network,2,005AA3
+Train,"Berala Station, Platform 1",-33.8718244483111,151.032375573782,Sydney Trains Network,2,0098CD
+Train,"Berala Station, Platform 1",-33.8718244483111,151.032375573782,Sydney Trains Network,2,F37021
+Train,"Berala Station, Platform 1",-33.8718244483111,151.032375573782,Sydney Trains Network,2,F6891F
+Train,"Berala Station, Platform 2",-33.8718946545737,151.032432891737,Sydney Trains Network,2,0098CD
+Train,"Berala Station, Platform 2",-33.8718946545737,151.032432891737,Sydney Trains Network,2,F37021
+Train,"Berala Station, Platform 2",-33.8718946545737,151.032432891737,Sydney Trains Network,2,F6891F
+Train,"Beresfield Station, Platform 1",-32.7991842262272,151.658225025192,Intercity Trains Network,2,833134
+Train,"Beresfield Station, Platform 2",-32.7992229671967,151.658152387582,Intercity Trains Network,2,833134
+Train,"Berowra Station, Platform 1",-33.6235758943158,151.153189851898,Intercity Trains Network,2,D11F2F
+Train,"Berowra Station, Platform 2",-33.6235237286109,151.153133493225,Sydney Trains Network,2,D11F2F
+Train,"Berowra Station, Platform 2",-33.6235237286109,151.153133493225,Sydney Trains Network,2,F99D1C
+Train,"Berowra Station, Platform 3",-33.6234625671637,151.153076702264,Intercity Trains Network,2,D11F2F
+Train,"Berry Station, Platform 1",-34.780314132529,150.696725473766,Intercity Trains Network,2,005AA3
+Train,"Beverly Hills Station, Platform 1",-33.9490429252661,151.081029588895,Sydney Trains Network,2,00954C
+Train,"Beverly Hills Station, Platform 2",-33.9490958262276,151.081064553532,Sydney Trains Network,2,00954C
+Train,"Bexley North Station, Platform 1",-33.9374951210071,151.113632586348,Sydney Trains Network,2,00954C
+Train,"Bexley North Station, Platform 2",-33.9375487340188,151.113645979249,Sydney Trains Network,2,00954C
+Train,"Birrong Station, Platform 1",-33.8927150436865,151.024273170604,Sydney Trains Network,2,F6891F
+Train,"Birrong Station, Platform 2",-33.8926991678962,151.024207594344,Sydney Trains Network,2,F6891F
+Train,"Blackheath Station, Platform 1",-33.6336332876474,150.284388091723,Intercity Trains Network,2,F99D1C
+Train,"Blackheath Station, Platform 2",-33.6336350049217,150.284323503,Intercity Trains Network,2,F99D1C
+Train,"Blacktown Station, Platform 1",-33.7681360511604,150.908011375419,Intercity Trains Network,2,D11F2F
+Train,"Blacktown Station, Platform 1",-33.7681360511604,150.908011375419,Sydney Trains Network,2,6F818E
+Train,"Blacktown Station, Platform 1",-33.7681360511604,150.908011375419,Sydney Trains Network,2,C4258F
+Train,"Blacktown Station, Platform 1",-33.7681360511604,150.908011375419,Sydney Trains Network,2,F99D1C
+Train,"Blacktown Station, Platform 2",-33.7681737524171,150.90795914095,Sydney Trains Network,2,C4258F
+Train,"Blacktown Station, Platform 2",-33.7681737524171,150.90795914095,Sydney Trains Network,2,F99D1C
+Train,"Blacktown Station, Platform 3",-33.7684251303906,150.90742029267,Intercity Trains Network,2,D11F2F
+Train,"Blacktown Station, Platform 3",-33.7684251303906,150.90742029267,Intercity Trains Network,2,F99D1C
+Train,"Blacktown Station, Platform 3",-33.7684251303906,150.90742029267,Sydney Trains Network,2,C4258F
+Train,"Blacktown Station, Platform 3",-33.7684251303906,150.90742029267,Sydney Trains Network,2,F99D1C
+Train,"Blacktown Station, Platform 4",-33.7684981410855,150.907391242421,Intercity Trains Network,2,D11F2F
+Train,"Blacktown Station, Platform 4",-33.7684981410855,150.907391242421,Intercity Trains Network,2,F99D1C
+Train,"Blacktown Station, Platform 4",-33.7684981410855,150.907391242421,Sydney Trains Network,2,C4258F
+Train,"Blacktown Station, Platform 4",-33.7684981410855,150.907391242421,Sydney Trains Network,2,F99D1C
+Train,"Blacktown Station, Platform 5",-33.7685621535492,150.907361783076,Intercity Trains Network,2,F99D1C
+Train,"Blacktown Station, Platform 5",-33.7685621535492,150.907361783076,Sydney Trains Network,2,F99D1C
+Train,"Blacktown Station, Platform 6",-33.7686434792176,150.907354690293,Intercity Trains Network,2,F99D1C
+Train,"Blacktown Station, Platform 6",-33.7686434792176,150.907354690293,Sydney Trains Network,2,C4258F
+Train,"Blacktown Station, Platform 6",-33.7686434792176,150.907354690293,Sydney Trains Network,2,F99D1C
+Train,"Blacktown Station, Platform 7",-33.7686981518274,150.907335596091,Intercity Trains Network,2,F99D1C
+Train,"Blacktown Station, Platform 7",-33.7686981518274,150.907335596091,Sydney Trains Network,2,C4258F
+Train,"Blacktown Station, Platform 7",-33.7686981518274,150.907335596091,Sydney Trains Network,2,F99D1C
+Train,"Blaxland Station, Platform 1",-33.7436624360638,150.609740223317,Intercity Trains Network,2,F99D1C
+Train,"Blaxland Station, Platform 2",-33.743718021292,150.609688614701,Intercity Trains Network,2,F99D1C
+Train,"Bomaderry Station, Platform 1",-34.853817819806,150.609851675246,Intercity Trains Network,2,005AA3
+Train,"Bombo Station, Platform 1",-34.6586934594805,150.853817947729,Intercity Trains Network,2,005AA3
+Train,"Bondi Junction Station, Platform 1",-33.891273815749,151.248240114065,Intercity Trains Network,2,005AA3
+Train,"Bondi Junction Station, Platform 1",-33.891273815749,151.248240114065,Sydney Trains Network,2,005AA3
+Train,"Bondi Junction Station, Platform 2",-33.8910827017796,151.248295442848,Intercity Trains Network,2,005AA3
+Train,"Bondi Junction Station, Platform 2",-33.8910827017796,151.248295442848,Sydney Trains Network,2,005AA3
+Train,"Booragul Station, Platform 1",-32.9716014236649,151.604915648003,Intercity Trains Network,2,D11F2F
+Train,"Booragul Station, Platform 2",-32.9716401473764,151.604842851121,Intercity Trains Network,2,D11F2F
+Train,"Bowral Station, Platform 1",-34.4781921901005,150.416513877168,Intercity Trains Network,2,00954C
+Train,"Bowral Station, Platform 2",-34.4780687731238,150.416737383648,Intercity Trains Network,2,00954C
+Train,"Branxton Station, Platform 1",-32.6621899049974,151.345556936071,Intercity Trains Network,2,833134
+Train,"Branxton Station, Platform 2",-32.6622712274936,151.345550227361,Intercity Trains Network,2,833134
+Light Rail,Bridge Street Light Rail,-33.8641497738042,151.207483756096,Sydney Light Rail Network,900,781140
+Light Rail,Bridge Street Light Rail,-33.8641497738042,151.207483756096,Sydney Light Rail Network,900,DD1E25
+Light Rail,Bridge Street Light Rail,-33.8641149010507,151.207449641448,Sydney Light Rail Network,900,781140
+Light Rail,Bridge Street Light Rail,-33.8641149010507,151.207449641448,Sydney Light Rail Network,900,DD1E25
+Train,"Broadmeadow Station, Platform 1",-32.922825763934,151.734921687433,Intercity Trains Network,2,D11F2F
+Train,"Broadmeadow Station, Platform 2",-32.9227746592195,151.734844196061,Intercity Trains Network,2,D11F2F
+Train,"Broadmeadow Station, Platform 3",-32.922713755463,151.734787542714,Intercity Trains Network,2,833134
+Train,"Bullaburra Station, Platform 1",-33.7234180419059,150.4148524214,Intercity Trains Network,2,F99D1C
+Train,"Bullaburra Station, Platform 2",-33.7234696752876,150.414940759467,Intercity Trains Network,2,F99D1C
+Train,"Bulli Station, Platform 1",-34.3343504993422,150.914741319914,Intercity Trains Network,2,005AA3
+Train,"Bulli Station, Platform 2",-34.3342563588018,150.914867285005,Intercity Trains Network,2,005AA3
+Train,"Bundanoon Station, Platform 1",-34.6559350775001,150.299432445763,Intercity Trains Network,2,00954C
+Train,"Bundanoon Station, Platform 2",-34.6560361760106,150.299360109013,Intercity Trains Network,2,00954C
+Train,"Burradoo Station, Platform 1",-34.494158220066,150.39793166664,Intercity Trains Network,2,00954C
+Train,"Burradoo Station, Platform 2",-34.4942197225333,150.397988590401,Intercity Trains Network,2,00954C
+Train,"Burwood Station, Platform 1",-33.8769462368354,151.104195382538,Sydney Trains Network,2,D11F2F
+Train,"Burwood Station, Platform 1",-33.8769462368354,151.104195382538,Sydney Trains Network,2,F99D1C
+Train,"Burwood Station, Platform 2",-33.8770347565492,151.104242837364,Sydney Trains Network,2,0098CD
+Train,"Burwood Station, Platform 2",-33.8770347565492,151.104242837364,Sydney Trains Network,2,D11F2F
+Train,"Burwood Station, Platform 2",-33.8770347565492,151.104242837364,Sydney Trains Network,2,F37021
+Train,"Burwood Station, Platform 2",-33.8770347565492,151.104242837364,Sydney Trains Network,2,F99D1C
+Train,"Burwood Station, Platform 3",-33.877125435155,151.104225580732,Sydney Trains Network,2,D11F2F
+Train,"Burwood Station, Platform 3",-33.877125435155,151.104225580732,Sydney Trains Network,2,F99D1C
+Train,"Burwood Station, Platform 4",-33.8771977621491,151.10421824657,Sydney Trains Network,2,D11F2F
+Train,"Burwood Station, Platform 5",-33.8772704489595,151.104200127121,Sydney Trains Network,2,0098CD
+Train,"Burwood Station, Platform 5",-33.8772704489595,151.104200127121,Sydney Trains Network,2,F37021
+Train,"Burwood Station, Platform 6",-33.8773517718505,151.104193224326,Sydney Trains Network,2,0098CD
+Train,"Burwood Station, Platform 6",-33.8773517718505,151.104193224326,Sydney Trains Network,2,F37021
+Train,"Cabramatta Station, Platform 1",-33.894896458706,150.938786294911,Sydney Trains Network,2,0098CD
+Train,"Cabramatta Station, Platform 1",-33.894896458706,150.938786294911,Sydney Trains Network,2,C4258F
+Train,"Cabramatta Station, Platform 1",-33.894896458706,150.938786294911,Sydney Trains Network,2,F37021
+Train,"Cabramatta Station, Platform 2",-33.8949113446221,150.938884230786,Sydney Trains Network,2,0098CD
+Train,"Cabramatta Station, Platform 2",-33.8949113446221,150.938884230786,Sydney Trains Network,2,C4258F
+Train,"Cabramatta Station, Platform 2",-33.8949113446221,150.938884230786,Sydney Trains Network,2,F37021
+Train,"Campbelltown Station, Platform 1",-34.0635374271191,150.814349151009,Intercity Trains Network,2,00954C
+Train,"Campbelltown Station, Platform 1",-34.0635374271191,150.814349151009,Sydney Trains Network,2,00954C
+Train,"Campbelltown Station, Platform 1",-34.0635374271191,150.814349151009,Sydney Trains Network,2,C4258F
+Train,"Campbelltown Station, Platform 2",-34.0636070650168,150.814428069695,Intercity Trains Network,2,00954C
+Train,"Campbelltown Station, Platform 2",-34.0636070650168,150.814428069695,Sydney Trains Network,2,00954C
+Train,"Campbelltown Station, Platform 2",-34.0636070650168,150.814428069695,Sydney Trains Network,2,C4258F
+Train,"Campbelltown Station, Platform 2",-34.0636070650168,150.814428069695,Sydney Trains Network,2,F37021
+Train,"Campbelltown Station, Platform 3",-34.0637050434621,150.814464949377,Intercity Trains Network,2,00954C
+Train,"Campbelltown Station, Platform 3",-34.0637050434621,150.814464949377,Sydney Trains Network,2,00954C
+Train,"Campbelltown Station, Platform 4",-34.0642367924882,150.813882454696,Intercity Trains Network,2,00954C
+Train,"Canley Vale Station, Platform 1",-33.8872645344563,150.943556337478,Sydney Trains Network,2,0098CD
+Train,"Canley Vale Station, Platform 1",-33.8872645344563,150.943556337478,Sydney Trains Network,2,C4258F
+Train,"Canley Vale Station, Platform 2",-33.887298450023,150.943622728277,Sydney Trains Network,2,0098CD
+Train,"Canley Vale Station, Platform 2",-33.887298450023,150.943622728277,Sydney Trains Network,2,C4258F
+Light Rail,Capitol Square Light Rail,-33.8798118386264,151.205553115885,Sydney Light Rail Network,900,BE1622
+Light Rail,Capitol Square Light Rail,-33.8797703289384,151.20571311068,Sydney Light Rail Network,900,BE1622
+Train,"Cardiff Station, Platform 1",-32.941536938249,151.66268899606,Intercity Trains Network,2,D11F2F
+Train,"Cardiff Station, Platform 2",-32.941498184985,151.662761740235,Intercity Trains Network,2,D11F2F
+Train,"Caringbah Station, Platform 1",-34.0416009454467,151.122156683892,Sydney Trains Network,2,005AA3
+Train,"Caringbah Station, Platform 2",-34.0415376143496,151.122164437976,Sydney Trains Network,2,005AA3
+Train,"Carlton Station, Platform 1",-33.9681594987226,151.124302845712,Sydney Trains Network,2,005AA3
+Train,"Carlton Station, Platform 2",-33.9682397337011,151.124328353512,Sydney Trains Network,2,005AA3
+Train,"Carlton Station, Platform 3",-33.9683199686701,151.124353861367,Sydney Trains Network,2,005AA3
+Train,"Carlton Station, Platform 4",-33.9684002036294,151.124379369278,Sydney Trains Network,2,005AA3
+Train,"Carramar Station, Platform 1",-33.8844550519521,150.960886469782,Sydney Trains Network,2,0098CD
+Train,"Carramar Station, Platform 1",-33.8844550519521,150.960886469782,Sydney Trains Network,2,F37021
+Train,"Carramar Station, Platform 2",-33.8844996920058,150.960899340186,Sydney Trains Network,2,0098CD
+Train,"Carramar Station, Platform 2",-33.8844996920058,150.960899340186,Sydney Trains Network,2,F37021
+Metro,"Castle Hill Station, Platform 1",-33.7314688480355,151.007680215438,Sydney Metro Network,401,168388
+Metro,"Castle Hill Station, Platform 2",-33.7315491226346,151.007705522602,Sydney Metro Network,401,168388
+Train,"Casula Station, Platform 1",-33.950284566501,150.911767422064,Sydney Trains Network,2,0098CD
+Train,"Casula Station, Platform 1",-33.950284566501,150.911767422064,Sydney Trains Network,2,C4258F
+Train,"Casula Station, Platform 2",-33.9501724680494,150.911892038373,Sydney Trains Network,2,0098CD
+Train,"Casula Station, Platform 2",-33.9501724680494,150.911892038373,Sydney Trains Network,2,C4258F
+Light Rail,Central Chalmers Street Light Rail,-33.8842518037219,151.207715870593,Sydney Light Rail Network,900,DD1E25
+Light Rail,Central Chalmers Street Light Rail,-33.8842518037219,151.207715870593,Sydney Light Rail Network,900,EE343F
+Light Rail,Central Chalmers Street Light Rail,-33.8842262953731,151.20767140456,Sydney Light Rail Network,900,781140
+Light Rail,Central Chalmers Street Light Rail,-33.8842262953731,151.20767140456,Sydney Light Rail Network,900,DD1E25
+Light Rail,Central Chalmers Street Light Rail,-33.8841925301676,151.207604926734,Sydney Light Rail Network,900,781140
+Light Rail,Central Chalmers Street Light Rail,-33.8841925301676,151.207604926734,Sydney Light Rail Network,900,DD1E25
+Light Rail,Central Grand Concourse Light Rail,-33.8824219920822,151.206686052586,Sydney Light Rail Network,900,BE1622
+Train,"Central Station, Platform 1",-33.8831645158386,151.205523453953,Intercity Trains Network,2,00954C
+Train,"Central Station, Platform 1",-33.8831645158386,151.205523453953,Intercity Trains Network,2,D11F2F
+Train,"Central Station, Platform 1",-33.8831645158386,151.205523453953,Intercity Trains Network,2,F99D1C
+Train,"Central Station, Platform 1",-33.8831645158386,151.205523453953,Sydney Trains Network,2,005AA3
+Train,"Central Station, Platform 1",-33.8831645158386,151.205523453953,Sydney Trains Network,2,D11F2F
+Train,"Central Station, Platform 10",-33.8836225725785,151.206356179915,Intercity Trains Network,2,D11F2F
+Train,"Central Station, Platform 10",-33.8836225725785,151.206356179915,Intercity Trains Network,2,F99D1C
+Train,"Central Station, Platform 10",-33.8836225725785,151.206356179915,Sydney Trains Network,2,0098CD
+Train,"Central Station, Platform 10",-33.8836225725785,151.206356179915,Sydney Trains Network,2,D11F2F
+Train,"Central Station, Platform 11",-33.8836649644282,151.206433883754,Intercity Trains Network,2,005AA3
+Train,"Central Station, Platform 11",-33.8836649644282,151.206433883754,Intercity Trains Network,2,D11F2F
+Train,"Central Station, Platform 11",-33.8836649644282,151.206433883754,Intercity Trains Network,2,F99D1C
+Train,"Central Station, Platform 11",-33.8836649644282,151.206433883754,Sydney Trains Network,2,D11F2F
+Train,"Central Station, Platform 12",-33.8837156132751,151.206533599271,Intercity Trains Network,2,F99D1C
+Train,"Central Station, Platform 12",-33.8837156132751,151.206533599271,Sydney Trains Network,2,0098CD
+Train,"Central Station, Platform 12",-33.8837156132751,151.206533599271,Sydney Trains Network,2,D11F2F
+Train,"Central Station, Platform 13",-33.8837580049989,151.206611303276,Intercity Trains Network,2,005AA3
+Train,"Central Station, Platform 13",-33.8837580049989,151.206611303276,Sydney Trains Network,2,D11F2F
+Train,"Central Station, Platform 16",-33.8839665011178,151.206837611434,Intercity Trains Network,2,D11F2F
+Train,"Central Station, Platform 16",-33.8839665011178,151.206837611434,Sydney Trains Network,2,005AA3
+Train,"Central Station, Platform 16",-33.8839665011178,151.206837611434,Sydney Trains Network,2,00954C
+Train,"Central Station, Platform 16",-33.8839665011178,151.206837611434,Sydney Trains Network,2,0098CD
+Train,"Central Station, Platform 16",-33.8839665011178,151.206837611434,Sydney Trains Network,2,D11F2F
+Train,"Central Station, Platform 16",-33.8839665011178,151.206837611434,Sydney Trains Network,2,F99D1C
+Train,"Central Station, Platform 17",-33.8840006356439,151.206893304099,Intercity Trains Network,2,D11F2F
+Train,"Central Station, Platform 17",-33.8840006356439,151.206893304099,Intercity Trains Network,2,F99D1C
+Train,"Central Station, Platform 17",-33.8840006356439,151.206893304099,Sydney Trains Network,2,00954C
+Train,"Central Station, Platform 17",-33.8840006356439,151.206893304099,Sydney Trains Network,2,0098CD
+Train,"Central Station, Platform 17",-33.8840006356439,151.206893304099,Sydney Trains Network,2,F37021
+Train,"Central Station, Platform 18",-33.8840516529415,151.206982235538,Intercity Trains Network,2,D11F2F
+Train,"Central Station, Platform 18",-33.8840516529415,151.206982235538,Intercity Trains Network,2,F99D1C
+Train,"Central Station, Platform 18",-33.8840516529415,151.206982235538,Sydney Trains Network,2,005AA3
+Train,"Central Station, Platform 18",-33.8840516529415,151.206982235538,Sydney Trains Network,2,00954C
+Train,"Central Station, Platform 18",-33.8840516529415,151.206982235538,Sydney Trains Network,2,0098CD
+Train,"Central Station, Platform 18",-33.8840516529415,151.206982235538,Sydney Trains Network,2,D11F2F
+Train,"Central Station, Platform 18",-33.8840516529415,151.206982235538,Sydney Trains Network,2,F99D1C
+Train,"Central Station, Platform 19",-33.8840940443396,151.207059940059,Intercity Trains Network,2,D11F2F
+Train,"Central Station, Platform 19",-33.8840940443396,151.207059940059,Intercity Trains Network,2,F99D1C
+Train,"Central Station, Platform 19",-33.8840940443396,151.207059940059,Sydney Trains Network,2,00954C
+Train,"Central Station, Platform 19",-33.8840940443396,151.207059940059,Sydney Trains Network,2,0098CD
+Train,"Central Station, Platform 19",-33.8840940443396,151.207059940059,Sydney Trains Network,2,F37021
+Train,"Central Station, Platform 2",-33.8832237914919,151.205634395159,Intercity Trains Network,2,00954C
+Train,"Central Station, Platform 2",-33.8832237914919,151.205634395159,Intercity Trains Network,2,D11F2F
+Train,"Central Station, Platform 2",-33.8832237914919,151.205634395159,Intercity Trains Network,2,F99D1C
+Train,"Central Station, Platform 2",-33.8832237914919,151.205634395159,Sydney Trains Network,2,F99D1C
+Train,"Central Station, Platform 20",-33.8841368045721,151.207126859922,Intercity Trains Network,2,005AA3
+Train,"Central Station, Platform 20",-33.8841368045721,151.207126859922,Intercity Trains Network,2,D11F2F
+Train,"Central Station, Platform 20",-33.8841368045721,151.207126859922,Intercity Trains Network,2,F99D1C
+Train,"Central Station, Platform 20",-33.8841368045721,151.207126859922,Sydney Trains Network,2,005AA3
+Train,"Central Station, Platform 20",-33.8841368045721,151.207126859922,Sydney Trains Network,2,00954C
+Train,"Central Station, Platform 20",-33.8841368045721,151.207126859922,Sydney Trains Network,2,0098CD
+Train,"Central Station, Platform 20",-33.8841368045721,151.207126859922,Sydney Trains Network,2,F37021
+Train,"Central Station, Platform 21",-33.88417882697,151.207215349322,Sydney Trains Network,2,00954C
+Train,"Central Station, Platform 21",-33.88417882697,151.207215349322,Sydney Trains Network,2,0098CD
+Train,"Central Station, Platform 21",-33.88417882697,151.207215349322,Sydney Trains Network,2,F37021
+Train,"Central Station, Platform 22",-33.8842215871064,151.207282269324,Sydney Trains Network,2,00954C
+Train,"Central Station, Platform 22",-33.8842215871064,151.207282269324,Sydney Trains Network,2,0098CD
+Train,"Central Station, Platform 22",-33.8842215871064,151.207282269324,Sydney Trains Network,2,F37021
+Train,"Central Station, Platform 23",-33.8842639782907,151.207359974137,Intercity Trains Network,2,F99D1C
+Train,"Central Station, Platform 23",-33.8842639782907,151.207359974137,Sydney Trains Network,2,00954C
+Train,"Central Station, Platform 23",-33.8842639782907,151.207359974137,Sydney Trains Network,2,0098CD
+Train,"Central Station, Platform 24",-33.8851545408247,151.206874422798,Intercity Trains Network,2,005AA3
+Train,"Central Station, Platform 24",-33.8851545408247,151.206874422798,Sydney Trains Network,2,005AA3
+Train,"Central Station, Platform 25",-33.8853074509057,151.206881941785,Intercity Trains Network,2,005AA3
+Train,"Central Station, Platform 25",-33.8853074509057,151.206881941785,Sydney Trains Network,2,005AA3
+Metro,"Central Station, Platform 26",-33.8841172820979,151.20638050186,Sydney Metro Network,401,168388
+Metro,"Central Station, Platform 27",-33.8841424221199,151.20643575224,Sydney Metro Network,401,168388
+Train,"Central Station, Platform 3",-33.8832575578845,151.205700871527,Intercity Trains Network,2,005AA3
+Train,"Central Station, Platform 3",-33.8832575578845,151.205700871527,Intercity Trains Network,2,D11F2F
+Train,"Central Station, Platform 3",-33.8832575578845,151.205700871527,Intercity Trains Network,2,F99D1C
+Train,"Central Station, Platform 3",-33.8832575578845,151.205700871527,Sydney Trains Network,2,D11F2F
+Train,"Central Station, Platform 4",-33.8833168333583,151.205811812967,Intercity Trains Network,2,005AA3
+Train,"Central Station, Platform 4",-33.8833168333583,151.205811812967,Intercity Trains Network,2,00954C
+Train,"Central Station, Platform 4",-33.8833168333583,151.205811812967,Intercity Trains Network,2,D11F2F
+Train,"Central Station, Platform 4",-33.8833168333583,151.205811812967,Intercity Trains Network,2,F99D1C
+Train,"Central Station, Platform 4",-33.8833168333583,151.205811812967,Sydney Trains Network,2,0098CD
+Train,"Central Station, Platform 4",-33.8833168333583,151.205811812967,Sydney Trains Network,2,D11F2F
+Train,"Central Station, Platform 4",-33.8833168333583,151.205811812967,Sydney Trains Network,2,F99D1C
+Train,"Central Station, Platform 5",-33.8833595943687,151.205878731627,Intercity Trains Network,2,005AA3
+Train,"Central Station, Platform 5",-33.8833595943687,151.205878731627,Intercity Trains Network,2,D11F2F
+Train,"Central Station, Platform 5",-33.8833595943687,151.205878731627,Intercity Trains Network,2,F99D1C
+Train,"Central Station, Platform 5",-33.8833595943687,151.205878731627,Sydney Trains Network,2,D11F2F
+Train,"Central Station, Platform 5",-33.8833595943687,151.205878731627,Sydney Trains Network,2,F99D1C
+Train,"Central Station, Platform 6",-33.8834181320941,151.206011242627,Intercity Trains Network,2,005AA3
+Train,"Central Station, Platform 6",-33.8834181320941,151.206011242627,Intercity Trains Network,2,00954C
+Train,"Central Station, Platform 6",-33.8834181320941,151.206011242627,Intercity Trains Network,2,D11F2F
+Train,"Central Station, Platform 6",-33.8834181320941,151.206011242627,Intercity Trains Network,2,F99D1C
+Train,"Central Station, Platform 6",-33.8834181320941,151.206011242627,Sydney Trains Network,2,D11F2F
+Train,"Central Station, Platform 6",-33.8834181320941,151.206011242627,Sydney Trains Network,2,F99D1C
+Train,"Central Station, Platform 7",-33.8834522670495,151.206066934621,Intercity Trains Network,2,005AA3
+Train,"Central Station, Platform 7",-33.8834522670495,151.206066934621,Intercity Trains Network,2,D11F2F
+Train,"Central Station, Platform 7",-33.8834522670495,151.206066934621,Intercity Trains Network,2,F99D1C
+Train,"Central Station, Platform 7",-33.8834522670495,151.206066934621,Sydney Trains Network,2,005AA3
+Train,"Central Station, Platform 7",-33.8834522670495,151.206066934621,Sydney Trains Network,2,0098CD
+Train,"Central Station, Platform 8",-33.8835115421527,151.206177876546,Intercity Trains Network,2,005AA3
+Train,"Central Station, Platform 8",-33.8835115421527,151.206177876546,Intercity Trains Network,2,00954C
+Train,"Central Station, Platform 8",-33.8835115421527,151.206177876546,Intercity Trains Network,2,D11F2F
+Train,"Central Station, Platform 8",-33.8835115421527,151.206177876546,Intercity Trains Network,2,F99D1C
+Train,"Central Station, Platform 8",-33.8835115421527,151.206177876546,Sydney Trains Network,2,0098CD
+Train,"Central Station, Platform 8",-33.8835115421527,151.206177876546,Sydney Trains Network,2,D11F2F
+Train,"Central Station, Platform 8",-33.8835115421527,151.206177876546,Sydney Trains Network,2,F99D1C
+Train,"Central Station, Platform 9",-33.8835543029371,151.206244795532,Intercity Trains Network,2,005AA3
+Train,"Central Station, Platform 9",-33.8835543029371,151.206244795532,Intercity Trains Network,2,D11F2F
+Train,"Central Station, Platform 9",-33.8835543029371,151.206244795532,Intercity Trains Network,2,F99D1C
+Train,"Chatswood Station, Platform 1",-33.7974661622668,151.181074323373,Intercity Trains Network,2,D11F2F
+Train,"Chatswood Station, Platform 1",-33.7974661622668,151.181074323373,Sydney Trains Network,2,D11F2F
+Train,"Chatswood Station, Platform 1",-33.7974661622668,151.181074323373,Sydney Trains Network,2,F99D1C
+Metro,"Chatswood Station, Platform 2",-33.7974690885396,151.18098812969,Sydney Metro Network,401,168388
+Metro,"Chatswood Station, Platform 3",-33.7974727462964,151.180880387568,Sydney Metro Network,401,168388
+Train,"Chatswood Station, Platform 4",-33.7974753066703,151.180804968071,Intercity Trains Network,2,D11F2F
+Train,"Chatswood Station, Platform 4",-33.7974753066703,151.180804968071,Sydney Trains Network,2,D11F2F
+Train,"Chatswood Station, Platform 4",-33.7974753066703,151.180804968071,Sydney Trains Network,2,F99D1C
+Train,"Cheltenham Station, Platform 1",-33.755634223288,151.078590190869,Sydney Trains Network,2,D11F2F
+Train,"Cheltenham Station, Platform 2",-33.7556996929633,151.078517785404,Sydney Trains Network,2,D11F2F
+Metro,"Cherrybrook Station, Platform 1",-33.7367283306946,151.032083986405,Sydney Metro Network,401,168388
+Metro,"Cherrybrook Station, Platform 2",-33.7367923657211,151.032054631565,Sydney Metro Network,401,168388
+Train,"Chester Hill Station, Platform 1",-33.8835791011989,150.999934656932,Sydney Trains Network,2,0098CD
+Train,"Chester Hill Station, Platform 1",-33.8835791011989,150.999934656932,Sydney Trains Network,2,F37021
+Train,"Chester Hill Station, Platform 2",-33.8836427820531,150.999916025804,Sydney Trains Network,2,0098CD
+Train,"Chester Hill Station, Platform 2",-33.8836427820531,150.999916025804,Sydney Trains Network,2,F37021
+Light Rail,Chinatown Light Rail,-33.8785945998064,151.205579711476,Sydney Light Rail Network,900,781140
+Light Rail,Chinatown Light Rail,-33.8785945998064,151.205579711476,Sydney Light Rail Network,900,DD1E25
+Light Rail,Chinatown Light Rail,-33.8785867111694,151.205546917264,Sydney Light Rail Network,900,781140
+Light Rail,Chinatown Light Rail,-33.8785867111694,151.205546917264,Sydney Light Rail Network,900,DD1E25
+Light Rail,Circular Quay Light Rail,-33.8615761299342,151.210024893904,Sydney Light Rail Network,900,781140
+Light Rail,Circular Quay Light Rail,-33.8615761299342,151.210024893904,Sydney Light Rail Network,900,DD1E25
+Light Rail,Circular Quay Light Rail,-33.8615124291174,151.210043361994,Sydney Light Rail Network,900,781140
+Light Rail,Circular Quay Light Rail,-33.8614854449916,151.210042035304,Sydney Light Rail Network,900,781140
+Light Rail,Circular Quay Light Rail,-33.8614854449916,151.210042035304,Sydney Light Rail Network,900,DD1E25
+Train,"Circular Quay Station, Platform 1",-33.8613506645596,151.210294607893,Intercity Trains Network,2,D11F2F
+Train,"Circular Quay Station, Platform 1",-33.8613506645596,151.210294607893,Sydney Trains Network,2,00954C
+Train,"Circular Quay Station, Platform 1",-33.8613506645596,151.210294607893,Sydney Trains Network,2,0098CD
+Train,"Circular Quay Station, Platform 1",-33.8613506645596,151.210294607893,Sydney Trains Network,2,F37021
+Train,"Circular Quay Station, Platform 2",-33.8612599796022,151.210311748984,Intercity Trains Network,2,F99D1C
+Train,"Circular Quay Station, Platform 2",-33.8612599796022,151.210311748984,Sydney Trains Network,2,00954C
+Train,"Circular Quay Station, Platform 2",-33.8612599796022,151.210311748984,Sydney Trains Network,2,0098CD
+Train,"Circular Quay Station, Platform 2",-33.8612599796022,151.210311748984,Sydney Trains Network,2,F37021
+Light Rail,Civic Light Rail,-32.9270513239838,151.771761379119,Newcastle Light Rail Network,900,EE343F
+Light Rail,Civic Light Rail,-32.9269884001847,151.771757993523,Newcastle Light Rail Network,900,EE343F
+Train,"Clarendon Station, Platform 1",-33.6085908140194,150.78799209013,Sydney Trains Network,2,C4258F
+Train,"Clarendon Station, Platform 1",-33.6085908140194,150.78799209013,Sydney Trains Network,2,F99D1C
+Train,"Clarendon Station, Platform 2",-33.6086551313971,150.787951826152,Sydney Trains Network,2,C4258F
+Train,"Clarendon Station, Platform 2",-33.6086551313971,150.787951826152,Sydney Trains Network,2,F99D1C
+Train,"Clyde Station, Platform 2",-33.8359288648876,151.017135203252,Sydney Trains Network,2,F99D1C
+Train,"Clyde Station, Platform 3",-33.8359936024943,151.017084248118,Sydney Trains Network,2,0098CD
+Train,"Clyde Station, Platform 3",-33.8359936024943,151.017084248118,Sydney Trains Network,2,F99D1C
+Train,"Clyde Station, Platform 4",-33.836058691896,151.017022511642,Sydney Trains Network,2,0098CD
+Train,"Clyde Station, Platform 4",-33.836058691896,151.017022511642,Sydney Trains Network,2,F99D1C
+Train,"Clyde Station, Platform 5",-33.8361237812731,151.016960775073,Sydney Trains Network,2,0098CD
+Train,"Clyde Station, Platform 5",-33.8361237812731,151.016960775073,Sydney Trains Network,2,F99D1C
+Train,"Coalcliff Station, Platform 1",-34.2422006831809,150.977256450981,Intercity Trains Network,2,005AA3
+Train,"Coalcliff Station, Platform 2",-34.2422712494372,150.977303174939,Intercity Trains Network,2,005AA3
+Train,"Cockle Creek Station, Platform 1",-32.9427157984026,151.623777638617,Intercity Trains Network,2,D11F2F
+Train,"Cockle Creek Station, Platform 2",-32.9426352747811,151.623762754912,Intercity Trains Network,2,D11F2F
+Train,"Coledale Station, Platform 1",-34.2894632525633,150.943226291268,Intercity Trains Network,2,005AA3
+Train,"Coledale Station, Platform 2",-34.2895147892149,150.943304695787,Intercity Trains Network,2,005AA3
+Train,"Como Station, Platform 1",-34.0044185660178,151.068047567573,Sydney Trains Network,2,005AA3
+Train,"Como Station, Platform 2",-34.0043707228214,151.068131833817,Sydney Trains Network,2,005AA3
+Train,"Concord West Station, Platform 2",-33.8487288530189,151.085694457436,Sydney Trains Network,2,D11F2F
+Train,"Concord West Station, Platform 3",-33.8487327902166,151.085575856064,Sydney Trains Network,2,D11F2F
+Train,"Concord West Station, Platform 4",-33.8487352956468,151.085500382451,Sydney Trains Network,2,D11F2F
+Train,"Coniston Station, Platform 1",-34.4377449619701,150.885219169103,Intercity Trains Network,2,005AA3
+Train,"Coniston Station, Platform 2",-34.4377968734801,150.885286829744,Intercity Trains Network,2,005AA3
+Light Rail,Convention Light Rail,-33.8726324133386,151.198125388685,Sydney Light Rail Network,900,BE1622
+Light Rail,Convention Light Rail,-33.872573497371,151.198003683104,Sydney Light Rail Network,900,BE1622
+Train,"Corrimal Station, Platform 1",-34.375526149043,150.904987415622,Intercity Trains Network,2,005AA3
+Train,"Corrimal Station, Platform 2",-34.3754680035328,150.905115122835,Intercity Trains Network,2,005AA3
+Train,"Cowan Station, Platform 1",-33.5934487409132,151.171811592247,Intercity Trains Network,2,D11F2F
+Train,"Cowan Station, Platform 2",-33.5934516452604,151.171725601014,Intercity Trains Network,2,D11F2F
+Train,"Cringila Station, Platform 1",-34.4671759695271,150.878359512155,Intercity Trains Network,2,005AA3
+Train,"Cringila Station, Platform 2",-34.4671195679441,150.878433056337,Intercity Trains Network,2,005AA3
+Train,"Cronulla Station, Platform 1",-34.0554912051282,151.151386666205,Sydney Trains Network,2,005AA3
+Train,"Cronulla Station, Platform 2",-34.056064697746,151.151479623454,Sydney Trains Network,2,005AA3
+Light Rail,Crown Street Light Rail,-32.9264366328388,151.777228860662,Newcastle Light Rail Network,900,EE343F
+Light Rail,Crown Street Light Rail,-32.9263745262357,151.777204153941,Newcastle Light Rail Network,900,EE343F
+Metro,"Crows Nest Station, Platform 1",-33.8258014734669,151.199372087568,Sydney Metro Network,401,168388
+Metro,"Crows Nest Station, Platform 2",-33.8258490214575,151.199298847552,Sydney Metro Network,401,168388
+Train,"Croydon Station, Platform 4",-33.883231301725,151.115375702476,Sydney Trains Network,2,0098CD
+Train,"Croydon Station, Platform 4",-33.883231301725,151.115375702476,Sydney Trains Network,2,F37021
+Train,"Croydon Station, Platform 5",-33.8832960762999,151.115324801648,Sydney Trains Network,2,0098CD
+Train,"Croydon Station, Platform 5",-33.8832960762999,151.115324801648,Sydney Trains Network,2,F37021
+Train,"Dapto Station, Platform 1",-34.4929501054229,150.791672918227,Intercity Trains Network,2,005AA3
+Train,"Dapto Station, Platform 2",-34.4928080371185,150.791895027998,Intercity Trains Network,2,005AA3
+Train,"Dapto Station, Platform 3",-34.4922013086242,150.792281087036,Intercity Trains Network,2,005AA3
+Train,"Denistone Station, Platform 1",-33.7995751942435,151.087109293193,Sydney Trains Network,2,D11F2F
+Train,"Denistone Station, Platform 2",-33.7996489518658,151.087058841081,Sydney Trains Network,2,D11F2F
+Train,"Denistone Station, Platform 3",-33.7997137132689,151.087007960557,Sydney Trains Network,2,D11F2F
+Train,"Denistone Station, Platform 4",-33.7997784746561,151.086957079959,Sydney Trains Network,2,D11F2F
+Train,"Domestic Airport Station, Platform 1",-33.9336048791702,151.180863874674,Sydney Trains Network,2,00954C
+Train,"Domestic Airport Station, Platform 2",-33.9336862006932,151.180857046623,Sydney Trains Network,2,00954C
+Train,"Doonside Station, Platform 1",-33.7638327450831,150.868467279174,Sydney Trains Network,2,F99D1C
+Train,"Doonside Station, Platform 2",-33.7638950592598,150.868491661883,Sydney Trains Network,2,F99D1C
+Train,"Doonside Station, Platform 3",-33.7640023666779,150.868518069235,Sydney Trains Network,2,C4258F
+Train,"Doonside Station, Platform 3",-33.7640023666779,150.868518069235,Sydney Trains Network,2,F99D1C
+Train,"Doonside Station, Platform 4",-33.7640650190321,150.868531677865,Sydney Trains Network,2,C4258F
+Train,"Doonside Station, Platform 4",-33.7640650190321,150.868531677865,Sydney Trains Network,2,F99D1C
+Train,"Dora Creek Station, Platform 1",-33.0838228530425,151.500941408717,Intercity Trains Network,2,D11F2F
+Train,"Dora Creek Station, Platform 2",-33.0838079595596,151.500855036222,Intercity Trains Network,2,D11F2F
+Train,"Douglas Park Station, Platform 1",-34.1832093337249,150.710391236342,Intercity Trains Network,2,00954C
+Train,"Douglas Park Station, Platform 2",-34.1832906588175,150.710383958266,Intercity Trains Network,2,00954C
+Light Rail,Dulwich Grove Light Rail,-33.9050443782764,151.139020605567,Sydney Light Rail Network,900,BE1622
+Light Rail,Dulwich Grove Light Rail,-33.9049795944189,151.139071498568,Sydney Light Rail Network,900,BE1622
+Light Rail,Dulwich Hill Light Rail,-33.910306100907,151.140096671552,Sydney Light Rail Network,900,BE1622
+Train,"Dungog Station, Platform 2",-32.402391542346,151.759272137662,Intercity Trains Network,2,833134
+Train,"East Hills Station, Platform 2",-33.9616872385088,150.984852354932,Sydney Trains Network,2,00954C
+Train,"East Hills Station, Platform 3",-33.9617571145244,150.984920501661,Sydney Trains Network,2,00954C
+Train,"East Maitland Station, Platform 1",-32.7448589221072,151.587444633285,Intercity Trains Network,2,833134
+Train,"East Maitland Station, Platform 2",-32.74478267932,151.587312798568,Intercity Trains Network,2,833134
+Train,"East Richmond Station, Platform 1",-33.60175117541,150.75906731189,Sydney Trains Network,2,C4258F
+Train,"East Richmond Station, Platform 1",-33.60175117541,150.75906731189,Sydney Trains Network,2,F99D1C
+Train,"Eastwood Station, Platform 1",-33.7901443521845,151.082397682067,Sydney Trains Network,2,D11F2F
+Train,"Eastwood Station, Platform 2",-33.7901472089694,151.082311484964,Sydney Trains Network,2,D11F2F
+Train,"Eastwood Station, Platform 3",-33.7901424977617,151.082181761615,Sydney Trains Network,2,D11F2F
+Train,"Eastwood Station, Platform 4",-33.7901457114706,151.082084789849,Sydney Trains Network,2,D11F2F
+Train,"Edgecliff Station, Platform 1",-33.8793538766834,151.236489687122,Intercity Trains Network,2,005AA3
+Train,"Edgecliff Station, Platform 1",-33.8793538766834,151.236489687122,Sydney Trains Network,2,005AA3
+Train,"Edgecliff Station, Platform 2",-33.8792815502702,151.23649690842,Intercity Trains Network,2,005AA3
+Train,"Edgecliff Station, Platform 2",-33.8792815502702,151.23649690842,Sydney Trains Network,2,005AA3
+Train,"Edmondson Park Station, Platform 1",-33.9693273670822,150.858963989806,Sydney Trains Network,2,0098CD
+Train,"Edmondson Park Station, Platform 1",-33.9693273670822,150.858963989806,Sydney Trains Network,2,C4258F
+Train,"Edmondson Park Station, Platform 2",-33.9694003721551,150.858934845908,Sydney Trains Network,2,0098CD
+Train,"Edmondson Park Station, Platform 2",-33.9694003721551,150.858934845908,Sydney Trains Network,2,C4258F
+Train,"Emu Plains Station, Platform 1",-33.7456790487999,150.671468354516,Intercity Trains Network,2,F99D1C
+Train,"Emu Plains Station, Platform 1",-33.7456790487999,150.671468354516,Sydney Trains Network,2,F99D1C
+Train,"Emu Plains Station, Platform 2",-33.7457500920604,150.671503749997,Intercity Trains Network,2,F99D1C
+Train,"Emu Plains Station, Platform 2",-33.7457500920604,150.671503749997,Sydney Trains Network,2,F99D1C
+Train,"Engadine Station, Platform 1",-34.0678339228572,151.014682405596,Intercity Trains Network,2,005AA3
+Train,"Engadine Station, Platform 1",-34.0678339228572,151.014682405596,Sydney Trains Network,2,005AA3
+Train,"Engadine Station, Platform 2",-34.0678760762271,151.014771015335,Intercity Trains Network,2,005AA3
+Train,"Engadine Station, Platform 2",-34.0678760762271,151.014771015335,Sydney Trains Network,2,005AA3
+Train,"Epping Station, Platform 1",-33.7730177840608,151.082328282802,Intercity Trains Network,2,D11F2F
+Train,"Epping Station, Platform 1",-33.7730177840608,151.082328282802,Sydney Trains Network,2,D11F2F
+Train,"Epping Station, Platform 2",-33.7730584093553,151.082189949951,Intercity Trains Network,2,D11F2F
+Train,"Epping Station, Platform 2",-33.7730584093553,151.082189949951,Sydney Trains Network,2,D11F2F
+Train,"Epping Station, Platform 3",-33.7725829595363,151.081854470004,Intercity Trains Network,2,D11F2F
+Train,"Epping Station, Platform 3",-33.7725829595363,151.081854470004,Sydney Trains Network,2,D11F2F
+Metro,"Epping Station, Platform 5",-33.7728752710603,151.082278354366,Sydney Metro Network,401,168388
+Metro,"Epping Station, Platform 6",-33.7729565213617,151.082001688905,Sydney Metro Network,401,168388
+Train,"Erskineville Station, Platform 1",-33.9006797552187,151.185185278816,Sydney Trains Network,2,00954C
+Train,"Erskineville Station, Platform 2",-33.9006944409265,151.185283243436,Sydney Trains Network,2,005AA3
+Train,"Erskineville Station, Platform 2",-33.9006944409265,151.185283243436,Sydney Trains Network,2,00954C
+Train,"Erskineville Station, Platform 3",-33.900709493696,151.185370420963,Sydney Trains Network,2,005AA3
+Train,"Erskineville Station, Platform 3",-33.900709493696,151.185370420963,Sydney Trains Network,2,00954C
+Train,"Erskineville Station, Platform 4",-33.9007151843156,151.185467945332,Sydney Trains Network,2,00954C
+Light Rail,ES Marks Light Rail,-33.905832751621,151.223938029941,Sydney Light Rail Network,900,781140
+Light Rail,ES Marks Light Rail,-33.905832751621,151.223938029941,Sydney Light Rail Network,900,EE343F
+Light Rail,ES Marks Light Rail,-33.905824868838,151.223905223828,Sydney Light Rail Network,900,781140
+Light Rail,ES Marks Light Rail,-33.905824868838,151.223905223828,Sydney Light Rail Network,900,EE343F
+Train,"Exeter Station, Platform 1",-34.6134995739006,150.317503618386,Intercity Trains Network,2,00954C
+Train,"Exeter Station, Platform 2",-34.6135611116796,150.31756057497,Intercity Trains Network,2,00954C
+Light Rail,Exhibition Centre Light Rail,-33.8772141574075,151.199570762909,Sydney Light Rail Network,900,BE1622
+Light Rail,Exhibition Centre Light Rail,-33.8771744965176,151.199676836938,Sydney Light Rail Network,900,BE1622
+Train,"Fairfield Station, Platform 1",-33.8724558260557,150.956863580741,Sydney Trains Network,2,0098CD
+Train,"Fairfield Station, Platform 1",-33.8724558260557,150.956863580741,Sydney Trains Network,2,C4258F
+Train,"Fairfield Station, Platform 2",-33.872508076895,150.956920009053,Sydney Trains Network,2,0098CD
+Train,"Fairfield Station, Platform 2",-33.872508076895,150.956920009053,Sydney Trains Network,2,C4258F
+Train,"Fairy Meadow Station, Platform 1",-34.3952827259053,150.896362274487,Intercity Trains Network,2,005AA3
+Train,"Fairy Meadow Station, Platform 2",-34.39531594614,150.896450777387,Intercity Trains Network,2,005AA3
+Train,"Fassifern Station, Platform 1",-32.9855717427839,151.581014948932,Intercity Trains Network,2,D11F2F
+Train,"Fassifern Station, Platform 2",-32.9855572898921,151.580917999156,Intercity Trains Network,2,D11F2F
+Train,"Faulconbridge Station, Platform 1",-33.6965026655296,150.534951500538,Intercity Trains Network,2,F99D1C
+Train,"Faulconbridge Station, Platform 2",-33.6965458250838,150.535017964954,Intercity Trains Network,2,F99D1C
+Light Rail,Fish Market Light Rail,-33.8709534384962,151.192404786361,Sydney Light Rail Network,900,BE1622
+Light Rail,Fish Market Light Rail,-33.8708886368192,151.192455618949,Sydney Light Rail Network,900,BE1622
+Train,"Flemington Station, Platform 1",-33.86477497278,151.069966673191,Sydney Trains Network,2,0098CD
+Train,"Flemington Station, Platform 1",-33.86477497278,151.069966673191,Sydney Trains Network,2,F37021
+Train,"Flemington Station, Platform 1",-33.86477497278,151.069966673191,Sydney Trains Network,2,F99D1C
+Train,"Flemington Station, Platform 2",-33.8648203109884,151.069958026987,Sydney Trains Network,2,0098CD
+Train,"Flemington Station, Platform 2",-33.8648203109884,151.069958026987,Sydney Trains Network,2,F99D1C
+Train,"Flemington Station, Platform 3",-33.8649203404086,151.069930377963,Sydney Trains Network,2,0098CD
+Train,"Flemington Station, Platform 3",-33.8649203404086,151.069930377963,Sydney Trains Network,2,F37021
+Train,"Flemington Station, Platform 3",-33.8649203404086,151.069930377963,Sydney Trains Network,2,F99D1C
+Train,"Flemington Station, Platform 4",-33.8649750316192,151.069911375129,Sydney Trains Network,2,0098CD
+Train,"Flemington Station, Platform 4",-33.8649750316192,151.069911375129,Sydney Trains Network,2,F37021
+Train,"Flemington Station, Platform 4",-33.8649750316192,151.069911375129,Sydney Trains Network,2,F99D1C
+Metro,"Gadigal Station, Platform 1",-33.8738736344955,151.208998656578,Sydney Metro Network,401,168388
+Metro,"Gadigal Station, Platform 2",-33.8738229332452,151.208110435827,Sydney Metro Network,401,168388
+Train,"Gerringong Station, Platform 1",-34.74475296617,150.817579061819,Intercity Trains Network,2,005AA3
+Light Rail,Glebe Light Rail,-33.8772589518494,151.187420632847,Sydney Light Rail Network,900,BE1622
+Light Rail,Glebe Light Rail,-33.8771690023769,151.187416231665,Sydney Light Rail Network,900,BE1622
+Train,"Glenbrook Station, Platform 1",-33.7690196241582,150.62092671337,Intercity Trains Network,2,F99D1C
+Train,"Glenbrook Station, Platform 2",-33.7691105859734,150.620898170909,Intercity Trains Network,2,F99D1C
+Train,"Glenfield Station, Platform 1",-33.9724351731719,150.892709188003,Sydney Trains Network,2,00954C
+Train,"Glenfield Station, Platform 2",-33.9724701390878,150.892743230886,Intercity Trains Network,2,00954C
+Train,"Glenfield Station, Platform 2",-33.9724701390878,150.892743230886,Sydney Trains Network,2,0098CD
+Train,"Glenfield Station, Platform 2",-33.9724701390878,150.892743230886,Sydney Trains Network,2,C4258F
+Train,"Glenfield Station, Platform 3",-33.9725213904079,150.892832095561,Intercity Trains Network,2,00954C
+Train,"Glenfield Station, Platform 3",-33.9725213904079,150.892832095561,Sydney Trains Network,2,00954C
+Train,"Glenfield Station, Platform 3",-33.9725213904079,150.892832095561,Sydney Trains Network,2,0098CD
+Train,"Glenfield Station, Platform 3",-33.9725213904079,150.892832095561,Sydney Trains Network,2,C4258F
+Train,"Glenfield Station, Platform 4",-33.9725646700524,150.892888149387,Intercity Trains Network,2,00954C
+Train,"Glenfield Station, Platform 4",-33.9725646700524,150.892888149387,Sydney Trains Network,2,00954C
+Train,"Glenfield Station, Platform 4",-33.9725646700524,150.892888149387,Sydney Trains Network,2,0098CD
+Train,"Gordon Station, Platform 1",-33.7556632338538,151.154327688904,Intercity Trains Network,2,D11F2F
+Train,"Gordon Station, Platform 1",-33.7556632338538,151.154327688904,Sydney Trains Network,2,D11F2F
+Train,"Gordon Station, Platform 1",-33.7556632338538,151.154327688904,Sydney Trains Network,2,F99D1C
+Train,"Gordon Station, Platform 2",-33.7557111158162,151.154243707348,Sydney Trains Network,2,D11F2F
+Train,"Gordon Station, Platform 2",-33.7557111158162,151.154243707348,Sydney Trains Network,2,F99D1C
+Train,"Gordon Station, Platform 3",-33.7557399175789,151.154191164497,Intercity Trains Network,2,D11F2F
+Train,"Gordon Station, Platform 3",-33.7557399175789,151.154191164497,Sydney Trains Network,2,F99D1C
+Train,"Gosford Station, Platform 1",-33.4236741957497,151.341732296509,Intercity Trains Network,2,D11F2F
+Train,"Gosford Station, Platform 2",-33.4236592171705,151.341645594951,Intercity Trains Network,2,D11F2F
+Train,"Gosford Station, Platform 3",-33.423628507606,151.341493643015,Intercity Trains Network,2,D11F2F
+Train,"Goulburn Station, Platform 1",-34.7581540060277,149.71942593493,Intercity Trains Network,2,00954C
+Train,"Granville Station, Platform 1",-33.832817668322,151.012238587899,Sydney Trains Network,2,F99D1C
+Train,"Granville Station, Platform 2",-33.8328914010475,151.012188051484,Sydney Trains Network,2,F99D1C
+Train,"Granville Station, Platform 3",-33.8329748334577,151.012116374117,Sydney Trains Network,2,0098CD
+Train,"Granville Station, Platform 3",-33.8329748334577,151.012116374117,Sydney Trains Network,2,F99D1C
+Train,"Granville Station, Platform 4",-33.8330402718522,151.012043854585,Sydney Trains Network,2,0098CD
+Train,"Granville Station, Platform 4",-33.8330402718522,151.012043854585,Sydney Trains Network,2,F99D1C
+Train,"Green Square Station, Platform 1",-33.906052669348,151.202532150697,Sydney Trains Network,2,00954C
+Train,"Green Square Station, Platform 2",-33.9061130515635,151.20261075892,Sydney Trains Network,2,00954C
+Train,"Greta Station, Platform 1",-32.6867461525125,151.384208798193,Intercity Trains Network,2,833134
+Train,"Greta Station, Platform 2",-32.6867678653005,151.384103319254,Intercity Trains Network,2,833134
+Train,"Guildford Station, Platform 1",-33.8543012106111,150.984440470588,Sydney Trains Network,2,0098CD
+Train,"Guildford Station, Platform 1",-33.8543012106111,150.984440470588,Sydney Trains Network,2,C4258F
+Train,"Guildford Station, Platform 2",-33.8543714430787,150.984497738253,Sydney Trains Network,2,0098CD
+Train,"Guildford Station, Platform 2",-33.8543714430787,150.984497738253,Sydney Trains Network,2,C4258F
+Train,"Gymea Station, Platform 1",-34.0349267156229,151.085436797755,Sydney Trains Network,2,005AA3
+Train,"Gymea Station, Platform 2",-34.0348453930847,151.085443715443,Sydney Trains Network,2,005AA3
+Train,"Hamilton Station, Platform 1",-32.9185506994413,151.748566756163,Intercity Trains Network,2,833134
+Train,"Hamilton Station, Platform 1",-32.9185506994413,151.748566756163,Intercity Trains Network,2,D11F2F
+Train,"Hamilton Station, Platform 2",-32.9183475948636,151.748459766285,Intercity Trains Network,2,833134
+Train,"Hamilton Station, Platform 2",-32.9183475948636,151.748459766285,Intercity Trains Network,2,D11F2F
+Train,"Harris Park Station, Platform 1",-33.8235675522571,151.007692453962,Sydney Trains Network,2,F99D1C
+Train,"Harris Park Station, Platform 2",-33.8235516634203,151.007626934208,Sydney Trains Network,2,F99D1C
+Train,"Harris Park Station, Platform 3",-33.8235278300961,151.007528654617,Sydney Trains Network,2,0098CD
+Train,"Harris Park Station, Platform 3",-33.8235278300961,151.007528654617,Sydney Trains Network,2,C4258F
+Train,"Harris Park Station, Platform 3",-33.8235278300961,151.007528654617,Sydney Trains Network,2,F99D1C
+Train,"Harris Park Station, Platform 4",-33.8235119411675,151.007463134915,Sydney Trains Network,2,0098CD
+Train,"Harris Park Station, Platform 4",-33.8235119411675,151.007463134915,Sydney Trains Network,2,C4258F
+Train,"Harris Park Station, Platform 4",-33.8235119411675,151.007463134915,Sydney Trains Network,2,F99D1C
+Train,"Hawkesbury River Station, Platform 1",-33.5469813071939,151.226496117896,Intercity Trains Network,2,D11F2F
+Train,"Hawkesbury River Station, Platform 2",-33.546911551477,151.226428153887,Intercity Trains Network,2,D11F2F
+Light Rail,Hawthorne Light Rail,-33.8797231293805,151.147128987715,Sydney Light Rail Network,900,BE1622
+Light Rail,Hawthorne Light Rail,-33.8793466821006,151.147337598728,Sydney Light Rail Network,900,BE1622
+Light Rail,Haymarket Light Rail,-33.8814693048956,151.205299699926,Sydney Light Rail Network,900,781140
+Light Rail,Haymarket Light Rail,-33.8814693048956,151.205299699926,Sydney Light Rail Network,900,DD1E25
+Light Rail,Haymarket Light Rail,-33.8814311137207,151.205362638165,Sydney Light Rail Network,900,781140
+Light Rail,Haymarket Light Rail,-33.8814311137207,151.205362638165,Sydney Light Rail Network,900,DD1E25
+Train,"Hazelbrook Station, Platform 1",-33.7237452741789,150.454246255447,Intercity Trains Network,2,F99D1C
+Train,"Hazelbrook Station, Platform 2",-33.7237731879551,150.454215016226,Intercity Trains Network,2,F99D1C
+Train,"Heathcote Station, Platform 1",-34.0879032652089,151.008255878704,Intercity Trains Network,2,005AA3
+Train,"Heathcote Station, Platform 1",-34.0879032652089,151.008255878704,Sydney Trains Network,2,005AA3
+Train,"Heathcote Station, Platform 2",-34.0879551251861,151.00832330599,Intercity Trains Network,2,005AA3
+Train,"Heathcote Station, Platform 2",-34.0879551251861,151.00832330599,Sydney Trains Network,2,005AA3
+Train,"Helensburgh Station, Platform 1",-34.1770253461471,150.994486197426,Intercity Trains Network,2,005AA3
+Train,"Helensburgh Station, Platform 1",-34.1770253461471,150.994486197426,Sydney Trains Network,2,005AA3
+Train,"Helensburgh Station, Platform 2",-34.1769537256061,150.994471975653,Intercity Trains Network,2,005AA3
+Train,"Hexham Station, Platform 1",-32.8289664124347,151.684215889097,Intercity Trains Network,2,833134
+Train,"Hexham Station, Platform 2",-32.8289770003116,151.684173768315,Intercity Trains Network,2,833134
+Train,"High Street Station, Platform 1",-32.7414300430784,151.563956008695,Intercity Trains Network,2,833134
+Train,"High Street Station, Platform 2",-32.7414839953882,151.563958764895,Intercity Trains Network,2,833134
+Train,"Hilldale Station, Platform 1",-32.5043182354766,151.649837322857,Intercity Trains Network,2,833134
+Metro,"Hills Showground Station, Platform 1",-33.7277552616658,150.987427171151,Sydney Metro Network,401,168388
+Metro,"Hills Showground Station, Platform 2",-33.7278171988413,150.987462392912,Sydney Metro Network,401,168388
+Train,"Holsworthy Station, Platform 1",-33.963164354503,150.956707286203,Sydney Trains Network,2,00954C
+Train,"Holsworthy Station, Platform 2",-33.9632366814495,150.956699826176,Sydney Trains Network,2,00954C
+Train,"Homebush Station, Platform 2",-33.8666458778528,151.086376395313,Intercity Trains Network,2,F99D1C
+Train,"Homebush Station, Platform 2",-33.8666458778528,151.086376395313,Sydney Trains Network,2,F37021
+Train,"Homebush Station, Platform 2",-33.8666458778528,151.086376395313,Sydney Trains Network,2,F99D1C
+Train,"Homebush Station, Platform 3",-33.8667279173479,151.086347906843,Sydney Trains Network,2,0098CD
+Train,"Homebush Station, Platform 3",-33.8667279173479,151.086347906843,Sydney Trains Network,2,F37021
+Train,"Homebush Station, Platform 3",-33.8667279173479,151.086347906843,Sydney Trains Network,2,F99D1C
+Train,"Homebush Station, Platform 4",-33.8667923227649,151.086307775439,Sydney Trains Network,2,0098CD
+Train,"Homebush Station, Platform 4",-33.8667923227649,151.086307775439,Sydney Trains Network,2,F37021
+Train,"Homebush Station, Platform 6",-33.8669211335714,151.08622751246,Sydney Trains Network,2,0098CD
+Train,"Homebush Station, Platform 7",-33.8670614898705,151.086342224213,Sydney Trains Network,2,0098CD
+Train,"Homebush Station, Platform 7",-33.8670614898705,151.086342224213,Sydney Trains Network,2,F37021
+Light Rail,Honeysuckle Light Rail,-32.9264946901204,151.765824985483,Newcastle Light Rail Network,900,EE343F
+Light Rail,Honeysuckle Light Rail,-32.9264673151623,151.7658341952,Newcastle Light Rail Network,900,EE343F
+Train,"Hornsby Station, Platform 1",-33.703233380565,151.098574636431,Intercity Trains Network,2,D11F2F
+Train,"Hornsby Station, Platform 1",-33.703233380565,151.098574636431,Sydney Trains Network,2,D11F2F
+Train,"Hornsby Station, Platform 1",-33.703233380565,151.098574636431,Sydney Trains Network,2,F99D1C
+Train,"Hornsby Station, Platform 2",-33.7032096112394,151.098476480515,Intercity Trains Network,2,D11F2F
+Train,"Hornsby Station, Platform 2",-33.7032096112394,151.098476480515,Sydney Trains Network,2,D11F2F
+Train,"Hornsby Station, Platform 2",-33.7032096112394,151.098476480515,Sydney Trains Network,2,F99D1C
+Train,"Hornsby Station, Platform 3",-33.7032031188843,151.098400707672,Intercity Trains Network,2,D11F2F
+Train,"Hornsby Station, Platform 3",-33.7032031188843,151.098400707672,Sydney Trains Network,2,D11F2F
+Train,"Hornsby Station, Platform 3",-33.7032031188843,151.098400707672,Sydney Trains Network,2,F99D1C
+Train,"Hornsby Station, Platform 4",-33.703178991731,151.098313315378,Intercity Trains Network,2,D11F2F
+Train,"Hornsby Station, Platform 4",-33.703178991731,151.098313315378,Sydney Trains Network,2,D11F2F
+Train,"Hornsby Station, Platform 5",-33.7031642184054,151.098215587517,Intercity Trains Network,2,D11F2F
+Train,"Hurstville Station, Platform 1",-33.9673110640504,151.102817780389,Intercity Trains Network,2,005AA3
+Train,"Hurstville Station, Platform 1",-33.9673110640504,151.102817780389,Sydney Trains Network,2,005AA3
+Train,"Hurstville Station, Platform 2",-33.9673941892594,151.102756894781,Intercity Trains Network,2,005AA3
+Train,"Hurstville Station, Platform 2",-33.9673941892594,151.102756894781,Sydney Trains Network,2,005AA3
+Train,"Hurstville Station, Platform 3",-33.9675147396589,151.102654553129,Intercity Trains Network,2,005AA3
+Train,"Hurstville Station, Platform 3",-33.9675147396589,151.102654553129,Sydney Trains Network,2,005AA3
+Train,"Hurstville Station, Platform 4",-33.9676158563743,151.102594532602,Intercity Trains Network,2,005AA3
+Train,"Hurstville Station, Platform 4",-33.9676158563743,151.102594532602,Sydney Trains Network,2,005AA3
+Train,"Ingleburn Station, Platform 1",-33.997297806733,150.864709220113,Sydney Trains Network,2,00954C
+Train,"Ingleburn Station, Platform 2",-33.997358755746,150.864776898288,Sydney Trains Network,2,00954C
+Train,"International Airport Station, Platform 1",-33.9349270322122,151.165806107875,Sydney Trains Network,2,00954C
+Train,"International Airport Station, Platform 2",-33.9349817343839,151.165787157278,Sydney Trains Network,2,00954C
+Train,"Jannali Station, Platform 1",-34.0159587309962,151.064573687007,Intercity Trains Network,2,005AA3
+Train,"Jannali Station, Platform 1",-34.0159587309962,151.064573687007,Sydney Trains Network,2,005AA3
+Train,"Jannali Station, Platform 2",-34.0159558699789,151.064660113581,Sydney Trains Network,2,005AA3
+Light Rail,John Street Square Light Rail,-33.8674243205517,151.192059144848,Sydney Light Rail Network,900,BE1622
+Light Rail,John Street Square Light Rail,-33.8673894431491,151.192025034577,Sydney Light Rail Network,900,BE1622
+Light Rail,Jubilee Park Light Rail,-33.8754636474894,151.17874528556,Sydney Light Rail Network,900,BE1622
+Light Rail,Jubilee Park Light Rail,-33.8753826920414,151.178741332955,Sydney Light Rail Network,900,BE1622
+Light Rail,Juniors Kingsford Light Rail,-33.9251524416182,151.229097400686,Sydney Light Rail Network,900,781140
+Light Rail,Juniors Kingsford Light Rail,-33.9251524416182,151.229097400686,Sydney Light Rail Network,900,EE343F
+Light Rail,Juniors Kingsford Light Rail,-33.9249752375447,151.229272362803,Sydney Light Rail Network,900,781140
+Light Rail,Juniors Kingsford Light Rail,-33.9249752375447,151.229272362803,Sydney Light Rail Network,900,EE343F
+Train,"Katoomba Station, Platform 1",-33.7117245796804,150.311142997044,Intercity Trains Network,2,F99D1C
+Train,"Katoomba Station, Platform 2",-33.711807641719,150.311070691069,Intercity Trains Network,2,F99D1C
+Metro,"Kellyville Station, Platform 1",-33.7134879494901,150.935344462725,Sydney Metro Network,401,168388
+Metro,"Kellyville Station, Platform 2",-33.7135187227747,150.935227259087,Sydney Metro Network,401,168388
+Train,"Kembla Grange Station, Platform 1",-34.4701378412584,150.817568169482,Intercity Trains Network,2,005AA3
+Light Rail,Kensington Light Rail,-33.9093747926795,151.223378254497,Sydney Light Rail Network,900,781140
+Light Rail,Kensington Light Rail,-33.9093747926795,151.223378254497,Sydney Light Rail Network,900,EE343F
+Light Rail,Kensington Light Rail,-33.9093672803993,151.223334659339,Sydney Light Rail Network,900,781140
+Light Rail,Kensington Light Rail,-33.9093672803993,151.223334659339,Sydney Light Rail Network,900,EE343F
+Train,"Kiama Station, Platform 1",-34.6725554730013,150.854558999733,Intercity Trains Network,2,005AA3
+Train,"Kiama Station, Platform 2",-34.6726070436558,150.854637738843,Intercity Trains Network,2,005AA3
+Train,"Killara Station, Platform 1",-33.7655742395829,151.161808180652,Sydney Trains Network,2,D11F2F
+Train,"Killara Station, Platform 1",-33.7655742395829,151.161808180652,Sydney Trains Network,2,F99D1C
+Train,"Killara Station, Platform 2",-33.765612767811,151.161734529621,Sydney Trains Network,2,D11F2F
+Train,"Killara Station, Platform 2",-33.765612767811,151.161734529621,Sydney Trains Network,2,F99D1C
+Train,"Kings Cross Station, Platform 1",-33.8743273336626,151.221788438254,Intercity Trains Network,2,005AA3
+Train,"Kings Cross Station, Platform 1",-33.8743273336626,151.221788438254,Sydney Trains Network,2,005AA3
+Train,"Kings Cross Station, Platform 2",-33.8742538969157,151.221828021989,Intercity Trains Network,2,005AA3
+Train,"Kings Cross Station, Platform 2",-33.8742538969157,151.221828021989,Sydney Trains Network,2,005AA3
+Light Rail,Kingsford Light Rail,-33.921877770701,151.226860240337,Sydney Light Rail Network,900,781140
+Light Rail,Kingsford Light Rail,-33.921877770701,151.226860240337,Sydney Light Rail Network,900,EE343F
+Light Rail,Kingsford Light Rail,-33.9218762867834,151.226903397176,Sydney Light Rail Network,900,781140
+Light Rail,Kingsford Light Rail,-33.9218762867834,151.226903397176,Sydney Light Rail Network,900,EE343F
+Train,"Kingsgrove Station, Platform 1",-33.9405053784037,151.100664408587,Sydney Trains Network,2,00954C
+Train,"Kingsgrove Station, Platform 2",-33.9405582731854,151.100699380758,Sydney Trains Network,2,00954C
+Train,"Kingswood Station, Platform 1",-33.758237061168,150.72002835939,Sydney Trains Network,2,F99D1C
+Train,"Kingswood Station, Platform 2",-33.7583277136296,150.720010701928,Sydney Trains Network,2,C4258F
+Train,"Kingswood Station, Platform 2",-33.7583277136296,150.720010701928,Sydney Trains Network,2,F99D1C
+Train,"Kirrawee Station, Platform 1",-34.0349983635939,151.071619575911,Sydney Trains Network,2,005AA3
+Train,"Kirrawee Station, Platform 2",-34.0349173992904,151.07161570128,Sydney Trains Network,2,005AA3
+Train,"Kogarah Station, Platform 1",-33.9627013160846,151.132289478757,Sydney Trains Network,2,005AA3
+Train,"Kogarah Station, Platform 2",-33.9627156762078,151.132398306915,Sydney Trains Network,2,005AA3
+Train,"Kogarah Station, Platform 3",-33.9627307624155,151.132485543763,Sydney Trains Network,2,005AA3
+Train,"Kogarah Station, Platform 4",-33.9627548440096,151.132573216399,Sydney Trains Network,2,005AA3
+Train,"Koolewong Station, Platform 1",-33.4662373538403,151.318498859877,Intercity Trains Network,2,D11F2F
+Train,"Koolewong Station, Platform 2",-33.4662583381485,151.318413904589,Intercity Trains Network,2,D11F2F
+Train,"Kotara Station, Platform 1",-32.9416006229759,151.697946650147,Intercity Trains Network,2,D11F2F
+Train,"Kotara Station, Platform 2",-32.941547084393,151.697933129695,Intercity Trains Network,2,D11F2F
+Train,"Lapstone Station, Platform 1",-33.7735221563247,150.642764535581,Intercity Trains Network,2,F99D1C
+Train,"Lapstone Station, Platform 2",-33.7735192892225,150.64286153898,Intercity Trains Network,2,F99D1C
+Train,"Lawson Station, Platform 1",-33.7190078706168,150.429896327453,Intercity Trains Network,2,F99D1C
+Train,"Lawson Station, Platform 2",-33.7190696942924,150.429941931981,Intercity Trains Network,2,F99D1C
+Light Rail,Leichhardt North Light Rail,-33.8750070648722,151.15445106925,Sydney Light Rail Network,900,BE1622
+Light Rail,Leichhardt North Light Rail,-33.8749544030765,151.153876008043,Sydney Light Rail Network,900,BE1622
+Train,"Leightonfield Station, Platform 1",-33.8814744439168,150.985100128361,Sydney Trains Network,2,0098CD
+Train,"Leightonfield Station, Platform 1",-33.8814744439168,150.985100128361,Sydney Trains Network,2,F37021
+Train,"Leightonfield Station, Platform 2",-33.8815488676471,150.985027968148,Sydney Trains Network,2,0098CD
+Train,"Leightonfield Station, Platform 2",-33.8815488676471,150.985027968148,Sydney Trains Network,2,F37021
+Train,"Leppington Station, Platform 1",-33.9543590111463,150.808425277706,Sydney Trains Network,2,00954C
+Train,"Leppington Station, Platform 1",-33.9543590111463,150.808425277706,Sydney Trains Network,2,0098CD
+Train,"Leppington Station, Platform 1",-33.9543590111463,150.808425277706,Sydney Trains Network,2,C4258F
+Train,"Leppington Station, Platform 2",-33.9544316723826,150.80840689204,Sydney Trains Network,2,0098CD
+Train,"Leppington Station, Platform 2",-33.9544316723826,150.80840689204,Sydney Trains Network,2,C4258F
+Train,"Leppington Station, Platform 3",-33.9545316652271,150.808378911987,Sydney Trains Network,2,00954C
+Train,"Leppington Station, Platform 3",-33.9545316652271,150.808378911987,Sydney Trains Network,2,0098CD
+Train,"Leppington Station, Platform 3",-33.9545316652271,150.808378911987,Sydney Trains Network,2,C4258F
+Train,"Leppington Station, Platform 4",-33.9546043264601,150.808360526259,Sydney Trains Network,2,00954C
+Train,"Leppington Station, Platform 4",-33.9546043264601,150.808360526259,Sydney Trains Network,2,0098CD
+Train,"Leppington Station, Platform 4",-33.9546043264601,150.808360526259,Sydney Trains Network,2,C4258F
+Train,"Leumeah Station, Platform 1",-34.0507159802698,150.830500220991,Sydney Trains Network,2,00954C
+Train,"Leumeah Station, Platform 2",-34.0507679478895,150.83056751754,Sydney Trains Network,2,00954C
+Train,"Leura Station, Platform 1",-33.7119970055042,150.330825909671,Intercity Trains Network,2,F99D1C
+Train,"Leura Station, Platform 2",-33.7120609064507,150.330796023679,Intercity Trains Network,2,F99D1C
+Train,"Lewisham Station, Platform 1",-33.8933066343149,151.147506575159,Sydney Trains Network,2,0098CD
+Train,"Lewisham Station, Platform 1",-33.8933066343149,151.147506575159,Sydney Trains Network,2,F37021
+Train,"Lewisham Station, Platform 2",-33.8933800523923,151.147466917853,Sydney Trains Network,2,0098CD
+Train,"Lewisham Station, Platform 2",-33.8933800523923,151.147466917853,Sydney Trains Network,2,F37021
+Light Rail,Lewisham West Light Rail,-33.8939824287552,151.143228372547,Sydney Light Rail Network,900,BE1622
+Light Rail,Lewisham West Light Rail,-33.8936638651061,151.143591095283,Sydney Light Rail Network,900,BE1622
+Train,"Lidcombe Station, Platform 0",-33.8641769777419,151.04684548307,Sydney Trains Network,2,6F818E
+Train,"Lidcombe Station, Platform 1",-33.8636057258645,151.045036306015,Sydney Trains Network,2,0098CD
+Train,"Lidcombe Station, Platform 1",-33.8636057258645,151.045036306015,Sydney Trains Network,2,6F818E
+Train,"Lidcombe Station, Platform 1",-33.8636057258645,151.045036306015,Sydney Trains Network,2,F99D1C
+Train,"Lidcombe Station, Platform 2",-33.8636798255763,151.044974999503,Sydney Trains Network,2,0098CD
+Train,"Lidcombe Station, Platform 2",-33.8636798255763,151.044974999503,Sydney Trains Network,2,6F818E
+Train,"Lidcombe Station, Platform 2",-33.8636798255763,151.044974999503,Sydney Trains Network,2,F99D1C
+Train,"Lidcombe Station, Platform 3",-33.863743865169,151.044945621067,Sydney Trains Network,2,0098CD
+Train,"Lidcombe Station, Platform 3",-33.863743865169,151.044945621067,Sydney Trains Network,2,6F818E
+Train,"Lidcombe Station, Platform 3",-33.863743865169,151.044945621067,Sydney Trains Network,2,F37021
+Train,"Lidcombe Station, Platform 3",-33.863743865169,151.044945621067,Sydney Trains Network,2,F6891F
+Train,"Lidcombe Station, Platform 3",-33.863743865169,151.044945621067,Sydney Trains Network,2,F99D1C
+Train,"Lidcombe Station, Platform 4",-33.863835958012,151.044885164281,Sydney Trains Network,2,0098CD
+Train,"Lidcombe Station, Platform 4",-33.863835958012,151.044885164281,Sydney Trains Network,2,F37021
+Train,"Lidcombe Station, Platform 4",-33.863835958012,151.044885164281,Sydney Trains Network,2,F6891F
+Train,"Lidcombe Station, Platform 4",-33.863835958012,151.044885164281,Sydney Trains Network,2,F99D1C
+Train,"Lidcombe Station, Platform 5",-33.8638906465084,151.044866145183,Sydney Trains Network,2,F37021
+Train,"Lidcombe Station, Platform 5",-33.8638906465084,151.044866145183,Sydney Trains Network,2,F6891F
+Light Rail,Lilyfield Light Rail,-33.8741786676621,151.165093895122,Sydney Light Rail Network,900,BE1622
+Light Rail,Lilyfield Light Rail,-33.8741426868283,151.16509214422,Sydney Light Rail Network,900,BE1622
+Train,"Linden Station, Platform 1",-33.714868485099,150.505334815791,Intercity Trains Network,2,F99D1C
+Train,"Linden Station, Platform 2",-33.7149408104686,150.505326973556,Intercity Trains Network,2,F99D1C
+Train,"Lindfield Station, Platform 1",-33.7753770688079,151.169274465764,Sydney Trains Network,2,D11F2F
+Train,"Lindfield Station, Platform 1",-33.7753770688079,151.169274465764,Sydney Trains Network,2,F99D1C
+Train,"Lindfield Station, Platform 2",-33.775416695469,151.169168495795,Sydney Trains Network,2,F99D1C
+Train,"Lindfield Station, Platform 3",-33.7754455040742,151.169115947291,Sydney Trains Network,2,D11F2F
+Train,"Lindfield Station, Platform 3",-33.7754455040742,151.169115947291,Sydney Trains Network,2,F99D1C
+Train,"Lisarow Station, Platform 1",-33.3821882465571,151.370089223385,Intercity Trains Network,2,D11F2F
+Train,"Lisarow Station, Platform 2",-33.3821268046233,151.370043187815,Intercity Trains Network,2,D11F2F
+Train,"Lithgow Station, Platform 1",-33.4805766965329,150.156977008511,Intercity Trains Network,2,F99D1C
+Train,"Lithgow Station, Platform 2",-33.4806479220319,150.157011866078,Intercity Trains Network,2,F99D1C
+Train,"Liverpool Station, Platform 1",-33.9247477746686,150.927298619135,Sydney Trains Network,2,0098CD
+Train,"Liverpool Station, Platform 1",-33.9247477746686,150.927298619135,Sydney Trains Network,2,C4258F
+Train,"Liverpool Station, Platform 1",-33.9247477746686,150.927298619135,Sydney Trains Network,2,F37021
+Train,"Liverpool Station, Platform 2",-33.9247900055242,150.927387035836,Sydney Trains Network,2,0098CD
+Train,"Liverpool Station, Platform 2",-33.9247900055242,150.927387035836,Sydney Trains Network,2,C4258F
+Train,"Liverpool Station, Platform 2",-33.9247900055242,150.927387035836,Sydney Trains Network,2,F37021
+Train,"Liverpool Station, Platform 3",-33.9248239280656,150.927453451811,Sydney Trains Network,2,0098CD
+Train,"Liverpool Station, Platform 3",-33.9248239280656,150.927453451811,Sydney Trains Network,2,C4258F
+Train,"Liverpool Station, Platform 3",-33.9248239280656,150.927453451811,Sydney Trains Network,2,F37021
+Train,"Liverpool Station, Platform 4",-33.9248831200276,150.927575076699,Sydney Trains Network,2,0098CD
+Train,"Liverpool Station, Platform 4",-33.9248831200276,150.927575076699,Sydney Trains Network,2,C4258F
+Train,"Liverpool Station, Platform 4",-33.9248831200276,150.927575076699,Sydney Trains Network,2,F37021
+Train,"Lochinvar Station, Platform 1",-32.7204530013929,151.450277747927,Intercity Trains Network,2,833134
+Train,"Lochinvar Station, Platform 2",-32.7205425579598,151.450292862838,Intercity Trains Network,2,833134
+Train,"Loftus Station, Platform 1",-34.045141985533,151.051257837789,Intercity Trains Network,2,005AA3
+Train,"Loftus Station, Platform 1",-34.045141985533,151.051257837789,Sydney Trains Network,2,005AA3
+Train,"Loftus Station, Platform 2",-34.0451301354893,151.05134386685,Intercity Trains Network,2,005AA3
+Train,"Loftus Station, Platform 2",-34.0451301354893,151.05134386685,Sydney Trains Network,2,005AA3
+Train,"Lysaghts Station, Platform 1",-34.4548239202822,150.876036130169,Intercity Trains Network,2,005AA3
+Train,"Lysaghts Station, Platform 2",-34.4544616036821,150.876095509467,Intercity Trains Network,2,005AA3
+Train,"Macarthur Station, Platform 1",-34.071914030603,150.797041651939,Sydney Trains Network,2,00954C
+Train,"Macarthur Station, Platform 1",-34.071914030603,150.797041651939,Sydney Trains Network,2,C4258F
+Train,"Macarthur Station, Platform 1",-34.071914030603,150.797041651939,Sydney Trains Network,2,F37021
+Train,"Macarthur Station, Platform 2",-34.0719570177548,150.797108545793,Intercity Trains Network,2,00954C
+Train,"Macarthur Station, Platform 2",-34.0719570177548,150.797108545793,Sydney Trains Network,2,00954C
+Train,"Macarthur Station, Platform 2",-34.0719570177548,150.797108545793,Sydney Trains Network,2,C4258F
+Train,"Macarthur Station, Platform 3",-34.0720386775509,150.79709053679,Intercity Trains Network,2,00954C
+Train,"Macarthur Station, Platform 3",-34.0720386775509,150.79709053679,Sydney Trains Network,2,00954C
+Train,"Macarthur Station, Platform 3",-34.0720386775509,150.79709053679,Sydney Trains Network,2,C4258F
+Train,"Macdonaldtown Station, Platform 1",-33.896910325925,151.185811140432,Sydney Trains Network,2,0098CD
+Train,"Macdonaldtown Station, Platform 1",-33.896910325925,151.185811140432,Sydney Trains Network,2,F37021
+Train,"Macdonaldtown Station, Platform 2",-33.8969459385275,151.185823688177,Sydney Trains Network,2,0098CD
+Train,"Macdonaldtown Station, Platform 2",-33.8969459385275,151.185823688177,Sydney Trains Network,2,F37021
+Train,"Macquarie Fields Station, Platform 1",-33.9847213751355,150.878904726037,Sydney Trains Network,2,00954C
+Train,"Macquarie Fields Station, Platform 2",-33.9847823164001,150.878972402695,Sydney Trains Network,2,00954C
+Metro,"Macquarie Park Station, Platform 1",-33.7849820801049,151.128337105827,Sydney Metro Network,401,168388
+Metro,"Macquarie Park Station, Platform 2",-33.7850659304279,151.128254810522,Sydney Metro Network,401,168388
+Metro,"Macquarie University Station, Platform 1",-33.7775957533836,151.118314442962,Sydney Metro Network,401,168388
+Metro,"Macquarie University Station, Platform 2",-33.7776522495097,151.118241622326,Sydney Metro Network,401,168388
+Train,"Maitland Station, Platform 1",-32.7378968793952,151.552135591872,Intercity Trains Network,2,833134
+Train,"Maitland Station, Platform 2",-32.7379703657684,151.552096698399,Intercity Trains Network,2,833134
+Train,"Maitland Station, Platform 3",-32.7380348599286,151.552057346756,Intercity Trains Network,2,833134
+Train,"Maitland Station, Platform 4",-32.7381173384936,151.552018911279,Intercity Trains Network,2,833134
+Train,"Marayong Station, Platform 1",-33.7462156071543,150.900208703728,Sydney Trains Network,2,C4258F
+Train,"Marayong Station, Platform 1",-33.7462156071543,150.900208703728,Sydney Trains Network,2,F99D1C
+Train,"Marayong Station, Platform 2",-33.7462176519466,150.900144074498,Sydney Trains Network,2,C4258F
+Train,"Marayong Station, Platform 2",-33.7462176519466,150.900144074498,Sydney Trains Network,2,F99D1C
+Light Rail,Marion Light Rail,-33.8838347762549,151.14516763501,Sydney Light Rail Network,900,BE1622
+Light Rail,Marion Light Rail,-33.8838286885064,151.145080914836,Sydney Light Rail Network,900,BE1622
+Train,"Martin Place Station, Platform 1",-33.8679207991466,151.211816590351,Intercity Trains Network,2,005AA3
+Train,"Martin Place Station, Platform 1",-33.8679207991466,151.211816590351,Sydney Trains Network,2,005AA3
+Train,"Martin Place Station, Platform 2",-33.8678034991788,151.21182162018,Intercity Trains Network,2,005AA3
+Train,"Martin Place Station, Platform 2",-33.8678034991788,151.21182162018,Sydney Trains Network,2,005AA3
+Metro,"Martin Place Station, Platform 3",-33.8671346256954,151.210568235217,Sydney Metro Network,401,168388
+Metro,"Martin Place Station, Platform 4",-33.8670825942436,151.209982438945,Sydney Metro Network,401,168388
+Train,"Martins Creek Station, Platform 1",-32.5586873934166,151.61854197006,Intercity Trains Network,2,833134
+Train,"Marulan Station, Platform 1",-34.7094512077091,150.006477096844,Intercity Trains Network,2,00954C
+Train,"Marulan Station, Platform 2",-34.7096008310632,150.005893108627,Intercity Trains Network,2,00954C
+Train,"Mascot Station, Platform 1",-33.9231620594718,151.187226617443,Sydney Trains Network,2,00954C
+Train,"Mascot Station, Platform 2",-33.923168481709,151.187302587765,Sydney Trains Network,2,00954C
+Train,"Meadowbank Station, Platform 1",-33.8158914418147,151.090142597002,Sydney Trains Network,2,D11F2F
+Train,"Meadowbank Station, Platform 2",-33.8158853097736,151.090055946006,Sydney Trains Network,2,D11F2F
+Train,"Medlow Bath Station, Platform 1",-33.6736874039841,150.280758444705,Intercity Trains Network,2,F99D1C
+Train,"Medlow Bath Station, Platform 2",-33.6736986981054,150.280672628484,Intercity Trains Network,2,F99D1C
+Train,"Menangle Park Station, Platform 1",-34.1036689526213,150.744903079201,Intercity Trains Network,2,00954C
+Train,"Menangle Park Station, Platform 2",-34.1036113227857,150.745019701343,Intercity Trains Network,2,00954C
+Train,"Menangle Station, Platform 1",-34.1254334848296,150.744260097177,Intercity Trains Network,2,00954C
+Train,"Menangle Station, Platform 2",-34.125484507657,150.744359873355,Intercity Trains Network,2,00954C
+Train,"Merrylands Station, Platform 1",-33.8365468785589,150.992598993227,Sydney Trains Network,2,0098CD
+Train,"Merrylands Station, Platform 1",-33.8365468785589,150.992598993227,Sydney Trains Network,2,C4258F
+Train,"Merrylands Station, Platform 2",-33.8365991133508,150.992655415724,Sydney Trains Network,2,0098CD
+Train,"Merrylands Station, Platform 2",-33.8365991133508,150.992655415724,Sydney Trains Network,2,C4258F
+Train,"Metford Station, Platform 1",-32.7650710618243,151.618124292308,Intercity Trains Network,2,833134
+Train,"Metford Station, Platform 2",-32.765099215038,151.618093762463,Intercity Trains Network,2,833134
+Train,"Milsons Point Station, Platform 1",-33.8457565769647,151.211817342483,Intercity Trains Network,2,D11F2F
+Train,"Milsons Point Station, Platform 1",-33.8457565769647,151.211817342483,Sydney Trains Network,2,D11F2F
+Train,"Milsons Point Station, Platform 1",-33.8457565769647,151.211817342483,Sydney Trains Network,2,F99D1C
+Train,"Milsons Point Station, Platform 2",-33.8457865125392,151.211732430179,Intercity Trains Network,2,D11F2F
+Train,"Milsons Point Station, Platform 2",-33.8457865125392,151.211732430179,Sydney Trains Network,2,D11F2F
+Train,"Milsons Point Station, Platform 2",-33.8457865125392,151.211732430179,Sydney Trains Network,2,F99D1C
+Train,"Mindaribba Station, Platform 1",-32.6683307869532,151.584469794295,Intercity Trains Network,2,833134
+Train,"Minnamurra Station, Platform 1",-34.6262093380277,150.852694644887,Intercity Trains Network,2,005AA3
+Train,"Minto Station, Platform 1",-34.0273538878839,150.842479455036,Sydney Trains Network,2,00954C
+Train,"Minto Station, Platform 2",-34.0273781777867,150.842567135045,Sydney Trains Network,2,00954C
+Train,"Miranda Station, Platform 1",-34.036313747283,151.102203059987,Sydney Trains Network,2,005AA3
+Train,"Miranda Station, Platform 2",-34.0362140724851,151.102219899344,Sydney Trains Network,2,005AA3
+Train,"Mittagong Station, Platform 1",-34.4525523627811,150.448237574042,Intercity Trains Network,2,00954C
+Train,"Mittagong Station, Platform 2",-34.4526057603093,150.448261530536,Intercity Trains Network,2,00954C
+Light Rail,Moore Park Light Rail,-33.8936640415798,151.221737948391,Sydney Light Rail Network,900,781140
+Light Rail,Moore Park Light Rail,-33.8936640415798,151.221737948391,Sydney Light Rail Network,900,DD1E25
+Light Rail,Moore Park Light Rail,-33.8936640415798,151.221737948391,Sydney Light Rail Network,900,EE343F
+Light Rail,Moore Park Light Rail,-33.8936621902726,151.221791877025,Sydney Light Rail Network,900,781140
+Light Rail,Moore Park Light Rail,-33.8936621902726,151.221791877025,Sydney Light Rail Network,900,DD1E25
+Light Rail,Moore Park Light Rail,-33.8936621902726,151.221791877025,Sydney Light Rail Network,900,EE343F
+Train,"Morisset Station, Platform 1",-33.1090352681177,151.488077597705,Intercity Trains Network,2,D11F2F
+Train,"Morisset Station, Platform 2",-33.1089738630672,151.488031650601,Intercity Trains Network,2,D11F2F
+Train,"Mortdale Station, Platform 1",-33.9709384349174,151.081017190739,Intercity Trains Network,2,005AA3
+Train,"Mortdale Station, Platform 1",-33.9709384349174,151.081017190739,Sydney Trains Network,2,005AA3
+Train,"Mortdale Station, Platform 2",-33.9709711910916,151.081116089292,Intercity Trains Network,2,005AA3
+Train,"Mortdale Station, Platform 2",-33.9709711910916,151.081116089292,Sydney Trains Network,2,005AA3
+Train,"Moss Vale Station, Platform 1",-34.547854813731,150.371610296377,Intercity Trains Network,2,00954C
+Train,"Moss Vale Station, Platform 2",-34.5480801546781,150.371935273313,Intercity Trains Network,2,00954C
+Train,"Mount Colah Station, Platform 1",-33.6716418796709,151.11484345364,Intercity Trains Network,2,D11F2F
+Train,"Mount Colah Station, Platform 1",-33.6716418796709,151.11484345364,Sydney Trains Network,2,D11F2F
+Train,"Mount Colah Station, Platform 1",-33.6716418796709,151.11484345364,Sydney Trains Network,2,F99D1C
+Train,"Mount Colah Station, Platform 2",-33.6715994110643,151.114765992073,Intercity Trains Network,2,D11F2F
+Train,"Mount Colah Station, Platform 2",-33.6715994110643,151.114765992073,Sydney Trains Network,2,D11F2F
+Train,"Mount Colah Station, Platform 2",-33.6715994110643,151.114765992073,Sydney Trains Network,2,F99D1C
+Train,"Mount Druitt Station, Platform 1",-33.7694084073182,150.819719966769,Sydney Trains Network,2,F99D1C
+Train,"Mount Druitt Station, Platform 2",-33.7694810685456,150.81970161505,Sydney Trains Network,2,F99D1C
+Train,"Mount Druitt Station, Platform 3",-33.7695537297718,150.819683263306,Sydney Trains Network,2,C4258F
+Train,"Mount Druitt Station, Platform 3",-33.7695537297718,150.819683263306,Sydney Trains Network,2,F99D1C
+Train,"Mount Druitt Station, Platform 4",-33.769608392679,150.819664111737,Sydney Trains Network,2,C4258F
+Train,"Mount Druitt Station, Platform 4",-33.769608392679,150.819664111737,Sydney Trains Network,2,F99D1C
+Train,"Mount Kuring-gai Station, Platform 1",-33.6534789556304,151.136883278396,Intercity Trains Network,2,D11F2F
+Train,"Mount Kuring-gai Station, Platform 1",-33.6534789556304,151.136883278396,Sydney Trains Network,2,D11F2F
+Train,"Mount Kuring-gai Station, Platform 1",-33.6534789556304,151.136883278396,Sydney Trains Network,2,F99D1C
+Train,"Mount Kuring-gai Station, Platform 2",-33.6534732049317,151.136786035693,Intercity Trains Network,2,D11F2F
+Train,"Mount Kuring-gai Station, Platform 2",-33.6534732049317,151.136786035693,Sydney Trains Network,2,D11F2F
+Train,"Mount Kuring-gai Station, Platform 2",-33.6534732049317,151.136786035693,Sydney Trains Network,2,F99D1C
+Train,"Mount Victoria Station, Platform 1",-33.5881455869985,150.256964246781,Intercity Trains Network,2,F99D1C
+Train,"Mount Victoria Station, Platform 2",-33.5881388499899,150.256877832624,Intercity Trains Network,2,F99D1C
+Train,"Mulgrave Station, Platform 1",-33.626512192964,150.830164932742,Sydney Trains Network,2,C4258F
+Train,"Mulgrave Station, Platform 1",-33.626512192964,150.830164932742,Sydney Trains Network,2,F99D1C
+Train,"Mulgrave Station, Platform 2",-33.626575855058,150.830146209572,Sydney Trains Network,2,C4258F
+Train,"Mulgrave Station, Platform 2",-33.626575855058,150.830146209572,Sydney Trains Network,2,F99D1C
+Train,"Museum Station, Platform 1",-33.8760694941714,151.20986277524,Intercity Trains Network,2,D11F2F
+Train,"Museum Station, Platform 1",-33.8760694941714,151.20986277524,Sydney Trains Network,2,00954C
+Train,"Museum Station, Platform 1",-33.8760694941714,151.20986277524,Sydney Trains Network,2,0098CD
+Train,"Museum Station, Platform 1",-33.8760694941714,151.20986277524,Sydney Trains Network,2,F37021
+Train,"Museum Station, Platform 2",-33.8761115151692,151.20995125698,Intercity Trains Network,2,F99D1C
+Train,"Museum Station, Platform 2",-33.8761115151692,151.20995125698,Sydney Trains Network,2,00954C
+Train,"Museum Station, Platform 2",-33.8761115151692,151.20995125698,Sydney Trains Network,2,0098CD
+Train,"Museum Station, Platform 2",-33.8761115151692,151.20995125698,Sydney Trains Network,2,F37021
+Train,"Muswellbrook Station, Platform 1",-32.267489400939,150.89040853823,Intercity Trains Network,2,833134
+Train,"Narara Station, Platform 1",-33.3947117594272,151.344467007833,Intercity Trains Network,2,D11F2F
+Train,"Narara Station, Platform 2",-33.3946413133077,151.344420533284,Intercity Trains Network,2,D11F2F
+Train,"Narwee Station, Platform 1",-33.9476010133613,151.070440944832,Sydney Trains Network,2,00954C
+Train,"Narwee Station, Platform 2",-33.9476557054267,151.070421929498,Sydney Trains Network,2,00954C
+Light Rail,Newcastle Beach Light Rail,-32.9274869909732,151.786246605367,Newcastle Light Rail Network,900,EE343F
+Light Rail,Newcastle Interchange Light Rail,-32.924306561162,151.759437953039,Newcastle Light Rail Network,900,EE343F
+Train,"Newcastle Interchange, Platform 1",-32.9240466056246,151.758932701246,Intercity Trains Network,2,833134
+Train,"Newcastle Interchange, Platform 1",-32.9240466056246,151.758932701246,Intercity Trains Network,2,D11F2F
+Train,"Newcastle Interchange, Platform 2",-32.9239624479047,151.759013629811,Intercity Trains Network,2,833134
+Train,"Newcastle Interchange, Platform 2",-32.9239624479047,151.759013629811,Intercity Trains Network,2,D11F2F
+Train,"Newcastle Interchange, Platform 3",-32.9239346665044,151.759033500195,Intercity Trains Network,2,833134
+Train,"Newcastle Interchange, Platform 3",-32.9239346665044,151.759033500195,Intercity Trains Network,2,D11F2F
+Train,"Newtown Station, Platform 1",-33.897878888285,151.179851112251,Sydney Trains Network,2,0098CD
+Train,"Newtown Station, Platform 1",-33.897878888285,151.179851112251,Sydney Trains Network,2,F37021
+Train,"Newtown Station, Platform 2",-33.8979418533145,151.179854189919,Sydney Trains Network,2,0098CD
+Train,"Newtown Station, Platform 2",-33.8979418533145,151.179854189919,Sydney Trains Network,2,F37021
+Train,"Niagara Park Station, Platform 1",-33.383178574624,151.354502619722,Intercity Trains Network,2,D11F2F
+Train,"Niagara Park Station, Platform 2",-33.3831354902728,151.354446771843,Intercity Trains Network,2,D11F2F
+Train,"Normanhurst Station, Platform 1",-33.7208237653944,151.097158230696,Sydney Trains Network,2,D11F2F
+Train,"Normanhurst Station, Platform 2",-33.7207913579904,151.097048860572,Sydney Trains Network,2,D11F2F
+Metro,"North Ryde Station, Platform 1",-33.79417061715,151.138059885467,Sydney Metro Network,401,168388
+Metro,"North Ryde Station, Platform 2",-33.7943069996606,151.138023291579,Sydney Metro Network,401,168388
+Train,"North Strathfield Station, Platform 1",-33.859079762169,151.088197028855,Sydney Trains Network,2,D11F2F
+Train,"North Strathfield Station, Platform 2",-33.8591013368026,151.088090055563,Sydney Trains Network,2,D11F2F
+Train,"North Strathfield Station, Platform 3",-33.8591135570113,151.087993436031,Sydney Trains Network,2,D11F2F
+Train,"North Sydney Station, Platform 1",-33.8410992453234,151.207053519895,Intercity Trains Network,2,D11F2F
+Train,"North Sydney Station, Platform 1",-33.8410992453234,151.207053519895,Sydney Trains Network,2,D11F2F
+Train,"North Sydney Station, Platform 1",-33.8410992453234,151.207053519895,Sydney Trains Network,2,F99D1C
+Train,"North Sydney Station, Platform 2",-33.8411445876609,151.207044948455,Sydney Trains Network,2,D11F2F
+Train,"North Sydney Station, Platform 2",-33.8411445876609,151.207044948455,Sydney Trains Network,2,F99D1C
+Train,"North Sydney Station, Platform 3",-33.8411985562985,151.20704759792,Sydney Trains Network,2,D11F2F
+Train,"North Sydney Station, Platform 3",-33.8411985562985,151.20704759792,Sydney Trains Network,2,F99D1C
+Train,"North Sydney Station, Platform 4",-33.841243898636,151.207039026472,Intercity Trains Network,2,D11F2F
+Train,"North Sydney Station, Platform 4",-33.841243898636,151.207039026472,Sydney Trains Network,2,D11F2F
+Train,"North Sydney Station, Platform 4",-33.841243898636,151.207039026472,Sydney Trains Network,2,F99D1C
+Train,"North Wollongong Station, Platform 1",-34.4123204087322,150.891325832857,Intercity Trains Network,2,005AA3
+Train,"North Wollongong Station, Platform 2",-34.4123259473122,150.891434813367,Intercity Trains Network,2,005AA3
+Metro,"Norwest Station, Platform 1",-33.7342824886202,150.963851342354,Sydney Metro Network,401,168388
+Metro,"Norwest Station, Platform 2",-33.7343343971083,150.963918444238,Sydney Metro Network,401,168388
+Train,"Oak Flats Station, Platform 1",-34.5719828433778,150.820339582566,Intercity Trains Network,2,005AA3
+Train,"Oatley Station, Platform 1",-33.9805027262009,151.078987329341,Intercity Trains Network,2,005AA3
+Train,"Oatley Station, Platform 1",-33.9805027262009,151.078987329341,Sydney Trains Network,2,005AA3
+Train,"Oatley Station, Platform 2",-33.9805005748095,151.079052121183,Sydney Trains Network,2,005AA3
+Train,"Olympic Park Station, Platform 2",-33.8465837030964,151.069124029869,Sydney Trains Network,2,0098CD
+Train,"Olympic Park Station, Platform 2",-33.8465837030964,151.069124029869,Sydney Trains Network,2,6F818E
+Train,"Olympic Park Station, Platform 2",-33.8465837030964,151.069124029869,Sydney Trains Network,2,F37021
+Train,"Olympic Park Station, Platform 2",-33.8465837030964,151.069124029869,Sydney Trains Network,2,F99D1C
+Train,"Olympic Park Station, Platform 3",-33.8466992296059,151.069172711288,Sydney Trains Network,2,0098CD
+Train,"Olympic Park Station, Platform 3",-33.8466992296059,151.069172711288,Sydney Trains Network,2,6F818E
+Train,"Olympic Park Station, Platform 3",-33.8466992296059,151.069172711288,Sydney Trains Network,2,F37021
+Train,"Olympic Park Station, Platform 3",-33.8466992296059,151.069172711288,Sydney Trains Network,2,F99D1C
+Train,"Otford Station, Platform 1",-34.2107181569943,151.005719614329,Intercity Trains Network,2,005AA3
+Train,"Otford Station, Platform 2",-34.2106279785182,151.005997328153,Intercity Trains Network,2,005AA3
+Train,"Ourimbah Station, Platform 1",-33.3596669922014,151.370023940401,Intercity Trains Network,2,D11F2F
+Train,"Ourimbah Station, Platform 2",-33.3596883807142,151.369928385476,Intercity Trains Network,2,D11F2F
+Light Rail,Paddy's Markets Light Rail,-33.8793173329833,151.202623000671,Sydney Light Rail Network,900,BE1622
+Light Rail,Paddy's Markets Light Rail,-33.8792761955361,151.202772212225,Sydney Light Rail Network,900,BE1622
+Train,"Padstow Station, Platform 1",-33.9518766710796,151.03230448,Sydney Trains Network,2,00954C
+Train,"Padstow Station, Platform 2",-33.95193929303,151.032318250906,Sydney Trains Network,2,00954C
+Train,"Panania Station, Platform 1",-33.9542654379508,150.998075974544,Sydney Trains Network,2,00954C
+Train,"Panania Station, Platform 2",-33.9543280655063,150.998089721256,Sydney Trains Network,2,00954C
+Train,"Parramatta Station, Platform 1",-33.8172767717454,151.005239461801,Intercity Trains Network,2,D11F2F
+Train,"Parramatta Station, Platform 1",-33.8172767717454,151.005239461801,Intercity Trains Network,2,F99D1C
+Train,"Parramatta Station, Platform 1",-33.8172767717454,151.005239461801,Sydney Trains Network,2,6F818E
+Train,"Parramatta Station, Platform 1",-33.8172767717454,151.005239461801,Sydney Trains Network,2,F99D1C
+Train,"Parramatta Station, Platform 2",-33.8174027310001,151.005245342551,Intercity Trains Network,2,F99D1C
+Train,"Parramatta Station, Platform 2",-33.8174027310001,151.005245342551,Sydney Trains Network,2,F99D1C
+Train,"Parramatta Station, Platform 3",-33.8174581159783,151.005204746521,Intercity Trains Network,2,F99D1C
+Train,"Parramatta Station, Platform 3",-33.8174581159783,151.005204746521,Sydney Trains Network,2,0098CD
+Train,"Parramatta Station, Platform 3",-33.8174581159783,151.005204746521,Sydney Trains Network,2,6F818E
+Train,"Parramatta Station, Platform 3",-33.8174581159783,151.005204746521,Sydney Trains Network,2,C4258F
+Train,"Parramatta Station, Platform 3",-33.8174581159783,151.005204746521,Sydney Trains Network,2,F99D1C
+Train,"Parramatta Station, Platform 4",-33.8175505411209,151.005133493326,Intercity Trains Network,2,F99D1C
+Train,"Parramatta Station, Platform 4",-33.8175505411209,151.005133493326,Sydney Trains Network,2,0098CD
+Train,"Parramatta Station, Platform 4",-33.8175505411209,151.005133493326,Sydney Trains Network,2,C4258F
+Train,"Parramatta Station, Platform 4",-33.8175505411209,151.005133493326,Sydney Trains Network,2,F99D1C
+Train,"Paterson Station, Platform 1",-32.6023213873709,151.614728745422,Intercity Trains Network,2,833134
+Train,"Pendle Hill Station, Platform 1",-33.8012757350187,150.956385909059,Sydney Trains Network,2,C4258F
+Train,"Pendle Hill Station, Platform 1",-33.8012757350187,150.956385909059,Sydney Trains Network,2,F99D1C
+Train,"Pendle Hill Station, Platform 2",-33.8013231466194,150.956312538531,Sydney Trains Network,2,C4258F
+Train,"Pendle Hill Station, Platform 2",-33.8013231466194,150.956312538531,Sydney Trains Network,2,F99D1C
+Train,"Pendle Hill Station, Platform 3",-33.8013802481996,150.956218027158,Sydney Trains Network,2,C4258F
+Train,"Pendle Hill Station, Platform 3",-33.8013802481996,150.956218027158,Sydney Trains Network,2,F99D1C
+Train,"Pendle Hill Station, Platform 4",-33.8014363111861,150.956155848834,Sydney Trains Network,2,C4258F
+Train,"Pendle Hill Station, Platform 4",-33.8014363111861,150.956155848834,Sydney Trains Network,2,F99D1C
+Train,"Pennant Hills Station, Platform 1",-33.7378541144111,151.072667409526,Sydney Trains Network,2,D11F2F
+Train,"Pennant Hills Station, Platform 2",-33.7377274524962,151.07268298428,Sydney Trains Network,2,D11F2F
+Train,"Penrith Station, Platform 1",-33.7499423010887,150.696183323113,Intercity Trains Network,2,F99D1C
+Train,"Penrith Station, Platform 1",-33.7499423010887,150.696183323113,Sydney Trains Network,2,C4258F
+Train,"Penrith Station, Platform 1",-33.7499423010887,150.696183323113,Sydney Trains Network,2,F99D1C
+Train,"Penrith Station, Platform 2",-33.7500329518045,150.696165641012,Intercity Trains Network,2,F99D1C
+Train,"Penrith Station, Platform 2",-33.7500329518045,150.696165641012,Sydney Trains Network,2,F99D1C
+Train,"Penrith Station, Platform 3",-33.7501239255472,150.6961371843,Intercity Trains Network,2,F99D1C
+Train,"Penrith Station, Platform 3",-33.7501239255472,150.6961371843,Sydney Trains Network,2,F99D1C
+Train,"Penrose Station, Platform 1",-34.6723246348938,150.211948225126,Intercity Trains Network,2,00954C
+Train,"Penrose Station, Platform 2",-34.6724132348519,150.212006195262,Intercity Trains Network,2,00954C
+Train,"Penshurst Station, Platform 1",-33.9661420688255,151.088963041812,Intercity Trains Network,2,005AA3
+Train,"Penshurst Station, Platform 1",-33.9661420688255,151.088963041812,Sydney Trains Network,2,005AA3
+Train,"Penshurst Station, Platform 2",-33.9662226729727,151.088977719577,Sydney Trains Network,2,005AA3
+Train,"Petersham Station, Platform 1",-33.8938456793564,151.155560379444,Sydney Trains Network,2,0098CD
+Train,"Petersham Station, Platform 1",-33.8938456793564,151.155560379444,Sydney Trains Network,2,F37021
+Train,"Petersham Station, Platform 2",-33.8938992866215,151.155573788414,Sydney Trains Network,2,0098CD
+Train,"Petersham Station, Platform 2",-33.8938992866215,151.155573788414,Sydney Trains Network,2,F37021
+Train,"Picton Station, Platform 1",-34.1791730618652,150.612636010611,Intercity Trains Network,2,00954C
+Train,"Picton Station, Platform 2",-34.1792823469963,150.612597300754,Intercity Trains Network,2,00954C
+Train,"Point Clare Station, Platform 1",-33.4462481405124,151.328468333366,Intercity Trains Network,2,D11F2F
+Train,"Point Clare Station, Platform 2",-33.4462241603653,151.328381162486,Intercity Trains Network,2,D11F2F
+Train,"Port Kembla North Station, Platform 1",-34.4726993663381,150.88742843751,Intercity Trains Network,2,005AA3
+Train,"Port Kembla Station, Platform 1",-34.4771700599248,150.902629835683,Intercity Trains Network,2,005AA3
+Train,"Pymble Station, Platform 1",-33.7447199122075,151.142161468015,Sydney Trains Network,2,D11F2F
+Train,"Pymble Station, Platform 1",-33.7447199122075,151.142161468015,Sydney Trains Network,2,F99D1C
+Train,"Pymble Station, Platform 2",-33.7447839675029,151.14213219597,Sydney Trains Network,2,F99D1C
+Light Rail,Pyrmont Bay Light Rail,-33.8693669594186,151.19744679219,Sydney Light Rail Network,900,BE1622
+Light Rail,Pyrmont Bay Light Rail,-33.8693010522823,151.197529968911,Sydney Light Rail Network,900,BE1622
+Train,"Quakers Hill Station, Platform 1",-33.7276807088214,150.886470279519,Sydney Trains Network,2,C4258F
+Train,"Quakers Hill Station, Platform 1",-33.7276807088214,150.886470279519,Sydney Trains Network,2,F99D1C
+Train,"Quakers Hill Station, Platform 2",-33.7276917439529,150.886406069363,Sydney Trains Network,2,C4258F
+Train,"Quakers Hill Station, Platform 2",-33.7276917439529,150.886406069363,Sydney Trains Network,2,F99D1C
+Light Rail,Queens Wharf Light Rail,-32.9263941611094,151.781627001266,Newcastle Light Rail Network,900,EE343F
+Light Rail,Queens Wharf Light Rail,-32.9263218405014,151.781633782723,Newcastle Light Rail Network,900,EE343F
+Light Rail,QVB Light Rail,-33.871584150123,151.206920242681,Sydney Light Rail Network,900,781140
+Light Rail,QVB Light Rail,-33.871584150123,151.206920242681,Sydney Light Rail Network,900,DD1E25
+Light Rail,QVB Light Rail,-33.8715815688394,151.206995724765,Sydney Light Rail Network,900,781140
+Light Rail,QVB Light Rail,-33.8715815688394,151.206995724765,Sydney Light Rail Network,900,DD1E25
+Light Rail,Randwick Light Rail,-33.9171452538752,151.240534638916,Sydney Light Rail Network,900,DD1E25
+Light Rail,Randwick Light Rail,-33.9171452538752,151.240534638916,Sydney Light Rail Network,900,EE343F
+Light Rail,Randwick Light Rail,-33.9171178989271,151.240544088251,Sydney Light Rail Network,900,DD1E25
+Light Rail,Randwick Light Rail,-33.9171178989271,151.240544088251,Sydney Light Rail Network,900,EE343F
+Train,"Redfern Station, Platform 1",-33.891903243999,151.198163480043,Intercity Trains Network,2,005AA3
+Train,"Redfern Station, Platform 1",-33.891903243999,151.198163480043,Intercity Trains Network,2,D11F2F
+Train,"Redfern Station, Platform 1",-33.891903243999,151.198163480043,Intercity Trains Network,2,F99D1C
+Train,"Redfern Station, Platform 1",-33.891903243999,151.198163480043,Sydney Trains Network,2,005AA3
+Train,"Redfern Station, Platform 1",-33.891903243999,151.198163480043,Sydney Trains Network,2,D11F2F
+Train,"Redfern Station, Platform 1",-33.891903243999,151.198163480043,Sydney Trains Network,2,F99D1C
+Train,"Redfern Station, Platform 10",-33.8923622944995,151.198704601912,Sydney Trains Network,2,005AA3
+Train,"Redfern Station, Platform 10",-33.8923622944995,151.198704601912,Sydney Trains Network,2,00954C
+Train,"Redfern Station, Platform 10",-33.8923622944995,151.198704601912,Sydney Trains Network,2,0098CD
+Train,"Redfern Station, Platform 11",-33.8922794451782,151.199283948046,Intercity Trains Network,2,005AA3
+Train,"Redfern Station, Platform 11",-33.8922794451782,151.199283948046,Sydney Trains Network,2,005AA3
+Train,"Redfern Station, Platform 12",-33.8923038515561,151.199360773963,Intercity Trains Network,2,005AA3
+Train,"Redfern Station, Platform 12",-33.8923038515561,151.199360773963,Sydney Trains Network,2,005AA3
+Train,"Redfern Station, Platform 2",-33.8919639985178,151.198231285519,Intercity Trains Network,2,005AA3
+Train,"Redfern Station, Platform 2",-33.8919639985178,151.198231285519,Intercity Trains Network,2,D11F2F
+Train,"Redfern Station, Platform 2",-33.8919639985178,151.198231285519,Intercity Trains Network,2,F99D1C
+Train,"Redfern Station, Platform 3",-33.89198987836,151.198264967543,Intercity Trains Network,2,D11F2F
+Train,"Redfern Station, Platform 3",-33.89198987836,151.198264967543,Sydney Trains Network,2,0098CD
+Train,"Redfern Station, Platform 3",-33.89198987836,151.198264967543,Sydney Trains Network,2,D11F2F
+Train,"Redfern Station, Platform 3",-33.89198987836,151.198264967543,Sydney Trains Network,2,F99D1C
+Train,"Redfern Station, Platform 4",-33.8920592594157,151.198344000522,Intercity Trains Network,2,D11F2F
+Train,"Redfern Station, Platform 4",-33.8920592594157,151.198344000522,Sydney Trains Network,2,0098CD
+Train,"Redfern Station, Platform 4",-33.8920592594157,151.198344000522,Sydney Trains Network,2,D11F2F
+Train,"Redfern Station, Platform 4",-33.8920592594157,151.198344000522,Sydney Trains Network,2,F37021
+Train,"Redfern Station, Platform 4",-33.8920592594157,151.198344000522,Sydney Trains Network,2,F99D1C
+Train,"Redfern Station, Platform 5",-33.8921117554184,151.19838979302,Intercity Trains Network,2,005AA3
+Train,"Redfern Station, Platform 5",-33.8921117554184,151.19838979302,Sydney Trains Network,2,005AA3
+Train,"Redfern Station, Platform 5",-33.8921117554184,151.19838979302,Sydney Trains Network,2,0098CD
+Train,"Redfern Station, Platform 5",-33.8921117554184,151.19838979302,Sydney Trains Network,2,D11F2F
+Train,"Redfern Station, Platform 5",-33.8921117554184,151.19838979302,Sydney Trains Network,2,F37021
+Train,"Redfern Station, Platform 5",-33.8921117554184,151.19838979302,Sydney Trains Network,2,F99D1C
+Train,"Redfern Station, Platform 6",-33.8921631467808,151.198467943163,Intercity Trains Network,2,005AA3
+Train,"Redfern Station, Platform 6",-33.8921631467808,151.198467943163,Sydney Trains Network,2,0098CD
+Train,"Redfern Station, Platform 6",-33.8921631467808,151.198467943163,Sydney Trains Network,2,D11F2F
+Train,"Redfern Station, Platform 6",-33.8921631467808,151.198467943163,Sydney Trains Network,2,F37021
+Train,"Redfern Station, Platform 6",-33.8921631467808,151.198467943163,Sydney Trains Network,2,F99D1C
+Train,"Redfern Station, Platform 7",-33.8922066479294,151.198513294264,Sydney Trains Network,2,005AA3
+Train,"Redfern Station, Platform 7",-33.8922066479294,151.198513294264,Sydney Trains Network,2,00954C
+Train,"Redfern Station, Platform 7",-33.8922066479294,151.198513294264,Sydney Trains Network,2,0098CD
+Train,"Redfern Station, Platform 8",-33.8922674022158,151.198581100233,Sydney Trains Network,2,005AA3
+Train,"Redfern Station, Platform 8",-33.8922674022158,151.198581100233,Sydney Trains Network,2,00954C
+Train,"Redfern Station, Platform 8",-33.8922674022158,151.198581100233,Sydney Trains Network,2,0098CD
+Train,"Redfern Station, Platform 9",-33.8923198981093,151.198626892993,Intercity Trains Network,2,005AA3
+Train,"Redfern Station, Platform 9",-33.8923198981093,151.198626892993,Sydney Trains Network,2,005AA3
+Train,"Redfern Station, Platform 9",-33.8923198981093,151.198626892993,Sydney Trains Network,2,00954C
+Train,"Redfern Station, Platform 9",-33.8923198981093,151.198626892993,Sydney Trains Network,2,0098CD
+Train,"Regents Park Station, Platform 1",-33.8830533845933,151.024067238411,Sydney Trains Network,2,0098CD
+Train,"Regents Park Station, Platform 1",-33.8830533845933,151.024067238411,Sydney Trains Network,2,F37021
+Train,"Regents Park Station, Platform 1",-33.8830533845933,151.024067238411,Sydney Trains Network,2,F6891F
+Train,"Regents Park Station, Platform 2",-33.8830958985089,151.024144863381,Sydney Trains Network,2,0098CD
+Train,"Regents Park Station, Platform 2",-33.8830958985089,151.024144863381,Sydney Trains Network,2,F37021
+Train,"Regents Park Station, Platform 2",-33.8830958985089,151.024144863381,Sydney Trains Network,2,F6891F
+Train,"Revesby Station, Platform 1",-33.9524062031684,151.015029507,Sydney Trains Network,2,00954C
+Train,"Revesby Station, Platform 2",-33.9524781774433,151.015032892809,Sydney Trains Network,2,00954C
+Train,"Revesby Station, Platform 3",-33.9525587958045,151.015047497823,Sydney Trains Network,2,00954C
+Train,"Revesby Station, Platform 4",-33.9526217732921,151.015050460436,Sydney Trains Network,2,00954C
+Train,"Rhodes Station, Platform 1",-33.8307876903885,151.087095825472,Sydney Trains Network,2,D11F2F
+Train,"Rhodes Station, Platform 2",-33.8307549267121,151.086997093111,Sydney Trains Network,2,D11F2F
+Train,"Rhodes Station, Platform 3",-33.8307491514313,151.086899647278,Sydney Trains Network,2,D11F2F
+Train,"Richmond Station, Platform 1",-33.5989032173303,150.7528482016,Sydney Trains Network,2,C4258F
+Train,"Richmond Station, Platform 1",-33.5989032173303,150.7528482016,Sydney Trains Network,2,F99D1C
+Train,"Richmond Station, Platform 2",-33.5989861783866,150.752787184789,Sydney Trains Network,2,C4258F
+Train,"Richmond Station, Platform 2",-33.5989861783866,150.752787184789,Sydney Trains Network,2,F99D1C
+Train,"Riverstone Station, Platform 1",-33.6791011396116,150.860329543789,Sydney Trains Network,2,C4258F
+Train,"Riverstone Station, Platform 1",-33.6791011396116,150.860329543789,Sydney Trains Network,2,F99D1C
+Train,"Riverstone Station, Platform 2",-33.6793877561832,150.860385487431,Sydney Trains Network,2,C4258F
+Train,"Riverstone Station, Platform 2",-33.6793877561832,150.860385487431,Sydney Trains Network,2,F99D1C
+Train,"Riverwood Station, Platform 1",-33.9514482472503,151.052178833099,Sydney Trains Network,2,00954C
+Train,"Riverwood Station, Platform 2",-33.9515101540253,151.052214208952,Sydney Trains Network,2,00954C
+Train,"Rockdale Station, Platform 2",-33.9520668175271,151.136650649057,Sydney Trains Network,2,005AA3
+Train,"Rockdale Station, Platform 3",-33.9520995289552,151.13674954155,Sydney Trains Network,2,005AA3
+Train,"Rockdale Station, Platform 4",-33.9521412357154,151.136848870151,Sydney Trains Network,2,005AA3
+Train,"Rockdale Station, Platform 5",-33.9521825790035,151.136958993119,Sydney Trains Network,2,005AA3
+Train,"Rooty Hill Station, Platform 1",-33.7714290337048,150.844865301543,Sydney Trains Network,2,F99D1C
+Train,"Rooty Hill Station, Platform 2",-33.7715090151305,150.844901250833,Sydney Trains Network,2,F99D1C
+Train,"Rooty Hill Station, Platform 3",-33.7715886603393,150.844947975614,Sydney Trains Network,2,C4258F
+Train,"Rooty Hill Station, Platform 3",-33.7715886603393,150.844947975614,Sydney Trains Network,2,F99D1C
+Train,"Rooty Hill Station, Platform 4",-33.7716509801565,150.84497234448,Sydney Trains Network,2,C4258F
+Train,"Rooty Hill Station, Platform 4",-33.7716509801565,150.84497234448,Sydney Trains Network,2,F99D1C
+Train,"Roseville Station, Platform 1",-33.7844433372352,151.177721035356,Sydney Trains Network,2,D11F2F
+Train,"Roseville Station, Platform 1",-33.7844433372352,151.177721035356,Sydney Trains Network,2,F99D1C
+Train,"Roseville Station, Platform 2",-33.7844804141239,151.177690467742,Sydney Trains Network,2,D11F2F
+Train,"Roseville Station, Platform 2",-33.7844804141239,151.177690467742,Sydney Trains Network,2,F99D1C
+Metro,"Rouse Hill Station, Platform 1",-33.6919589141629,150.924357465744,Sydney Metro Network,401,168388
+Metro,"Rouse Hill Station, Platform 2",-33.6920159848907,150.924263043458,Sydney Metro Network,401,168388
+Light Rail,Royal Randwick Light Rail,-33.9052049590015,151.228834294063,Sydney Light Rail Network,900,DD1E25
+Light Rail,Royal Randwick Light Rail,-33.9052049590015,151.228834294063,Sydney Light Rail Network,900,EE343F
+Light Rail,Royal Randwick Light Rail,-33.9051682393128,151.22885408849,Sydney Light Rail Network,900,DD1E25
+Light Rail,Royal Randwick Light Rail,-33.9051682393128,151.22885408849,Sydney Light Rail Network,900,EE343F
+Light Rail,Rozelle Bay Light Rail,-33.8719114569732,151.172706660732,Sydney Light Rail Network,900,BE1622
+Light Rail,Rozelle Bay Light Rail,-33.8718301350933,151.172713498017,Sydney Light Rail Network,900,BE1622
+Train,"Rydal Station, Platform 1",-33.4838037241604,150.031819984224,Intercity Trains Network,2,F99D1C
+Train,"Sandgate Station, Platform 1",-32.8723152919868,151.702852677138,Intercity Trains Network,2,833134
+Train,"Sandgate Station, Platform 2",-32.8723638552388,151.702759175447,Intercity Trains Network,2,833134
+Train,"Scarborough Station, Platform 1",-34.2653626657907,150.965444125453,Intercity Trains Network,2,005AA3
+Train,"Scarborough Station, Platform 2",-34.265413486639,150.96554419107,Intercity Trains Network,2,005AA3
+Train,"Schofields Station, Platform 1",-33.704663511574,150.873938291739,Sydney Trains Network,2,C4258F
+Train,"Schofields Station, Platform 1",-33.704663511574,150.873938291739,Sydney Trains Network,2,F99D1C
+Train,"Schofields Station, Platform 2",-33.7046838759191,150.873863734088,Sydney Trains Network,2,C4258F
+Train,"Schofields Station, Platform 2",-33.7046838759191,150.873863734088,Sydney Trains Network,2,F99D1C
+Train,"Scone Station, Platform 1",-32.0467613957824,150.866954368095,Intercity Trains Network,2,833134
+Train,"Sefton Station, Platform 1",-33.8852109838718,151.011528046655,Sydney Trains Network,2,0098CD
+Train,"Sefton Station, Platform 1",-33.8852109838718,151.011528046655,Sydney Trains Network,2,F37021
+Train,"Sefton Station, Platform 2",-33.8852926597163,151.0115102677,Sydney Trains Network,2,0098CD
+Train,"Sefton Station, Platform 2",-33.8852926597163,151.0115102677,Sydney Trains Network,2,F37021
+Train,"Seven Hills Station, Platform 1",-33.7742206102719,150.935976253951,Sydney Trains Network,2,C4258F
+Train,"Seven Hills Station, Platform 1",-33.7742206102719,150.935976253951,Sydney Trains Network,2,F99D1C
+Train,"Seven Hills Station, Platform 2",-33.7742839398133,150.935968364278,Sydney Trains Network,2,C4258F
+Train,"Seven Hills Station, Platform 2",-33.7742839398133,150.935968364278,Sydney Trains Network,2,F99D1C
+Train,"Seven Hills Station, Platform 3",-33.774426234437,150.936309383225,Sydney Trains Network,2,C4258F
+Train,"Seven Hills Station, Platform 3",-33.774426234437,150.936309383225,Sydney Trains Network,2,F99D1C
+Train,"Seven Hills Station, Platform 4",-33.7744989060904,150.936291131356,Sydney Trains Network,2,C4258F
+Train,"Seven Hills Station, Platform 4",-33.7744989060904,150.936291131356,Sydney Trains Network,2,F99D1C
+Train,"Shellharbour Junction, Platform 1",-34.5914546999715,150.844713004955,Intercity Trains Network,2,005AA3
+Train,"Shellharbour Junction, Platform 2",-34.5914304532183,150.844624718303,Intercity Trains Network,2,005AA3
+Train,"Singleton Station, Platform 1",-32.5719877374623,151.16554861215,Intercity Trains Network,2,833134
+Train,"Springwood Station, Platform 1",-33.6989479002089,150.563679829182,Intercity Trains Network,2,F99D1C
+Train,"Springwood Station, Platform 2",-33.6989991118803,150.563778990051,Intercity Trains Network,2,F99D1C
+Train,"St James Station, Platform 1",-33.8706535694054,151.211735024458,Intercity Trains Network,2,D11F2F
+Train,"St James Station, Platform 1",-33.8706535694054,151.211735024458,Sydney Trains Network,2,00954C
+Train,"St James Station, Platform 1",-33.8706535694054,151.211735024458,Sydney Trains Network,2,0098CD
+Train,"St James Station, Platform 1",-33.8706535694054,151.211735024458,Sydney Trains Network,2,F37021
+Train,"St James Station, Platform 2",-33.8706829029958,151.211930888237,Intercity Trains Network,2,F99D1C
+Train,"St James Station, Platform 2",-33.8706829029958,151.211930888237,Sydney Trains Network,2,00954C
+Train,"St James Station, Platform 2",-33.8706829029958,151.211930888237,Sydney Trains Network,2,0098CD
+Train,"St James Station, Platform 2",-33.8706829029958,151.211930888237,Sydney Trains Network,2,F37021
+Train,"St Leonards Station, Platform 2",-33.8220419076742,151.194157487694,Intercity Trains Network,2,D11F2F
+Train,"St Leonards Station, Platform 2",-33.8220419076742,151.194157487694,Sydney Trains Network,2,D11F2F
+Train,"St Leonards Station, Platform 2",-33.8220419076742,151.194157487694,Sydney Trains Network,2,F99D1C
+Train,"St Leonards Station, Platform 3",-33.822054574219,151.194050156483,Intercity Trains Network,2,D11F2F
+Train,"St Leonards Station, Platform 3",-33.822054574219,151.194050156483,Sydney Trains Network,2,D11F2F
+Train,"St Leonards Station, Platform 3",-33.822054574219,151.194050156483,Sydney Trains Network,2,F99D1C
+Train,"St Marys Station, Platform 1",-33.7620219619183,150.775457024889,Sydney Trains Network,2,F99D1C
+Train,"St Marys Station, Platform 2",-33.7620942890285,150.775449411113,Sydney Trains Network,2,F99D1C
+Train,"St Marys Station, Platform 3",-33.7621942751375,150.775421432598,Sydney Trains Network,2,C4258F
+Train,"St Marys Station, Platform 3",-33.7621942751375,150.775421432598,Sydney Trains Network,2,F99D1C
+Train,"St Marys Station, Platform 4",-33.762266602247,150.77541381879,Sydney Trains Network,2,C4258F
+Train,"St Marys Station, Platform 4",-33.762266602247,150.77541381879,Sydney Trains Network,2,F99D1C
+Train,"St Peters Station, Platform 1",-33.907220286725,151.180437486806,Sydney Trains Network,2,00954C
+Train,"St Peters Station, Platform 2",-33.907300508032,151.18046302179,Sydney Trains Network,2,005AA3
+Train,"St Peters Station, Platform 2",-33.907300508032,151.18046302179,Sydney Trains Network,2,00954C
+Train,"St Peters Station, Platform 3",-33.907388990755,151.180510572776,Sydney Trains Network,2,005AA3
+Train,"St Peters Station, Platform 3",-33.907388990755,151.180510572776,Sydney Trains Network,2,00954C
+Train,"St Peters Station, Platform 4",-33.9074868352176,151.180547775729,Sydney Trains Network,2,00954C
+Train,"Stanmore Station, Platform 2",-33.8945498495375,151.16404366604,Sydney Trains Network,2,0098CD
+Train,"Stanmore Station, Platform 2",-33.8945498495375,151.16404366604,Sydney Trains Network,2,F37021
+Train,"Stanmore Station, Platform 3",-33.8946311714705,151.164036820963,Sydney Trains Network,2,0098CD
+Train,"Stanmore Station, Platform 3",-33.8946311714705,151.164036820963,Sydney Trains Network,2,F37021
+Train,"Stanwell Park Station, Platform 1",-34.2263354573892,150.981065426897,Intercity Trains Network,2,005AA3
+Train,"Stanwell Park Station, Platform 2",-34.2263869726528,150.981143789452,Intercity Trains Network,2,005AA3
+Train,"Strathfield Station, Platform 1",-33.8712790604501,151.094180437534,Intercity Trains Network,2,D11F2F
+Train,"Strathfield Station, Platform 1",-33.8712790604501,151.094180437534,Intercity Trains Network,2,F99D1C
+Train,"Strathfield Station, Platform 1",-33.8712790604501,151.094180437534,Sydney Trains Network,2,D11F2F
+Train,"Strathfield Station, Platform 1",-33.8712790604501,151.094180437534,Sydney Trains Network,2,F99D1C
+Train,"Strathfield Station, Platform 2",-33.8713254760743,151.094139450059,Intercity Trains Network,2,D11F2F
+Train,"Strathfield Station, Platform 2",-33.8713254760743,151.094139450059,Intercity Trains Network,2,F99D1C
+Train,"Strathfield Station, Platform 2",-33.8713254760743,151.094139450059,Sydney Trains Network,2,0098CD
+Train,"Strathfield Station, Platform 2",-33.8713254760743,151.094139450059,Sydney Trains Network,2,D11F2F
+Train,"Strathfield Station, Platform 2",-33.8713254760743,151.094139450059,Sydney Trains Network,2,F99D1C
+Train,"Strathfield Station, Platform 3",-33.8713995975007,151.094078183882,Intercity Trains Network,2,D11F2F
+Train,"Strathfield Station, Platform 3",-33.8713995975007,151.094078183882,Intercity Trains Network,2,F99D1C
+Train,"Strathfield Station, Platform 3",-33.8713995975007,151.094078183882,Sydney Trains Network,2,0098CD
+Train,"Strathfield Station, Platform 3",-33.8713995975007,151.094078183882,Sydney Trains Network,2,D11F2F
+Train,"Strathfield Station, Platform 3",-33.8713995975007,151.094078183882,Sydney Trains Network,2,F37021
+Train,"Strathfield Station, Platform 3",-33.8713995975007,151.094078183882,Sydney Trains Network,2,F99D1C
+Train,"Strathfield Station, Platform 4",-33.8714643640117,151.094027272063,Intercity Trains Network,2,D11F2F
+Train,"Strathfield Station, Platform 4",-33.8714643640117,151.094027272063,Intercity Trains Network,2,F99D1C
+Train,"Strathfield Station, Platform 4",-33.8714643640117,151.094027272063,Sydney Trains Network,2,0098CD
+Train,"Strathfield Station, Platform 4",-33.8714643640117,151.094027272063,Sydney Trains Network,2,F37021
+Train,"Strathfield Station, Platform 4",-33.8714643640117,151.094027272063,Sydney Trains Network,2,F99D1C
+Train,"Strathfield Station, Platform 5",-33.8715204933531,151.093965145255,Intercity Trains Network,2,D11F2F
+Train,"Strathfield Station, Platform 5",-33.8715204933531,151.093965145255,Sydney Trains Network,2,D11F2F
+Train,"Strathfield Station, Platform 6",-33.8715672677846,151.093913372852,Intercity Trains Network,2,D11F2F
+Train,"Strathfield Station, Platform 6",-33.8715672677846,151.093913372852,Intercity Trains Network,2,F99D1C
+Train,"Strathfield Station, Platform 6",-33.8715672677846,151.093913372852,Sydney Trains Network,2,0098CD
+Train,"Strathfield Station, Platform 6",-33.8715672677846,151.093913372852,Sydney Trains Network,2,D11F2F
+Train,"Strathfield Station, Platform 6",-33.8715672677846,151.093913372852,Sydney Trains Network,2,F99D1C
+Train,"Strathfield Station, Platform 7",-33.8716511028602,151.093830967099,Sydney Trains Network,2,0098CD
+Train,"Strathfield Station, Platform 7",-33.8716511028602,151.093830967099,Sydney Trains Network,2,F37021
+Train,"Strathfield Station, Platform 8",-33.87168852237,151.093789549061,Sydney Trains Network,2,0098CD
+Train,"Strathfield Station, Platform 8",-33.87168852237,151.093789549061,Sydney Trains Network,2,F37021
+Train,"Summer Hill Station, Platform 2",-33.8903689703417,151.138958626169,Sydney Trains Network,2,0098CD
+Train,"Summer Hill Station, Platform 2",-33.8903689703417,151.138958626169,Sydney Trains Network,2,F37021
+Train,"Summer Hill Station, Platform 3",-33.8904333906459,151.138918527065,Sydney Trains Network,2,0098CD
+Train,"Summer Hill Station, Platform 3",-33.8904333906459,151.138918527065,Sydney Trains Network,2,F37021
+Light Rail,Surry Hills Light Rail,-33.8881283231394,151.211860569558,Sydney Light Rail Network,900,781140
+Light Rail,Surry Hills Light Rail,-33.8881283231394,151.211860569558,Sydney Light Rail Network,900,DD1E25
+Light Rail,Surry Hills Light Rail,-33.8881283231394,151.211860569558,Sydney Light Rail Network,900,EE343F
+Light Rail,Surry Hills Light Rail,-33.8880728778762,151.211901053018,Sydney Light Rail Network,900,781140
+Light Rail,Surry Hills Light Rail,-33.8880728778762,151.211901053018,Sydney Light Rail Network,900,DD1E25
+Light Rail,Surry Hills Light Rail,-33.8880728778762,151.211901053018,Sydney Light Rail Network,900,EE343F
+Train,"Sutherland Station, Platform 1",-34.0316375563814,151.057194830802,Intercity Trains Network,2,005AA3
+Train,"Sutherland Station, Platform 1",-34.0316375563814,151.057194830802,Sydney Trains Network,2,005AA3
+Train,"Sutherland Station, Platform 2",-34.0316980299186,151.057273471286,Intercity Trains Network,2,005AA3
+Train,"Sutherland Station, Platform 2",-34.0316980299186,151.057273471286,Sydney Trains Network,2,005AA3
+Train,"Sutherland Station, Platform 3",-34.0317311576684,151.05736163043,Intercity Trains Network,2,005AA3
+Train,"Sutherland Station, Platform 3",-34.0317311576684,151.05736163043,Sydney Trains Network,2,005AA3
+Metro,"Sydenham Station, Platform 1",-33.9137065827257,151.167192201029,Sydney Metro Network,401,168388
+Metro,"Sydenham Station, Platform 2",-33.9137950712879,151.167239743094,Sydney Metro Network,401,168388
+Train,"Sydenham Station, Platform 3",-33.9143020161785,151.166637661136,Sydney Trains Network,2,005AA3
+Train,"Sydenham Station, Platform 3",-33.9143020161785,151.166637661136,Sydney Trains Network,2,00954C
+Train,"Sydenham Station, Platform 4",-33.9143984031899,151.166718008907,Sydney Trains Network,2,005AA3
+Train,"Sydenham Station, Platform 4",-33.9143984031899,151.166718008907,Sydney Trains Network,2,00954C
+Train,"Sydenham Station, Platform 5",-33.9144861606491,151.166787129185,Intercity Trains Network,2,005AA3
+Train,"Sydenham Station, Platform 5",-33.9144861606491,151.166787129185,Sydney Trains Network,2,005AA3
+Train,"Sydenham Station, Platform 6",-33.9145645572766,151.166866600154,Sydney Trains Network,2,005AA3
+Train,"Tahmoor Station, Platform 1",-34.2233837403865,150.590027395829,Intercity Trains Network,2,00954C
+Train,"Tahmoor Station, Platform 2",-34.2234075667531,150.590136900474,Intercity Trains Network,2,00954C
+Metro,"Tallawong Station, Platform 2",-33.6917054286045,150.905653308828,Sydney Metro Network,401,168388
+Metro,"Tallawong Station, Platform 3",-33.6917677355164,150.90567769199,Sydney Metro Network,401,168388
+Train,"Tallong Station, Platform 1",-34.718286232754,150.086352536561,Intercity Trains Network,2,00954C
+Train,"Tallong Station, Platform 2",-34.7183765566826,150.08634498007,Intercity Trains Network,2,00954C
+Train,"Tarana Station, Platform 1",-33.524182563708,149.907385336209,Intercity Trains Network,2,F99D1C
+Train,"Tarro Station, Platform 1",-32.8090083162105,151.669672433916,Intercity Trains Network,2,833134
+Train,"Tarro Station, Platform 2",-32.8090650453066,151.669600737033,Intercity Trains Network,2,833134
+Train,"Tascott Station, Platform 1",-33.4509625323247,151.318600025532,Intercity Trains Network,2,D11F2F
+Train,"Tascott Station, Platform 2",-33.4509100657235,151.318554428798,Intercity Trains Network,2,D11F2F
+Light Rail,Taverners Hill Light Rail,-33.8893026283537,151.145205686535,Sydney Light Rail Network,900,BE1622
+Light Rail,Taverners Hill Light Rail,-33.8887128371816,151.145328360511,Sydney Light Rail Network,900,BE1622
+Train,"Telarah Station, Platform 1",-32.7234184127298,151.539770772095,Intercity Trains Network,2,833134
+Train,"Tempe Station, Platform 3",-33.9241293184772,151.156600529753,Sydney Trains Network,2,005AA3
+Train,"Tempe Station, Platform 4",-33.9241436604629,151.156709309747,Sydney Trains Network,2,005AA3
+Train,"Teralba Station, Platform 1",-32.9624673479687,151.60368203316,Intercity Trains Network,2,D11F2F
+Train,"Teralba Station, Platform 2",-32.9623700201063,151.603634230401,Intercity Trains Network,2,D11F2F
+Light Rail,The Star Light Rail,-33.8675301288881,151.195034555371,Sydney Light Rail Network,900,BE1622
+Light Rail,The Star Light Rail,-33.8673533434379,151.195198705635,Sydney Light Rail Network,900,BE1622
+Train,"Thirroul Station, Platform 1",-34.317999018914,150.918867822004,Intercity Trains Network,2,005AA3
+Train,"Thirroul Station, Platform 2",-34.3180325756205,150.918945403882,Intercity Trains Network,2,005AA3
+Train,"Thirroul Station, Platform 3",-34.3180747820611,150.919034248455,Intercity Trains Network,2,005AA3
+Train,"Thornleigh Station, Platform 1",-33.7319355240176,151.078351023846,Sydney Trains Network,2,D11F2F
+Train,"Thornleigh Station, Platform 2",-33.7318753988591,151.078261900294,Sydney Trains Network,2,D11F2F
+Train,"Thornleigh Station, Platform 3",-33.7318329102371,151.078184396889,Sydney Trains Network,2,D11F2F
+Train,"Thornton Station, Platform 1",-32.7835870798054,151.639920896384,Intercity Trains Network,2,833134
+Train,"Thornton Station, Platform 2",-32.7836433966905,151.63985984056,Intercity Trains Network,2,833134
+Train,"Toongabbie Station, Platform 1",-33.7872379074507,150.951573481108,Sydney Trains Network,2,C4258F
+Train,"Toongabbie Station, Platform 1",-33.7872379074507,150.951573481108,Sydney Trains Network,2,F99D1C
+Train,"Toongabbie Station, Platform 2",-33.7872503616308,150.951466134988,Sydney Trains Network,2,C4258F
+Train,"Toongabbie Station, Platform 2",-33.7872503616308,150.951466134988,Sydney Trains Network,2,F99D1C
+Train,"Toongabbie Station, Platform 3",-33.7872624700871,150.951369564839,Sydney Trains Network,2,C4258F
+Train,"Toongabbie Station, Platform 3",-33.7872624700871,150.951369564839,Sydney Trains Network,2,F99D1C
+Train,"Toongabbie Station, Platform 4",-33.7872839218183,150.951262632572,Sydney Trains Network,2,C4258F
+Train,"Toongabbie Station, Platform 4",-33.7872839218183,150.951262632572,Sydney Trains Network,2,F99D1C
+Light Rail,Town Hall Light Rail,-33.8738721299799,151.206935483941,Sydney Light Rail Network,900,781140
+Light Rail,Town Hall Light Rail,-33.8738721299799,151.206935483941,Sydney Light Rail Network,900,DD1E25
+Light Rail,Town Hall Light Rail,-33.8738567219245,151.206859115631,Sydney Light Rail Network,900,781140
+Light Rail,Town Hall Light Rail,-33.8738567219245,151.206859115631,Sydney Light Rail Network,900,DD1E25
+Train,"Town Hall Station, Platform 1",-33.8736378983116,151.206934772555,Intercity Trains Network,2,D11F2F
+Train,"Town Hall Station, Platform 1",-33.8736378983116,151.206934772555,Sydney Trains Network,2,00954C
+Train,"Town Hall Station, Platform 1",-33.8736378983116,151.206934772555,Sydney Trains Network,2,0098CD
+Train,"Town Hall Station, Platform 1",-33.8736378983116,151.206934772555,Sydney Trains Network,2,F37021
+Train,"Town Hall Station, Platform 2",-33.8735523762274,151.206800950661,Intercity Trains Network,2,D11F2F
+Train,"Town Hall Station, Platform 2",-33.8735523762274,151.206800950661,Sydney Trains Network,2,D11F2F
+Train,"Town Hall Station, Platform 2",-33.8735523762274,151.206800950661,Sydney Trains Network,2,F99D1C
+Train,"Town Hall Station, Platform 3",-33.8736542683001,151.206719546329,Intercity Trains Network,2,D11F2F
+Train,"Town Hall Station, Platform 3",-33.8736542683001,151.206719546329,Sydney Trains Network,2,D11F2F
+Train,"Town Hall Station, Platform 3",-33.8736542683001,151.206719546329,Sydney Trains Network,2,F99D1C
+Train,"Town Hall Station, Platform 4",-33.8735907120295,151.206997262471,Intercity Trains Network,2,005AA3
+Train,"Town Hall Station, Platform 4",-33.8735907120295,151.206997262471,Sydney Trains Network,2,005AA3
+Train,"Town Hall Station, Platform 5",-33.8737203259393,151.206895617823,Intercity Trains Network,2,005AA3
+Train,"Town Hall Station, Platform 5",-33.8737203259393,151.206895617823,Sydney Trains Network,2,005AA3
+Train,"Town Hall Station, Platform 6",-33.8736164456048,151.206771695063,Intercity Trains Network,2,F99D1C
+Train,"Town Hall Station, Platform 6",-33.8736164456048,151.206771695063,Sydney Trains Network,2,00954C
+Train,"Town Hall Station, Platform 6",-33.8736164456048,151.206771695063,Sydney Trains Network,2,0098CD
+Train,"Town Hall Station, Platform 6",-33.8736164456048,151.206771695063,Sydney Trains Network,2,F37021
+Train,"Towradgi Station, Platform 1",-34.3842922384736,150.901362710853,Intercity Trains Network,2,005AA3
+Train,"Towradgi Station, Platform 2",-34.3843254557814,150.90145120334,Intercity Trains Network,2,005AA3
+Train,"Tuggerah Station, Platform 1",-33.307749394527,151.420249513341,Intercity Trains Network,2,D11F2F
+Train,"Tuggerah Station, Platform 2",-33.3077344624772,151.420162922341,Intercity Trains Network,2,D11F2F
+Train,"Turramurra Station, Platform 1",-33.7325064720812,151.128600253465,Sydney Trains Network,2,D11F2F
+Train,"Turramurra Station, Platform 1",-33.7325064720812,151.128600253465,Sydney Trains Network,2,F99D1C
+Train,"Turramurra Station, Platform 2",-33.7325442583821,151.128548145774,Sydney Trains Network,2,F99D1C
+Train,"Turrella Station, Platform 1",-33.9298286233223,151.140167174157,Sydney Trains Network,2,00954C
+Train,"Turrella Station, Platform 2",-33.9298822323378,151.140180581717,Sydney Trains Network,2,00954C
+Train,"Unanderra Station, Platform 1",-34.4546100748845,150.846046429512,Intercity Trains Network,2,005AA3
+Train,"Unanderra Station, Platform 2",-34.454669979908,150.846147082918,Intercity Trains Network,2,005AA3
+Light Rail,UNSW Anzac Parade Light Rail,-33.9166588662244,151.225878003133,Sydney Light Rail Network,900,781140
+Light Rail,UNSW Anzac Parade Light Rail,-33.9166588662244,151.225878003133,Sydney Light Rail Network,900,EE343F
+Light Rail,UNSW Anzac Parade Light Rail,-33.9166480175614,151.225931501141,Sydney Light Rail Network,900,781140
+Light Rail,UNSW Anzac Parade Light Rail,-33.9166480175614,151.225931501141,Sydney Light Rail Network,900,EE343F
+Light Rail,UNSW High Street Light Rail,-33.9164079066476,151.235526914584,Sydney Light Rail Network,900,DD1E25
+Light Rail,UNSW High Street Light Rail,-33.9164079066476,151.235526914584,Sydney Light Rail Network,900,EE343F
+Light Rail,UNSW High Street Light Rail,-33.9163352086212,151.235544924787,Sydney Light Rail Network,900,DD1E25
+Light Rail,UNSW High Street Light Rail,-33.9163352086212,151.235544924787,Sydney Light Rail Network,900,EE343F
+Train,"Valley Heights Station, Platform 1",-33.704384900755,150.583821326796,Intercity Trains Network,2,F99D1C
+Train,"Valley Heights Station, Platform 2",-33.7044324118423,150.583737036621,Intercity Trains Network,2,F99D1C
+Metro,"Victoria Cross Station, Platform 1",-33.8362188538549,151.20749415557,Sydney Metro Network,401,168388
+Metro,"Victoria Cross Station, Platform 2",-33.8362049173566,151.207374706753,Sydney Metro Network,401,168388
+Train,"Victoria Street Station, Platform 1",-32.7508613013858,151.593754880953,Intercity Trains Network,2,833134
+Train,"Victoria Street Station, Platform 2",-32.7509351889437,151.593705378547,Intercity Trains Network,2,833134
+Train,"Villawood Station, Platform 1",-33.8808379841661,150.976643675544,Sydney Trains Network,2,0098CD
+Train,"Villawood Station, Platform 1",-33.8808379841661,150.976643675544,Sydney Trains Network,2,F37021
+Train,"Villawood Station, Platform 2",-33.8808739734112,150.976645347777,Sydney Trains Network,2,0098CD
+Train,"Villawood Station, Platform 2",-33.8808739734112,150.976645347777,Sydney Trains Network,2,F37021
+Train,"Vineyard Station, Platform 1",-33.6503886871817,150.851157919579,Sydney Trains Network,2,C4258F
+Train,"Vineyard Station, Platform 1",-33.6503886871817,150.851157919579,Sydney Trains Network,2,F99D1C
+Train,"Wahroonga Station, Platform 1",-33.717895881216,151.117429939936,Sydney Trains Network,2,D11F2F
+Train,"Wahroonga Station, Platform 1",-33.717895881216,151.117429939936,Sydney Trains Network,2,F99D1C
+Train,"Wahroonga Station, Platform 2",-33.7179336625571,151.117377834995,Sydney Trains Network,2,F99D1C
+Train,"Waitara Station, Platform 1",-33.7103125867087,151.104895179281,Sydney Trains Network,2,D11F2F
+Train,"Waitara Station, Platform 1",-33.7103125867087,151.104895179281,Sydney Trains Network,2,F99D1C
+Train,"Waitara Station, Platform 2",-33.710340650073,151.10486417247,Sydney Trains Network,2,F99D1C
+Train,"Wallarobba Station, Platform 1",-32.496128222536,151.695622246016,Intercity Trains Network,2,833134
+Light Rail,Wansey Road Light Rail,-33.9105357186475,151.235203471404,Sydney Light Rail Network,900,DD1E25
+Light Rail,Wansey Road Light Rail,-33.9105357186475,151.235203471404,Sydney Light Rail Network,900,EE343F
+Light Rail,Wansey Road Light Rail,-33.9105256095,151.235235388702,Sydney Light Rail Network,900,DD1E25
+Light Rail,Wansey Road Light Rail,-33.9105256095,151.235235388702,Sydney Light Rail Network,900,EE343F
+Train,"Warabrook Station, Platform 1",-32.887265753853,151.710092571154,Intercity Trains Network,2,833134
+Train,"Warabrook Station, Platform 2",-32.8872857448103,151.710040249423,Intercity Trains Network,2,833134
+Light Rail,Waratah Mills Light Rail,-33.8988248316454,151.14016742779,Sydney Light Rail Network,900,BE1622
+Light Rail,Waratah Mills Light Rail,-33.8987726747145,151.14011087722,Sydney Light Rail Network,900,BE1622
+Train,"Waratah Station, Platform 1",-32.9022850380577,151.731199012841,Intercity Trains Network,2,833134
+Train,"Waratah Station, Platform 2",-32.902341805271,151.731127291942,Intercity Trains Network,2,833134
+Train,"Warnervale Station, Platform 1",-33.2474214905257,151.44880190571,Intercity Trains Network,2,D11F2F
+Train,"Warnervale Station, Platform 2",-33.2473604592387,151.448745197867,Intercity Trains Network,2,D11F2F
+Train,"Warrawee Station, Platform 1",-33.7243003275846,151.121801479945,Sydney Trains Network,2,D11F2F
+Train,"Warrawee Station, Platform 1",-33.7243003275846,151.121801479945,Sydney Trains Network,2,F99D1C
+Train,"Warrawee Station, Platform 2",-33.7243204789742,151.121737746195,Sydney Trains Network,2,F99D1C
+Train,"Warrimoo Station, Platform 1",-33.7213127694059,150.602612500138,Intercity Trains Network,2,F99D1C
+Train,"Warrimoo Station, Platform 2",-33.7213947263227,150.60258357247,Intercity Trains Network,2,F99D1C
+Train,"Warwick Farm Station, Platform 1",-33.9131726091981,150.935067262829,Sydney Trains Network,2,0098CD
+Train,"Warwick Farm Station, Platform 1",-33.9131726091981,150.935067262829,Sydney Trains Network,2,C4258F
+Train,"Warwick Farm Station, Platform 1",-33.9131726091981,150.935067262829,Sydney Trains Network,2,F37021
+Train,"Warwick Farm Station, Platform 2",-33.9131784988913,150.935164805445,Sydney Trains Network,2,0098CD
+Train,"Warwick Farm Station, Platform 2",-33.9131784988913,150.935164805445,Sydney Trains Network,2,C4258F
+Train,"Warwick Farm Station, Platform 2",-33.9131784988913,150.935164805445,Sydney Trains Network,2,F37021
+Train,"Waterfall Station, Platform 1",-34.1347658584905,150.994487513275,Intercity Trains Network,2,005AA3
+Train,"Waterfall Station, Platform 1",-34.1347658584905,150.994487513275,Sydney Trains Network,2,005AA3
+Train,"Waterfall Station, Platform 2",-34.1347547464956,150.994552005417,Intercity Trains Network,2,005AA3
+Train,"Waterfall Station, Platform 2",-34.1347547464956,150.994552005417,Sydney Trains Network,2,005AA3
+Metro,"Waterloo Station, Platform 1",-33.8975275482764,151.200211531402,Sydney Metro Network,401,168388
+Metro,"Waterloo Station, Platform 2",-33.8974968798107,151.200318071095,Sydney Metro Network,401,168388
+Train,"Waverton Station, Platform 1",-33.8377847925725,151.197519006498,Intercity Trains Network,2,D11F2F
+Train,"Waverton Station, Platform 1",-33.8377847925725,151.197519006498,Sydney Trains Network,2,D11F2F
+Train,"Waverton Station, Platform 1",-33.8377847925725,151.197519006498,Sydney Trains Network,2,F99D1C
+Train,"Waverton Station, Platform 2",-33.8378158208671,151.197401758589,Intercity Trains Network,2,D11F2F
+Train,"Waverton Station, Platform 2",-33.8378158208671,151.197401758589,Sydney Trains Network,2,D11F2F
+Train,"Waverton Station, Platform 2",-33.8378158208671,151.197401758589,Sydney Trains Network,2,F99D1C
+Train,"Wentworth Falls Station, Platform 1",-33.7096037923077,150.376429004991,Intercity Trains Network,2,F99D1C
+Train,"Wentworth Falls Station, Platform 2",-33.7096067403557,150.376321272528,Intercity Trains Network,2,F99D1C
+Light Rail,Wentworth Park Light Rail,-33.8744096174606,151.194097112867,Sydney Light Rail Network,900,BE1622
+Light Rail,Wentworth Park Light Rail,-33.8743585894295,151.194008198775,Sydney Light Rail Network,900,BE1622
+Train,"Wentworthville Station, Platform 1",-33.8070169678849,150.972583000735,Sydney Trains Network,2,C4258F
+Train,"Wentworthville Station, Platform 1",-33.8070169678849,150.972583000735,Sydney Trains Network,2,F99D1C
+Train,"Wentworthville Station, Platform 2",-33.8070903382417,150.972543219635,Sydney Trains Network,2,C4258F
+Train,"Wentworthville Station, Platform 2",-33.8070903382417,150.972543219635,Sydney Trains Network,2,F99D1C
+Train,"Wentworthville Station, Platform 3",-33.8071810082003,150.972525827868,Sydney Trains Network,2,C4258F
+Train,"Wentworthville Station, Platform 3",-33.8071810082003,150.972525827868,Sydney Trains Network,2,F99D1C
+Train,"Wentworthville Station, Platform 4",-33.8072540308886,150.972496824897,Sydney Trains Network,2,C4258F
+Train,"Wentworthville Station, Platform 4",-33.8072540308886,150.972496824897,Sydney Trains Network,2,F99D1C
+Train,"Werrington Station, Platform 1",-33.7591394272467,150.757722384438,Sydney Trains Network,2,F99D1C
+Train,"Werrington Station, Platform 2",-33.7592207541101,150.7577151489,Sydney Trains Network,2,C4258F
+Train,"Werrington Station, Platform 2",-33.7592207541101,150.7577151489,Sydney Trains Network,2,F99D1C
+Train,"West Ryde Station, Platform 1",-33.8071821870127,151.09029951331,Sydney Trains Network,2,D11F2F
+Train,"West Ryde Station, Platform 2",-33.8071667003246,151.090223219071,Sydney Trains Network,2,D11F2F
+Train,"West Ryde Station, Platform 3",-33.8071339371412,151.090124513975,Sydney Trains Network,2,D11F2F
+Train,"Westmead Station, Platform 1",-33.808319432399,150.987766286772,Intercity Trains Network,2,F99D1C
+Train,"Westmead Station, Platform 1",-33.808319432399,150.987766286772,Sydney Trains Network,2,C4258F
+Train,"Westmead Station, Platform 1",-33.808319432399,150.987766286772,Sydney Trains Network,2,F99D1C
+Train,"Westmead Station, Platform 2",-33.8083651168773,150.987746820821,Intercity Trains Network,2,F99D1C
+Train,"Westmead Station, Platform 2",-33.8083651168773,150.987746820821,Sydney Trains Network,2,C4258F
+Train,"Westmead Station, Platform 2",-33.8083651168773,150.987746820821,Sydney Trains Network,2,F99D1C
+Train,"Westmead Station, Platform 3",-33.8085453347055,150.988025055592,Intercity Trains Network,2,F99D1C
+Train,"Westmead Station, Platform 3",-33.8085453347055,150.988025055592,Sydney Trains Network,2,C4258F
+Train,"Westmead Station, Platform 3",-33.8085453347055,150.988025055592,Sydney Trains Network,2,F99D1C
+Train,"Westmead Station, Platform 4",-33.8086093628264,150.987995647759,Sydney Trains Network,2,C4258F
+Train,"Westmead Station, Platform 4",-33.8086093628264,150.987995647759,Sydney Trains Network,2,F99D1C
+Train,"Windsor Station, Platform 1",-33.6136861484035,150.811017155835,Sydney Trains Network,2,C4258F
+Train,"Windsor Station, Platform 1",-33.6136861484035,150.811017155835,Sydney Trains Network,2,F99D1C
+Train,"Wingello Station, Platform 1",-34.6921207123842,150.158404608752,Intercity Trains Network,2,00954C
+Train,"Wingello Station, Platform 2",-34.6922014670169,150.158418591522,Intercity Trains Network,2,00954C
+Train,"Wirragulla Station, Platform 1",-32.4629274185423,151.74252756703,Intercity Trains Network,2,833134
+Train,"Wolli Creek Station, Platform 1",-33.9285143989357,151.154284651249,Sydney Trains Network,2,00954C
+Train,"Wolli Creek Station, Platform 2",-33.9285957208935,151.154277797567,Sydney Trains Network,2,00954C
+Train,"Wolli Creek Station, Platform 3",-33.9280263448732,151.153796139673,Intercity Trains Network,2,005AA3
+Train,"Wolli Creek Station, Platform 3",-33.9280263448732,151.153796139673,Sydney Trains Network,2,005AA3
+Train,"Wolli Creek Station, Platform 4",-33.9280694979846,151.153852281817,Intercity Trains Network,2,005AA3
+Train,"Wolli Creek Station, Platform 4",-33.9280694979846,151.153852281817,Sydney Trains Network,2,005AA3
+Train,Wollongong Station Platform 4,-34.4278492475753,150.888109876736,Intercity Trains Network,2,005AA3
+Train,"Wollongong Station, Platform 1",-34.4270733908519,150.888139144433,Intercity Trains Network,2,005AA3
+Train,"Wollongong Station, Platform 2",-34.4269519292088,150.888274877685,Intercity Trains Network,2,005AA3
+Train,"Wollstonecraft Station, Platform 1",-33.8319343315802,151.191791178755,Intercity Trains Network,2,D11F2F
+Train,"Wollstonecraft Station, Platform 1",-33.8319343315802,151.191791178755,Sydney Trains Network,2,D11F2F
+Train,"Wollstonecraft Station, Platform 1",-33.8319343315802,151.191791178755,Sydney Trains Network,2,F99D1C
+Train,"Wollstonecraft Station, Platform 2",-33.8319732478152,151.191706710947,Intercity Trains Network,2,D11F2F
+Train,"Wollstonecraft Station, Platform 2",-33.8319732478152,151.191706710947,Sydney Trains Network,2,D11F2F
+Train,"Wollstonecraft Station, Platform 2",-33.8319732478152,151.191706710947,Sydney Trains Network,2,F99D1C
+Train,"Wombarra Station, Platform 1",-34.2756290142047,150.953368453965,Intercity Trains Network,2,005AA3
+Train,"Wombarra Station, Platform 2",-34.2756715479118,150.953446428465,Intercity Trains Network,2,005AA3
+Train,"Wondabyne Station, Platform 1",-33.4921347453911,151.257052682309,Intercity Trains Network,2,D11F2F
+Train,"Wondabyne Station, Platform 2",-33.4921567989146,151.256935477142,Intercity Trains Network,2,D11F2F
+Train,"Woodford Station, Platform 1",-33.7355961828998,150.481852657974,Intercity Trains Network,2,F99D1C
+Train,"Woodford Station, Platform 2",-33.7356582885041,150.481887532677,Intercity Trains Network,2,F99D1C
+Train,"Woolooware Station, Platform 1",-34.0476182816551,151.143869238263,Sydney Trains Network,2,005AA3
+Train,"Woolooware Station, Platform 2",-34.0475632158106,151.143899026927,Sydney Trains Network,2,005AA3
+Train,"Woonona Station, Platform 1",-34.3495473314915,150.91515533252,Intercity Trains Network,2,005AA3
+Train,"Woonona Station, Platform 2",-34.3495625464898,150.915242953627,Intercity Trains Network,2,005AA3
+Train,"Woy Woy Station, Platform 1",-33.4853232589214,151.32355491717,Intercity Trains Network,2,D11F2F
+Train,"Woy Woy Station, Platform 2",-33.4852902845208,151.323467259029,Intercity Trains Network,2,D11F2F
+Train,"Wyee Station, Platform 1",-33.1801588728328,151.487143577369,Intercity Trains Network,2,D11F2F
+Train,"Wyee Station, Platform 2",-33.1801623486919,151.487047334152,Intercity Trains Network,2,D11F2F
+Light Rail,Wynyard Light Rail,-33.8666819423683,151.207208571756,Sydney Light Rail Network,900,781140
+Light Rail,Wynyard Light Rail,-33.8666819423683,151.207208571756,Sydney Light Rail Network,900,DD1E25
+Light Rail,Wynyard Light Rail,-33.8666755287207,151.207132651995,Sydney Light Rail Network,900,781140
+Light Rail,Wynyard Light Rail,-33.8666755287207,151.207132651995,Sydney Light Rail Network,900,DD1E25
+Train,"Wynyard Station, Platform 3",-33.8658850999381,151.20574374044,Intercity Trains Network,2,D11F2F
+Train,"Wynyard Station, Platform 3",-33.8658850999381,151.20574374044,Sydney Trains Network,2,D11F2F
+Train,"Wynyard Station, Platform 3",-33.8658850999381,151.20574374044,Sydney Trains Network,2,F99D1C
+Train,"Wynyard Station, Platform 4",-33.8658974120018,151.205647140178,Intercity Trains Network,2,D11F2F
+Train,"Wynyard Station, Platform 4",-33.8658974120018,151.205647140178,Sydney Trains Network,2,D11F2F
+Train,"Wynyard Station, Platform 4",-33.8658974120018,151.205647140178,Sydney Trains Network,2,F99D1C
+Train,"Wynyard Station, Platform 5",-33.8658702075591,151.205915817829,Intercity Trains Network,2,D11F2F
+Train,"Wynyard Station, Platform 5",-33.8658702075591,151.205915817829,Sydney Trains Network,2,00954C
+Train,"Wynyard Station, Platform 5",-33.8658702075591,151.205915817829,Sydney Trains Network,2,0098CD
+Train,"Wynyard Station, Platform 5",-33.8658702075591,151.205915817829,Sydney Trains Network,2,F37021
+Train,"Wynyard Station, Platform 6",-33.8658814139482,151.205851564983,Intercity Trains Network,2,F99D1C
+Train,"Wynyard Station, Platform 6",-33.8658814139482,151.205851564983,Sydney Trains Network,2,00954C
+Train,"Wynyard Station, Platform 6",-33.8658814139482,151.205851564983,Sydney Trains Network,2,0098CD
+Train,"Wynyard Station, Platform 6",-33.8658814139482,151.205851564983,Sydney Trains Network,2,F37021
+Train,"Wyong Station, Platform 1",-33.2854313523565,151.425364806133,Intercity Trains Network,2,D11F2F
+Train,"Wyong Station, Platform 2",-33.2854074291067,151.425277782487,Intercity Trains Network,2,D11F2F
+Train,"Wyong Station, Platform 3",-33.2854014917651,151.425191668417,Intercity Trains Network,2,D11F2F
+Train,"Yagoona Station, Platform 1",-33.907077580815,151.024560043821,Sydney Trains Network,2,F6891F
+Train,"Yagoona Station, Platform 2",-33.9070980461035,151.0244853601,Sydney Trains Network,2,F6891F
+Train,"Yennora Station, Platform 1",-33.8647040211601,150.970925577485,Sydney Trains Network,2,0098CD
+Train,"Yennora Station, Platform 1",-33.8647040211601,150.970925577485,Sydney Trains Network,2,C4258F
+Train,"Yennora Station, Platform 2",-33.8647746081772,150.970972057063,Sydney Trains Network,2,0098CD
+Train,"Yennora Station, Platform 2",-33.8647746081772,150.970972057063,Sydney Trains Network,2,C4258F
+Train,"Yerrinbool Station, Platform 1",-34.3717190661747,150.543454799014,Intercity Trains Network,2,00954C
+Train,"Yerrinbool Station, Platform 2",-34.3717432372536,150.543553635891,Intercity Trains Network,2,00954C
+Train,"Zig Zag Station, Platform 1",-33.4718727137823,150.202115656253,Intercity Trains Network,2,F99D1C
+Train,"Zig Zag Station, Platform 2",-33.4716888763409,150.201904527037,Intercity Trains Network,2,F99D1C
