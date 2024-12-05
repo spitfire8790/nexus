@@ -184,8 +184,9 @@ export function MetroStationsLayer() {
                 ` : ''}
               </div>
             `,
-            iconSize: showLabel ? [40, 60] : [24, 24],
-            iconAnchor: showLabel ? [20, 30] : [12, 12]
+            iconSize: [24, 24],  // Fixed size for the icon
+            iconAnchor: [12, 12],  // Exact center of the icon
+            popupAnchor: [0, -12]  // Popup appears just above the icon
           });
 
           const marker = L.marker([avgLat, avgLon], { 

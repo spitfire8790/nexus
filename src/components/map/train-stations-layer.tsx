@@ -142,9 +142,10 @@ export function TrainStationsLayer() {
         // Group stations by name (excluding platform info)
         const stationGroups = stations.reduce((acc: { [key: string]: StationGroup }, station) => {
           // Extract base station name without platform info
-          const baseName = station.stop_name.split(',')[0].trim();
-          const lat = parseFloat(station.stop_lat);
-          const lon = parseFloat(station.stop_lon);
+          const baseName = station.stop_name
+            .split(',')[0]
+            .trim()
+            .replace(/ Station$/, '');  // Remove "Station" suffix
           
           if (!acc[baseName]) {
             acc[baseName] = {
@@ -155,8 +156,8 @@ export function TrainStationsLayer() {
             };
           }
           
-          acc[baseName].lat += lat;
-          acc[baseName].lon += lon;
+          acc[baseName].lat += parseFloat(station.stop_lat);
+          acc[baseName].lon += parseFloat(station.stop_lon);
           acc[baseName].count++;
           
           return acc;
@@ -184,8 +185,9 @@ export function TrainStationsLayer() {
                 ` : ''}
               </div>
             `,
-            iconSize: showLabel ? [40, 60] : [24, 24],
-            iconAnchor: showLabel ? [20, 30] : [12, 12]
+            iconSize: [24, 24],  
+            iconAnchor: [12, 12],  
+            popupAnchor: [0, -12]  
           });
 
           const marker = L.marker([avgLat, avgLon], { 

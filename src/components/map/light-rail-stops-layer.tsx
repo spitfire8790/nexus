@@ -142,9 +142,10 @@ export function LightRailStopsLayer() {
         // Group stops by name (excluding platform info)
         const stopGroups = stops.reduce((acc: { [key: string]: StopGroup }, stop) => {
           // Extract base stop name without platform info
-          const baseName = stop.stop_name.split(',')[0].trim();
-          const lat = parseFloat(stop.stop_lat);
-          const lon = parseFloat(stop.stop_lon);
+          const baseName = stop.stop_name
+            .split(',')[0]
+            .trim()
+            .replace(/ Light Rail$/, '');  // Remove "Light Rail" suffix
           
           if (!acc[baseName]) {
             acc[baseName] = {
@@ -155,8 +156,8 @@ export function LightRailStopsLayer() {
             };
           }
           
-          acc[baseName].lat += lat;
-          acc[baseName].lon += lon;
+          acc[baseName].lat += parseFloat(stop.stop_lat);
+          acc[baseName].lon += parseFloat(stop.stop_lon);
           acc[baseName].count++;
           
           return acc;
@@ -184,8 +185,9 @@ export function LightRailStopsLayer() {
                 ` : ''}
               </div>
             `,
-            iconSize: showLabel ? [40, 60] : [24, 24],
-            iconAnchor: showLabel ? [20, 30] : [12, 12]
+            iconSize: [24, 24],  // Fixed size for the icon
+            iconAnchor: [12, 12],  // Exact center of the icon
+            popupAnchor: [0, -12]  // Popup appears just above the icon
           });
 
           const marker = L.marker([avgLat, avgLon], { 
