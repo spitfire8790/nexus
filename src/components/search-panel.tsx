@@ -151,128 +151,132 @@ export function SearchPanel() {
 
   return (
     <div className="w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/75">
-      <div className="container flex items-center gap-2 p-2">
-        <ToggleGroup type="single" value={searchMode} onValueChange={(value) => {
-          if (value) {
-            setSearchMode(value);
-            setSearchValue("");
-            setSuggestions([]);
-            setLotSuggestions([]);
-            setSelectedProperty(null);
-          }
-        }}>
-          <ToggleGroupItem value="address" aria-label="Search by address">
-            <MapPin className="h-4 w-4" />
-          </ToggleGroupItem>
-          <ToggleGroupItem value="lot" aria-label="Search by lot">
-            <FileText className="h-4 w-4" />
-          </ToggleGroupItem>
-        </ToggleGroup>
+      <div className="container p-2 search-panel-container">
+        <div className="flex items-center gap-2">
+          <ToggleGroup type="single" value={searchMode} onValueChange={(value) => {
+            if (value) {
+              setSearchMode(value);
+              setSearchValue("");
+              setSuggestions([]);
+              setLotSuggestions([]);
+              setSelectedProperty(null);
+            }
+          }} className="flex-shrink-0">
+            <ToggleGroupItem value="address" aria-label="Search by address">
+              <MapPin className="h-4 w-4" />
+            </ToggleGroupItem>
+            <ToggleGroupItem value="lot" aria-label="Search by lot">
+              <FileText className="h-4 w-4" />
+            </ToggleGroupItem>
+          </ToggleGroup>
 
-        <Popover open={searchOpen} onOpenChange={setSearchOpen}>
-          <PopoverTrigger asChild>
-            <Button 
-              variant="outline" 
-              role="combobox" 
-              aria-expanded={searchOpen} 
-              className="w-[400px] justify-between text-left"
+          <Popover open={searchOpen} onOpenChange={setSearchOpen} className="flex-grow">
+            <PopoverTrigger asChild>
+              <Button 
+                variant="outline" 
+                role="combobox" 
+                aria-expanded={searchOpen} 
+                className="w-[300px] justify-between text-left"
+              >
+                {displayValue}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[400px] p-0">
+              <Command>
+                <CommandInput
+                  placeholder={`Search by ${searchMode}...`}
+                  value={searchValue}
+                  onValueChange={handleSearchChange}
+                />
+                <CommandList>
+                  <CommandEmpty>No results found.</CommandEmpty>
+                  <CommandGroup>
+                    {searchMode === "address" ? (
+                      suggestions.map((suggestion) => (
+                        <CommandItem
+                          key={`${suggestion.propId}-${suggestion.GURASID}`}
+                          value={suggestion.address}
+                          onSelect={handleSelect}
+                        >
+                          {suggestion.address}
+                        </CommandItem>
+                      ))
+                    ) : (
+                      lotSuggestions.map((lot) => (
+                        <CommandItem
+                          key={lot.cadId}
+                          value={lot.lot}
+                          onSelect={handleSelect}
+                        >
+                          {lot.lot}
+                        </CommandItem>
+                      ))
+                    )}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
+
+          <Button
+            variant={mapSelectMode ? "default" : "outline"}
+            size="sm"
+            className="hidden md:flex gap-2 whitespace-nowrap"
+            onClick={() => setMapSelectMode(!mapSelectMode)}
+          >
+            <MousePointerClick className="h-4 w-4" />
+            Search on map
+          </Button>
+
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={() => {
+                setSelectedProperty(null);
+                setHeaderAddress(null);
+              }}
             >
-              {displayValue}
+              <X className="h-4 w-4" />
+              Clear
             </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-[400px] p-0">
-            <Command>
-              <CommandInput
-                placeholder={`Search by ${searchMode}...`}
-                value={searchValue}
-                onValueChange={handleSearchChange}
-              />
-              <CommandList>
-                <CommandEmpty>No results found.</CommandEmpty>
-                <CommandGroup>
-                  {searchMode === "address" ? (
-                    suggestions.map((suggestion) => (
-                      <CommandItem
-                        key={`${suggestion.propId}-${suggestion.GURASID}`}
-                        value={suggestion.address}
-                        onSelect={handleSelect}
-                      >
-                        {suggestion.address}
-                      </CommandItem>
-                    ))
-                  ) : (
-                    lotSuggestions.map((lot) => (
-                      <CommandItem
-                        key={lot.cadId}
-                        value={lot.lot}
-                        onSelect={handleSelect}
-                      >
-                        {lot.lot}
-                      </CommandItem>
-                    ))
-                  )}
-                </CommandGroup>
-              </CommandList>
-            </Command>
-          </PopoverContent>
-        </Popover>
 
-        <Button
-          variant={mapSelectMode ? "default" : "outline"}
-          size="sm"
-          className="gap-2"
-          onClick={() => setMapSelectMode(!mapSelectMode)}
-        >
-          <MousePointerClick className="h-4 w-4" />
-          Search on map
-        </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2 whitespace-nowrap"
+              onClick={() => {
+                if (!selectedProperty) return;
+                
+                const geojson = convertToGeoJSON(selectedProperty.geometry);
+                if (!geojson) return;
+                
+                const savedProperty = {
+                  id: selectedProperty.propId || crypto.randomUUID(),
+                  address: selectedProperty.address || 'Unknown Address',
+                  geometry: geojson
+                };
+                
+                addSavedProperty(savedProperty);
+              }}
+              disabled={!selectedProperty}
+            >
+              <BookmarkPlus className="h-4 w-4" />
+              Save property
+            </Button>
 
-        <Button
-          variant="outline"
-          size="sm"
-          className="gap-2"
-          onClick={() => {
-            setSelectedProperty(null);
-            setHeaderAddress(null);
-          }}
-        >
-          <X className="h-4 w-4" />
-          Clear
-        </Button>
-
-        <Button
-          variant="outline"
-          size="sm"
-          className="gap-2"
-          onClick={() => {
-            if (!selectedProperty) return;
-            
-            const geojson = convertToGeoJSON(selectedProperty.geometry);
-            if (!geojson) return;
-            
-            const savedProperty = {
-              id: selectedProperty.propId || crypto.randomUUID(),
-              address: selectedProperty.address || 'Unknown Address',
-              geometry: geojson
-            };
-            
-            addSavedProperty(savedProperty);
-          }}
-          disabled={!selectedProperty}
-        >
-          <BookmarkPlus className="h-4 w-4" />
-          Save Property
-        </Button>
-
-        <Button
-          variant="outline"
-          size="sm"
-          className="gap-2"
-          onClick={() => toggleChat()}
-        >
-          <MessageCircle className="h-4 w-4" />
-          Chat
-        </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2 whitespace-nowrap"
+              onClick={() => toggleChat()}
+            >
+              <MessageCircle className="h-4 w-4" />
+              Chat
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   );

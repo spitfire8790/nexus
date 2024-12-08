@@ -24,7 +24,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Layers, Tag, Filter, X, SlidersHorizontal, ChevronDown } from "lucide-react";
+import { Layers, Tag, Filter, X, SlidersHorizontal, ChevronDown, MapPin, Train, AlertTriangle, FileText, Image, ThermometerSun, Building2, Trees, Map, Grid } from "lucide-react";
 import { useState } from 'react';
 import { MapLayer, ZoneOption, ZONE_OPTIONS } from "@/lib/map-store";
 import {
@@ -41,6 +41,7 @@ import { TooltipWrapper } from "@/components/ui/tooltip-wrapper";
 
 interface SortableLayerItemProps {
   layer: MapLayer;
+  groupEnabled: boolean;
   onToggle: (id: string) => void;
   onUpdateZones: (id: string, zones: string[]) => void;
   onUpdateOpacity: (id: string, opacity: number) => void;
@@ -48,7 +49,15 @@ interface SortableLayerItemProps {
   onUpdateFSRRange: (id: string, range: { min: number; max: number } | null) => void;
 }
 
-function SortableLayerItem({ layer, onToggle, onUpdateZones, onUpdateOpacity, onUpdateLayerUrl, onUpdateFSRRange }: SortableLayerItemProps) {
+function SortableLayerItem({ 
+  layer, 
+  groupEnabled,
+  onToggle, 
+  onUpdateZones, 
+  onUpdateOpacity, 
+  onUpdateLayerUrl, 
+  onUpdateFSRRange 
+}: SortableLayerItemProps) {
   const [showFilter, setShowFilter] = useState(false);
   const [opacityValue, setOpacityValue] = useState(layer.opacity ? Math.round(layer.opacity * 100) : 100);
   const [metromapToken, setMetromapToken] = useState('');
@@ -412,6 +421,19 @@ interface CollapsibleGroupProps {
   onUpdateFSRRange: (id: string, range: { min: number; max: number } | null) => void;
 }
 
+// Add icons for all layer groups
+const GROUP_ICONS: Record<string, React.ReactNode> = {
+  'imagery': <Image className="h-4 w-4" />,
+  'cadastre': <Grid className="h-4 w-4" />,
+  'climate': <ThermometerSun className="h-4 w-4" />,
+  'base': <MapPin className="h-4 w-4" />,
+  'transport': <Train className="h-4 w-4" />,
+  'planning': <FileText className="h-4 w-4" />,
+  'constraints': <AlertTriangle className="h-4 w-4" />,
+  'development': <Building2 className="h-4 w-4" />,
+  'environment': <Trees className="h-4 w-4" />
+};
+
 function CollapsibleGroup({ 
   group, 
   isCollapsed, 
@@ -422,18 +444,47 @@ function CollapsibleGroup({
   onUpdateLayerUrl, 
   onUpdateFSRRange 
 }: CollapsibleGroupProps) {
+  const [isGroupEnabled, setIsGroupEnabled] = useState(false);
+
+  // Update map store when group enabled state changes
+  useEffect(() => {
+    const { updateGroupEnabled } = useMapStore.getState();
+    updateGroupEnabled(group.id, isGroupEnabled);
+
+    // Toggle all child layers based on group state
+    group.layers.forEach(layer => {
+      if (layer.enabled && !isGroupEnabled) {
+        onLayerToggle(layer.id);
+      }
+    });
+  }, [isGroupEnabled, group.id]);
+
   return (
     <div className="space-y-2">
-      <button 
-        onClick={onToggle}
-        className="w-full flex items-center justify-between text-sm font-medium text-muted-foreground hover:text-foreground"
-      >
-        <span>{group.name}</span>
-        <ChevronDown className={cn(
-          "h-4 w-4 transition-transform duration-200",
-          isCollapsed ? "" : "transform rotate-180"
-        )} />
-      </button>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          {GROUP_ICONS[group.id]}
+          <span className="text-sm font-medium text-muted-foreground hover:text-foreground">
+            {group.name}
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <Switch
+            checked={isGroupEnabled}
+            onCheckedChange={setIsGroupEnabled}
+            className="ml-2"
+          />
+          <button 
+            onClick={onToggle}
+            className="flex items-center justify-between"
+          >
+            <ChevronDown className={cn(
+              "h-4 w-4 transition-transform duration-200",
+              isCollapsed ? "" : "transform rotate-180"
+            )} />
+          </button>
+        </div>
+      </div>
       {!isCollapsed && (
         <div className="space-y-1">
           {group.layers
@@ -442,7 +493,12 @@ function CollapsibleGroup({
               <SortableLayerItem
                 key={layer.id}
                 layer={layer}
-                onToggle={onLayerToggle}
+                onToggle={(id) => {
+                  if (isGroupEnabled) {
+                    onLayerToggle(id);
+                  }
+                }}
+                groupEnabled={isGroupEnabled}
                 onUpdateZones={onUpdateZones}
                 onUpdateOpacity={onUpdateOpacity}
                 onUpdateLayerUrl={onUpdateLayerUrl}
@@ -464,7 +520,13 @@ export function LayerControl() {
     updateLayerUrl,
     updateFSRRange 
   } = useMapStore();
-  const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
+
+  const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>(() => {
+    return layerGroups.reduce((acc, group) => ({
+      ...acc,
+      [group.id]: true
+    }), {});
+  });
 
   const toggleGroup = (groupId: string) => {
     setCollapsedGroups(prev => ({
@@ -480,19 +542,25 @@ export function LayerControl() {
         <h2 className="font-semibold text-left">Map Layers</h2>
       </div>
       <ScrollArea className="h-[calc(100%-60px)]">
-        <div className="p-4 space-y-6">
-          {layerGroups.map((group) => (
-            <CollapsibleGroup
-              key={group.id}
-              group={group}
-              isCollapsed={collapsedGroups[group.id] || false}
-              onToggle={() => toggleGroup(group.id)}
-              onLayerToggle={toggleLayer}
-              onUpdateZones={updateSelectedZones}
-              onUpdateOpacity={updateLayerOpacity}
-              onUpdateLayerUrl={updateLayerUrl}
-              onUpdateFSRRange={updateFSRRange}
-            />
+        <div className="p-4">
+          {layerGroups.map((group, index) => (
+            <div key={group.id}>
+              <CollapsibleGroup
+                group={group}
+                isCollapsed={collapsedGroups[group.id]}
+                onToggle={() => toggleGroup(group.id)}
+                onLayerToggle={toggleLayer}
+                onUpdateZones={updateSelectedZones}
+                onUpdateOpacity={updateLayerOpacity}
+                onUpdateLayerUrl={updateLayerUrl}
+                onUpdateFSRRange={updateFSRRange}
+              />
+              {index < layerGroups.length - 1 && (
+                <div className="mx-0 my-3">
+                  <div className="h-[1px] bg-border" />
+                </div>
+              )}
+            </div>
           ))}
         </div>
       </ScrollArea>

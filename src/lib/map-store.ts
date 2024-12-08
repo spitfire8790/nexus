@@ -81,6 +81,11 @@ interface MapState {
   setSavedProperties: (properties: SavedProperty[]) => void;
   addSavedProperty: (property: Omit<SavedProperty, 'id'>) => Promise<void>;
   removeSavedProperty: (id: string) => Promise<void>;
+  toggleLayerGroup: (groupId: string, enabled: boolean) => void;
+  groupEnabledStates: Record<string, boolean>;
+  updateGroupEnabled: (groupId: string, enabled: boolean) => void;
+  showSavedPropertyMarkers: boolean;
+  setShowSavedPropertyMarkers: (show: boolean) => void;
 }
 
 export interface ZoneOption {
@@ -191,8 +196,8 @@ interface SavedProperty {
 export const useMapStore = create<MapState>((set, get) => ({
   layerGroups: [
     {
-      id: 'basemaps',
-      name: 'Base Maps',
+      id: 'imagery',
+      name: 'Imagery',
       layers: [
         {
           id: 'metromap',
@@ -212,7 +217,10 @@ export const useMapStore = create<MapState>((set, get) => ({
           type: 'tile',
           opacity: 1,
           attribution: ' NSW Government - Department of Customer Service',
-          className: 'seamless-tiles'
+          className: 'seamless-tiles',
+          maxZoom: 19,
+          maxNativeZoom: 19,
+          tileSize: 256
         }
       ]
     },
@@ -551,5 +559,33 @@ export const useMapStore = create<MapState>((set, get) => ({
       console.error('Error removing property:', error);
       throw error;
     }
-  }
+  },
+
+  toggleLayerGroup: (groupId: string, enabled: boolean) => {
+    set((state) => ({
+      layerGroups: state.layerGroups.map((group) => {
+        if (group.id === groupId) {
+          return {
+            ...group,
+            layers: group.layers.map((layer) => ({
+              ...layer,
+              enabled: enabled
+            }))
+          };
+        }
+        return group;
+      })
+    }));
+  },
+
+  groupEnabledStates: {},
+  updateGroupEnabled: (groupId, enabled) =>
+    set((state) => ({
+      groupEnabledStates: {
+        ...state.groupEnabledStates,
+        [groupId]: enabled
+      }
+    })),
+  showSavedPropertyMarkers: true,
+  setShowSavedPropertyMarkers: (show) => set({ showSavedPropertyMarkers: show }),
 }));

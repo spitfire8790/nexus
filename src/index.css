@@ -252,6 +252,10 @@ html, body {
   background: rgba(255, 255, 255, 0.9);
   border: 1px solid #2563eb;
   border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 12px;
+  white-space: nowrap;
+  z-index: 1000;
 }
 
 .leaflet-draw-guide-dash {
@@ -267,15 +271,11 @@ html, body {
   font-size: 12px;
   white-space: nowrap;
   box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  z-index: 1000;
 }
 
-.measure-control {
-  background: white !important;
-  border: none !important;
-}
-
-.measure-control button {
-  height: 32px !important;
+.leaflet-drawing {
+  cursor: crosshair !important;
 }
 
 /* Add these transitions */
@@ -337,4 +337,206 @@ html, body {
 
 .custom-station-icon > div {
   color: #1d4ed8;
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  /* Remove the problematic switch styles */
+  button, 
+  [role="button"],
+  .leaflet-control-layers label {
+    min-height: 44px;
+    padding: 12px;
+    font-size: 16px;
+  }
+
+  /* Keep only the essential switch styles */
+  [role="switch"] {
+    min-height: unset !important;
+    padding: 0 !important;
+  }
+
+  /* Improve popup readability */
+  .leaflet-popup-content {
+    font-size: 16px !important;
+    line-height: 1.5 !important;
+    padding: 12px !important;
+  }
+
+  /* Make buttons more touch-friendly */
+  button, 
+  [role="button"],
+  .leaflet-control-layers label {
+    min-height: 44px;
+    padding: 12px;
+    font-size: 16px;
+  }
+
+  /* Improve form inputs on mobile */
+  input, 
+  select, 
+  textarea {
+    font-size: 16px !important; /* Prevents iOS zoom on focus */
+    padding: 12px !important;
+  }
+
+  /* Adjust layer control for mobile */
+  .leaflet-control-layers {
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1) !important;
+  }
+
+  .leaflet-control-layers-expanded {
+    padding: 12px !important;
+    min-width: 200px !important;
+  }
+
+  /* Improve layer control switches on mobile */
+  .layer-control-item {
+    display: grid;
+    grid-template-columns: auto 1fr auto auto;
+    gap: 0.75rem;
+    align-items: center;
+    padding: 0.75rem;
+    width: 100%;
+  }
+
+  /* Ensure switches maintain proper dimensions */
+  .layer-control-item [role="switch"] {
+    min-width: 36px;
+    height: 20px;
+    padding: 0;
+    transform: none;
+  }
+
+  /* Adjust spacing for the grip handle */
+  .layer-control-item .grip-handle {
+    padding: 0.5rem;
+  }
+
+  /* Improve label readability */
+  .layer-control-item label {
+    font-size: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Ensure switch maintains horizontal orientation on mobile */
+  [role="switch"] {
+    transform: none !important;
+    min-width: 36px;
+    height: 20px;
+  }
+
+  [role="switch"][data-state="checked"] {
+    transform: none !important;
+  }
+
+  /* Center zoom controls on mobile */
+  .leaflet-control-zoom {
+    position: absolute !important;
+    right: 16px !important;
+    bottom: calc(50% + 60px) !important;
+    transform: translateY(50%) !important;
+    margin: 0 !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+    z-index: 1000 !important;
+  }
+
+  .leaflet-control-zoom a {
+    width: 36px !important;
+    height: 36px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 18px !important;
+    padding: 0 !important;
+  }
+
+  /* Make analytics tabs horizontal on mobile */
+  [data-orientation="vertical"].analytics-tabs {
+    flex-direction: column !important;
+  }
+
+  [data-orientation="vertical"].analytics-tabs > div:first-child {
+    width: 100% !important;
+    height: auto !important;
+    border-right: 0 !important;
+    border-bottom: 1px solid hsl(var(--border));
+  }
+
+  [data-orientation="vertical"].analytics-tabs [role="tablist"] {
+    flex-direction: row !important;
+    justify-content: flex-start;
+    padding: 1rem !important;
+    gap: 1.5rem !important;
+    overflow-x: hidden;
+  }
+
+  /* Hide the empty space above tabs */
+  [data-orientation="vertical"].analytics-tabs > div:first-child > div:first-child {
+    display: none;
+  }
+
+  /* Hide tooltips on mobile */
+  .analytics-tabs .group span[class*="absolute"] {
+    display: none;
+  }
+
+  /* Make search button responsive on mobile */
+  .search-panel-container {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .search-panel-container [role="combobox"] {
+    width: 100% !important;
+    flex: 1;
+  }
+
+  .search-panel-container .search-actions {
+    display: flex;
+    gap: 0.5rem;
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .search-panel-container .search-actions button {
+    flex: 1;
+  }
+}
+
+/* Improve scrolling on mobile */
+.touch-scroll {
+  -webkit-overflow-scrolling: touch;
+  overflow-y: auto;
+}
+
+/* Prevent text selection while panning */
+.leaflet-container {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  touch-action: pan-x pan-y;
+}
+
+/* Mobile header styles */
+@media (max-width: 768px) {
+  .mobile-header {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    background-color: white;
+  }
+
+  .mobile-header .logo {
+    height: 24px;
+  }
+
+  .sheet-content {
+    padding-top: env(safe-area-inset-top);
+    height: 100vh;
+  }
 }

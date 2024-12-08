@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
-import { MapContainer, TileLayer, useMap, LayersControl, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, useMap, LayersControl, useMapEvents, ZoomControl } from 'react-leaflet';
 import * as L from 'leaflet';
 import * as EL from 'esri-leaflet';
 import * as ELG from 'esri-leaflet-geocoder';
 import 'leaflet/dist/leaflet.css';
+import 'leaflet-draw/dist/leaflet.draw.css';
 import 'esri-leaflet-geocoder/dist/esri-leaflet-geocoder.css';
 import { useMapStore } from '@/lib/map-store';
 import { Deck } from '@deck.gl/core';
@@ -15,6 +16,9 @@ import { TemperatureLegend } from './map/temperature-legend';
 import { TrainStationsLayer } from './map/train-stations-layer';
 import { LightRailStopsLayer } from './map/light-rail-stops-layer';
 import { MetroStationsLayer } from './map/sydney-metro-station-layer';
+import { MapMeasureControl } from './map/map-measure-control';
+import { DevelopmentApplicationsLayer } from './map/development-applications-layer';
+import { ImageryDateOverlay } from './map/imagery-date-overlay';
 
 // Fix for default marker icons in Leaflet with Vite
 import icon from 'leaflet/dist/images/marker-icon.png';
@@ -34,36 +38,35 @@ let DefaultIcon = L.Icon.extend({
 L.Marker.prototype.options.icon = new DefaultIcon();
 
 // Initialize Leaflet-Geoman
-const initGeoman = (map: L.Map) => {
-  return new Promise((resolve, reject) => {
-    try {
-      // Dynamically import Geoman
-      require('@geoman-io/leaflet-geoman-free');
-      require('@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css');
-      
-      // Wait for next tick to ensure plugin is loaded
-      setTimeout(() => {
-        if (map.pm) {
-          map.pm.addControls({
-            position: 'topleft',
-            drawCircle: false,
-            drawCircleMarker: false,
-            drawPolyline: false,
-            drawRectangle: false,
-            drawPolygon: false,
-            drawMarker: false,
-            cutPolygon: false,
-            rotateMode: false,
-          });
-          resolve(true);
-        } else {
-          reject(new Error('Geoman not initialized properly'));
-        }
-      }, 100);
-    } catch (error) {
-      reject(error);
+const initGeoman = async (map: L.Map) => {
+  try {
+    // Dynamically import Geoman
+    await import('@geoman-io/leaflet-geoman-free');
+    await import('@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css');
+    
+    // Wait for next tick to ensure plugin is loaded
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    if (map.pm) {
+      map.pm.addControls({
+        position: 'topleft',
+        drawCircle: false,
+        drawCircleMarker: false,
+        drawPolyline: false,
+        drawRectangle: false,
+        drawPolygon: false,
+        drawMarker: false,
+        cutPolygon: false,
+        rotateMode: false,
+      });
+      return true;
+    } else {
+      throw new Error('Geoman not initialized properly');
     }
-  });
+  } catch (error) {
+    console.error('Error initializing Geoman:', error);
+    return false;
+  }
 };
 
 // Constants for pane management
@@ -242,13 +245,20 @@ function CoordinateDisplay({ position }: { position: L.LatLng | null }) {
 function OverlayLayers() {
   const map = useMap();
   const layerGroups = useMapStore((state) => state.layerGroups);
+  const groupEnabledStates = useMapStore((state) => state.groupEnabledStates);
   const layerRefs = useRef<Record<string, any>>({});
 
   useEffect(() => {
-    const allLayers = layerGroups.flatMap(group => group.layers);
+    const allLayers = layerGroups.flatMap(group => ({
+      ...group,
+      layers: group.layers.map(layer => ({
+        ...layer,
+        effectivelyEnabled: layer.enabled && groupEnabledStates[group.id]
+      }))
+    })).flatMap(group => group.layers);
 
     allLayers.forEach(layer => {
-      if (layer.enabled) {
+      if (layer.effectivelyEnabled) {
         // Skip custom layers as they're handled by their own components
         if (layer.type === 'custom') {
           return;
@@ -275,7 +285,11 @@ function OverlayLayers() {
               opacity: layer.opacity,
               attribution: layer.attribution,
               className: layer.className,
-              pane: OVERLAY_PANE
+              pane: OVERLAY_PANE,
+              maxZoom: 19,
+              maxNativeZoom: 19,
+              tileSize: 256,
+              crossOrigin: true
             }).addTo(map);
           } else if (layer.type === 'geojson') {
             layerRefs.current[layer.id] = L.geoJSON(layer.data, {
@@ -312,9 +326,15 @@ function OverlayLayers() {
       });
       layerRefs.current = {};
     };
-  }, [map, layerGroups]);
+  }, [map, layerGroups, groupEnabledStates]);
 
-  return null;
+  return (
+    <>
+      <LayersControl.Overlay name="Development Applications" checked>
+        <DevelopmentApplicationsLayer />
+      </LayersControl.Overlay>
+    </>
+  );
 }
 
 function PropertyBoundary() {
@@ -512,39 +532,121 @@ function MapLayerController() {
 export function MapView() {
   const mapRef = useRef<L.Map | null>(null);
   const savedLayersRef = useRef<{ [key: string]: L.GeoJSON }>({});
+  const markerLayersRef = useRef<{ [key: string]: L.Marker }>({});
   const isShowingAmenities = useMapStore((state) => state.isShowingAmenities);
   const savedProperties = useMapStore((state) => state.savedProperties);
+  const measureMode = useMapStore((state) => state.measureMode);
+  const showSavedProperties = useMapStore((state) => state.showSavedPropertyMarkers);
   
   useEffect(() => {
     if (!mapRef.current) return;
     const map = mapRef.current;
+    const currentZoom = map.getZoom();
 
-    // Remove all existing saved property layers
+    // Remove all existing layers
     Object.values(savedLayersRef.current).forEach(layer => {
       if (map.hasLayer(layer)) {
         map.removeLayer(layer);
       }
     });
-    savedLayersRef.current = {};
-
-    // Add new layers for each saved property
-    savedProperties.forEach(property => {
-      const layerId = `saved-property-${property.id}`;
-      
-      const layer = L.geoJSON(property.geometry, {
-        style: {
-          color: '#2563eb',
-          weight: 2,
-          opacity: 0.7,
-          fillOpacity: 0.1
-        }
-      })
-      .bindPopup(property.address)
-      .addTo(map);
-
-      savedLayersRef.current[layerId] = layer;
+    Object.values(markerLayersRef.current).forEach(marker => {
+      if (map.hasLayer(marker)) {
+        map.removeLayer(marker);
+      }
     });
-  }, [mapRef, savedProperties]);
+    
+    savedLayersRef.current = {};
+    markerLayersRef.current = {};
+
+    // Only add layers if showSavedProperties is true
+    if (showSavedProperties) {
+      savedProperties.forEach(property => {
+        const layerId = `saved-property-${property.id}`;
+        
+        // Always add polygon layer when showing saved properties
+        const layer = L.geoJSON(property.geometry, {
+          style: {
+            color: '#2563eb',
+            weight: 2,
+            opacity: 0.7,
+            fillOpacity: 0.1
+          }
+        })
+        .bindPopup(property.address);
+        
+        layer.addTo(map);
+        savedLayersRef.current[layerId] = layer;
+
+        // Calculate centroid for marker
+        const coords = property.geometry.type === 'Feature' 
+          ? property.geometry.geometry.coordinates[0] 
+          : property.geometry.coordinates[0];
+        
+        const centroid = coords.reduce(
+          (acc: [number, number], curr: number[]) => [acc[0] + curr[0], acc[1] + curr[1]],
+          [0, 0]
+        ).map((sum: number) => sum / coords.length);
+
+        // Create marker
+        const marker = L.marker([centroid[1], centroid[0]], {
+          icon: L.divIcon({
+            html: `
+              <div class="flex flex-col items-center">
+                <div class="w-6 h-6 rounded-full bg-blue-500 border-2 border-white shadow-lg flex items-center justify-center">
+                  <i class="fas fa-map-marker text-white text-xs"></i>
+                </div>
+                <div class="bg-white/90 px-1.5 py-0.5 rounded-md shadow-sm mt-1 whitespace-nowrap">
+                  <span class="text-[10px] font-bold text-blue-500">
+                    ${property.address.replace(/\s\d{4}$/, '')}
+                  </span>
+                </div>
+              </div>
+            `,
+            className: 'saved-property-marker',
+            iconSize: [120, 45],    // Increased height to accommodate label
+            iconAnchor: [60, 22],   // Centered horizontally, slightly above vertical center
+            popupAnchor: [0, -30]   // Adjusted popup position
+          })
+        }).bindPopup(property.address);
+
+        // Only show markers at zoom threshold
+        if (currentZoom <= 16) {
+          marker.addTo(map);
+          markerLayersRef.current[layerId] = marker;
+        }
+      });
+    }
+
+    // Add zoom handler
+    const handleZoomEnd = () => {
+      if (!showSavedProperties) return;
+      
+      const newZoom = map.getZoom();
+      
+      savedProperties.forEach(property => {
+        const layerId = `saved-property-${property.id}`;
+        const marker = markerLayersRef.current[layerId];
+
+        if (newZoom <= 16) {
+          if (marker && !map.hasLayer(marker)) {
+            marker.addTo(map);
+          }
+        } else {
+          if (marker && map.hasLayer(marker)) {
+            map.removeLayer(marker);
+          }
+        }
+      });
+    };
+
+    map.on('zoomend', handleZoomEnd);
+    
+    return () => {
+      map.off('zoomend', handleZoomEnd);
+      Object.values(savedLayersRef.current).forEach(layer => layer.remove());
+      Object.values(markerLayersRef.current).forEach(marker => marker.remove());
+    };
+  }, [mapRef, savedProperties, showSavedProperties]);
 
   return (
     <div className="relative w-full h-full">
@@ -555,13 +657,26 @@ export function MapView() {
         className="w-full h-full"
         ref={mapRef}
         style={{ background: '#f8f9fa' }}
+        touchZoom={true}
+        dragging={true}
+        tap={true}
+        zoomControl={false}
       >
         <MapController />
         <MapClickHandler />
         <OverlayLayers />
         <PropertyBoundary />
         <MapLayerController />
-        <LayersControl position="topright">
+        <MapMeasureControl />
+        <ImageryDateOverlay />
+        {/* Move zoom control to bottom right for better thumb access */}
+        <div className="absolute bottom-4 right-4 z-[1000] flex flex-col gap-2">
+          <ZoomControl position="bottomright" />
+        </div>
+        <LayersControl 
+          position="topright"
+          collapsed={true} // Collapse by default on mobile
+        >
           <LayersControl.BaseLayer checked name="Carto">
             <TileLayer
               url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png"
