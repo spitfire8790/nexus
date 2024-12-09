@@ -81,7 +81,7 @@ export function PlanningTab() {
         });
 
         const API_BASE_URL = process.env.NODE_ENV === 'development' 
-          ? 'http://localhost:5173'
+          ? 'http://localhost:5174'
           : '';
 
         const permittedResponse = await fetch(`${API_BASE_URL}/api/proxy`, {
