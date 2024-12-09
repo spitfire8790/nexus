@@ -231,7 +231,7 @@ function meetsStreetFrontageRequirement(
 
         const API_BASE_URL = process.env.NODE_ENV === 'development' 
           ? 'http://localhost:5174'
-          : '';
+          : window.location.origin; ;
 
         const permittedResponse = await fetch(`${API_BASE_URL}/api/proxy`, {
           headers: {
