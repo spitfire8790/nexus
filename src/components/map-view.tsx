@@ -19,6 +19,7 @@ import { MetroStationsLayer } from './map/sydney-metro-station-layer';
 import { MapMeasureControl } from './map/map-measure-control';
 import { DevelopmentApplicationsLayer } from './map/development-applications-layer';
 import { ImageryDateOverlay } from './map/imagery-date-overlay';
+import { RoadsLayer } from './map/roads-layer';
 
 // Fix for default marker icons in Leaflet with Vite
 import icon from 'leaflet/dist/images/marker-icon.png';
@@ -333,6 +334,9 @@ function OverlayLayers() {
       <LayersControl.Overlay name="Development Applications" checked>
         <DevelopmentApplicationsLayer />
       </LayersControl.Overlay>
+      <LayersControl.Overlay name="Roads" checked>
+        <RoadsLayer />
+      </LayersControl.Overlay>
     </>
   );
 }
@@ -343,12 +347,7 @@ function PropertyBoundary() {
   const boundaryRef = useRef<L.GeoJSON | null>(null);
 
   useEffect(() => {
-    console.log('PropertyBoundary effect triggered');
-    console.log('Selected property:', selectedProperty);
-
     if (selectedProperty?.geometry) {
-      console.log('Geometry found:', selectedProperty.geometry);
-      
       if (boundaryRef.current) {
         map.removeLayer(boundaryRef.current);
       }
@@ -362,8 +361,6 @@ function PropertyBoundary() {
         });
       });
 
-      console.log('Transformed coordinates:', transformedRings);
-
       const geoJsonFeature: GeoJSON.Feature = {
         type: 'Feature',
         properties: {},
@@ -372,8 +369,6 @@ function PropertyBoundary() {
           coordinates: transformedRings
         }
       };
-      
-      console.log('Created GeoJSON feature:', geoJsonFeature);
 
       try {
         boundaryRef.current = L.geoJSON(geoJsonFeature, {
@@ -385,11 +380,8 @@ function PropertyBoundary() {
             fillOpacity: 0.1
           }
         }).addTo(map);
-        console.log('Successfully added boundary layer to map');
 
         const bounds = boundaryRef.current.getBounds();
-        console.log('Boundary bounds:', bounds);
-        
         map.fitBounds(bounds, {
           padding: [50, 50]
         });

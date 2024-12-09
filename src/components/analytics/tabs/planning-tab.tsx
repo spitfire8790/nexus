@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useMapStore } from '@/lib/map-store';
 import { Alert, AlertTitle} from '@/components/ui/alert';
 import { Loader2 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { apiThrottle } from '@/lib/api-throttle';
 
 interface PermittedUses {
   withConsent: string[] | null;
@@ -15,12 +16,8 @@ export function PlanningTab() {
   const selectedProperty = useMapStore((state) => state.selectedProperty);
   const setZoneInfo = useMapStore((state) => state.setZoneInfo);
   const zoneInfo = useMapStore((state) => state.zoneInfo);
-  const [permittedUses, setPermittedUses] = useState<PermittedUses>({
-    withConsent: null,
-    withoutConsent: null,
-    loading: false,
-    error: null
-  });
+  const permittedUses = useMapStore((state) => state.permittedUses);
+  const setPermittedUses = useMapStore((state) => state.setPermittedUses);
 
   useEffect(() => {
     async function fetchZoningAndPermittedUses() {
@@ -30,7 +27,7 @@ export function PlanningTab() {
 
       try {
         // First fetch zoning information
-        const zoningResponse = await fetch(
+        const zoningResponse = await apiThrottle.fetch(
           `https://api.apps1.nsw.gov.au/planning/viewersf/V1/ePlanningApi/layerintersect?type=property&id=${selectedProperty.propId}&layers=epi`
         );
 
@@ -53,7 +50,7 @@ export function PlanningTab() {
         setZoneInfo(zoneInfo);
 
         // Fetch permitted uses
-        const response = await fetch(
+        const response = await apiThrottle.fetch(
           `https://mapprod3.environment.nsw.gov.au/arcgis/rest/services/ePlanning/Planning_Portal_Principal_Planning/MapServer/19/query?` +
           `geometry=${encodeURIComponent(JSON.stringify(selectedProperty.geometry))}` +
           `&geometryType=esriGeometryPolygon` +
@@ -76,6 +73,12 @@ export function PlanningTab() {
         const zoneData = data.features[0].attributes;
         const epiName = zoneData.EPI_NAME;
         const zoneCode = zoneData.SYM_CODE;
+
+        console.log('Zoning Data:', zoneData);
+        console.log('Making proxy request with:', {
+          epiName,
+          zoneCode
+        });
 
         const API_BASE_URL = process.env.NODE_ENV === 'development' 
           ? 'http://localhost:5173'
@@ -127,7 +130,7 @@ export function PlanningTab() {
     }
 
     fetchZoningAndPermittedUses();
-  }, [selectedProperty?.propId, selectedProperty?.geometry, setZoneInfo]);
+  }, [selectedProperty?.propId, selectedProperty?.geometry, setZoneInfo, setPermittedUses]);
 
   if (!selectedProperty) {
     return (

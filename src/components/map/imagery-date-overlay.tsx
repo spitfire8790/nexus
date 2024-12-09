@@ -24,27 +24,14 @@ export function ImageryDateOverlay() {
       tile => (tile as HTMLImageElement).src?.includes('NSW_Imagery')
     );
 
-    console.log('NSW Imagery Check:', {
-      overlayEnabled,
-      baseLayerEnabled,
-      layerGroups: layerGroups,
-      tilesCount: tiles.length
-    });
-
     return overlayEnabled || baseLayerEnabled;
   };
 
   useEffect(() => {
-    if (!map) {
-      console.log('No map instance');
-      return;
-    }
-
-    console.log('ImageryDateOverlay mounted');
+    if (!map) return;
 
     const fetchImageryDate = async () => {
       if (!isNSWImageryEnabled()) {
-        console.log('NSW Imagery not enabled');
         setDateText(null);
         return;
       }
@@ -58,12 +45,9 @@ export function ImageryDateOverlay() {
         url.searchParams.append('outFields', '*');
         url.searchParams.append('returnGeometry', 'false');
         url.searchParams.append('f', 'json');
-
-        console.log('Fetching date for:', url.toString());
         
         const response = await fetch(url);
         const data = await response.json();
-        console.log('Date response:', data);
 
         if (data.features?.[0]?.attributes?.BlockStartDate) {
           const timestamp = data.features[0].attributes.BlockStartDate;
@@ -74,7 +58,6 @@ export function ImageryDateOverlay() {
           }));
         }
       } catch (error) {
-        console.error('Error fetching date:', error);
         setDateText(null);
       }
     };
@@ -91,7 +74,6 @@ export function ImageryDateOverlay() {
 
   if (!dateText || !isNSWImageryEnabled()) return null;
 
-  console.log('Rendering date overlay:', dateText);
   return (
     <div className="absolute top-4 left-4 bg-white/90 px-3 py-1.5 rounded-md shadow-sm z-[1000] text-sm">
       <span className="font-medium">Imagery Date: {dateText}</span>

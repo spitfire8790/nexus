@@ -9,7 +9,7 @@ export interface MapLayer {
   enabled: boolean;
   opacity?: number;
   attribution?: string;
-  type?: 'tile' | 'wms' | 'geojson' | 'custom' | 'dynamic';
+  type?: 'tile' | 'wms' | 'geojson' | 'custom' | 'dynamic' | 'feature';
   wmsLayers?: string;
   layerId?: number;
   showLabels?: boolean;
@@ -26,6 +26,7 @@ export interface MapLayer {
   } | null;
   timeIndex?: number;
   emissionScenario?: 'low' | 'high';
+  selectedRoadTypes?: number[];
 }
 
 interface PropertyData {
@@ -86,6 +87,19 @@ interface MapState {
   updateGroupEnabled: (groupId: string, enabled: boolean) => void;
   showSavedPropertyMarkers: boolean;
   setShowSavedPropertyMarkers: (show: boolean) => void;
+  permittedUses: {
+    withConsent: string[] | null;
+    withoutConsent: string[] | null;
+    loading: boolean;
+    error: string | null;
+  };
+  setPermittedUses: (uses: {
+    withConsent: string[] | null;
+    withoutConsent: string[] | null;
+    loading: boolean;
+    error: string | null;
+  }) => void;
+  updateSelectedRoadTypes: (layerId: string, selectedTypes: number[]) => void;
 }
 
 export interface ZoneOption {
@@ -380,6 +394,16 @@ export const useMapStore = create<MapState>((set, get) => ({
           layerId: 7,
           opacity: 1,
           attribution: '© Transport for NSW'
+        },
+        {
+          id: 'roads',
+          name: 'Roads',
+          url: 'https://portal.spatial.nsw.gov.au/server/rest/services/NSW_Transport_Theme/FeatureServer',
+          enabled: false,
+          type: 'feature',
+          layerId: 5,
+          opacity: 1,
+          attribution: '© Transport for NSW'
         }
       ]
     }
@@ -588,4 +612,23 @@ export const useMapStore = create<MapState>((set, get) => ({
     })),
   showSavedPropertyMarkers: true,
   setShowSavedPropertyMarkers: (show) => set({ showSavedPropertyMarkers: show }),
+  permittedUses: {
+    withConsent: null,
+    withoutConsent: null,
+    loading: false,
+    error: null
+  },
+  setPermittedUses: (uses) => set({ permittedUses: uses }),
+  updateSelectedRoadTypes: (layerId: string, selectedTypes: number[]) => {
+    set((state) => ({
+      layerGroups: state.layerGroups.map(group => ({
+        ...group,
+        layers: group.layers.map(layer => 
+          layer.id === layerId 
+            ? { ...layer, selectedRoadTypes: selectedTypes }
+            : layer
+        )
+      }))
+    }));
+  }
 }));

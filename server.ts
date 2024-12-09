@@ -46,11 +46,11 @@ app.get("/api/proxy", async (req, res) => {
     };
 
     console.log("🚀 Making API request to:", 
-      "https://api-uat.apps1.nsw.gov.au/eplanning/data/v0/FetchEPILandUsePermissibility");
+      "https://api.apps1.nsw.gov.au/eplanning/data/v0/FetchEPILandUsePermissibility");
     console.log("📨 With headers:", JSON.stringify(headers, null, 2));
 
     const response = await axios.get(
-      "https://api-uat.apps1.nsw.gov.au/eplanning/data/v0/FetchEPILandUsePermissibility",
+      "https://api.apps1.nsw.gov.au/eplanning/data/v0/FetchEPILandUsePermissibility",
       { headers }
     );
 

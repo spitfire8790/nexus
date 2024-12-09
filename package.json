@@ -57,7 +57,6 @@
     "@turf/turf": "^7.1.0",
     "@types/papaparse": "^5.3.15",
     "@types/react-beautiful-dnd": "^13.1.8",
-    "@types/turf": "^3.5.32",
     "@vercel/analytics": "^1.4.1",
     "@vercel/node": "^3.2.25",
     "apexcharts": "^4.1.0",
@@ -78,6 +77,7 @@
     "input-otp": "^1.2.4",
     "leaflet": "^1.9.4",
     "leaflet-draw": "^1.0.4",
+    "leaflet-geometryutil": "^0.10.3",
     "leaflet-wikipedia": "^1.1.0",
     "lottie-react": "^2.4.0",
     "lucide-react": "^0.446.0",
@@ -115,6 +115,7 @@
     "@types/node-fetch": "^2.6.12",
     "@types/react": "^18.3.9",
     "@types/react-dom": "^18.3.0",
+    "@types/turf": "^3.5.32",
     "@vitejs/plugin-react": "^4.3.1",
     "autoprefixer": "^10.4.20",
     "eslint": "^9.11.1",
@@ -130,4 +131,3 @@
     "vite": "^5.4.8"
   }
 }
-

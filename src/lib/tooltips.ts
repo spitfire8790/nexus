@@ -182,6 +182,46 @@ export const TOOLTIPS: { [key: string]: TooltipConfig } = {
     description: "Shows nearby Wikipedia articles and points of interest",
     source: "Wikipedia API",
     link: "https://www.wikipedia.org/"
+  },
+
+  "train-stations": {
+    name: "Train Stations",
+    description: "Sydney Trains and NSW TrainLink station locations across the network",
+    source: "Transport for NSW",
+    link: "https://opendata.transport.nsw.gov.au/"
+  },
+
+  "metro-stations": {
+    name: "Metro Stations", 
+    description: "Sydney Metro station locations across the network",
+    source: "Transport for NSW",
+    link: "https://opendata.transport.nsw.gov.au/"
+  },
+
+  "light-rail-stops": {
+    name: "Light Rail Stops",
+    description: "Sydney and NewcastleLight Rail stop locations across the network",
+    source: "Transport for NSW",
+    link: "https://opendata.transport.nsw.gov.au/"
+  },
+
+  "rail-lines": {
+    name: "Rail Lines",
+    description: "Railway network including Sydney Trains, NSW TrainLink, Sydney Metro and Light Rail routes",
+    source: "Transport for NSW",
+    link: "https://opendata.transport.nsw.gov.au/"
+  },
+
+  "roads": {
+    name: "Roads",
+    description: "NSW road network classified by function and hierarchy.",
+    source: "NSW Department of Customer Service (Spatial Services)",
+    link: "https://portal.spatial.nsw.gov.au/server/rest/services/NSW_Transport_Theme/MapServer/5"
+  },
+
+  streetFrontage: {
+    title: "Street Frontage",
+    description: "The length of property boundaries that directly face a public road. Multiple frontages may be detected if the property is on a corner or has access to multiple streets."
   }
 };
 
