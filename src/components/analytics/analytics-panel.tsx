@@ -67,6 +67,38 @@ export function AnalyticsPanel() {
     fetchAddress();
   }, [selectedProperty?.propId, setHeaderAddress]);
 
+  useEffect(() => {
+    if (!selectedProperty?.propId) return;
+
+    const fetchAllTabData = async () => {
+      try {
+        const overviewTabRef = document.createElement('div');
+        const planningTabRef = document.createElement('div');
+        const developmentTabRef = document.createElement('div');
+        const salesTabRef = document.createElement('div');
+        const amenitiesTabRef = document.createElement('div');
+        const demographicsTabRef = document.createElement('div');
+        const climateTabRef = document.createElement('div');
+        const imageryTabRef = document.createElement('div');
+        const wikiTabRef = document.createElement('div');
+
+        overviewTabRef.innerHTML = '<overview-tab></overview-tab>';
+        planningTabRef.innerHTML = '<planning-tab></planning-tab>';
+        developmentTabRef.innerHTML = '<development-tab></development-tab>';
+        salesTabRef.innerHTML = '<sales-tab></sales-tab>';
+        amenitiesTabRef.innerHTML = '<amenities-tab></amenities-tab>';
+        demographicsTabRef.innerHTML = '<demographics-tab></demographics-tab>';
+        climateTabRef.innerHTML = '<climate-tab></climate-tab>';
+        imageryTabRef.innerHTML = '<imagery-tab></imagery-tab>';
+        wikiTabRef.innerHTML = '<wiki-tab></wiki-tab>';
+      } catch (error) {
+        console.error('Error fetching tab data:', error);
+      }
+    };
+
+    fetchAllTabData();
+  }, [selectedProperty]);
+
   return (
     <div className="h-full bg-card shadow-lg">
       <Tabs 

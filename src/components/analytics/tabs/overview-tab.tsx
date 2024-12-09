@@ -686,3 +686,5 @@ export function OverviewTab() {
     </div>
   );
 }
+
+export { calculateStreetFrontage };
