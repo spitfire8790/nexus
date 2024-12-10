@@ -79,4 +79,4 @@ export function ImageryDateOverlay() {
       <span className="font-medium">Imagery Date: {dateText}</span>
     </div>
   );
-} 
+}

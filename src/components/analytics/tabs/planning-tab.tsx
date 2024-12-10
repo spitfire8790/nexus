@@ -82,9 +82,10 @@ export function PlanningTab() {
 
         const API_BASE_URL = process.env.NODE_ENV === 'development' 
           ? 'http://localhost:5174'
-          : '';
+          : 'https://www.nexusapi.xyz';
 
         const permittedResponse = await fetch(`${API_BASE_URL}/api/proxy`, {
+          method: 'GET',
           headers: {
             'EPINAME': epiName,
             'ZONECODE': zoneCode,
