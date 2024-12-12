@@ -62,6 +62,12 @@ export const TOOLTIPS: { [key: string]: TooltipConfig } = {
     source: "NSW Department of Customer Service (Spatial Services)",
     link: "https://maps.six.nsw.gov.au/arcgis/rest/services/public/NSW_Imagery/MapServer"
   },
+  nearmap: {
+    name: "Nearmap",
+    description: "High-resolution aerial imagery with frequent updates. Requires a valid Nearmap API key to access.",
+    source: "Nearmap",
+    link: "https://www.nearmap.com/"
+  },
   cadastre: {
     name: "Lots",
     description: "NSW Cadastre - Lot and Plan details",
@@ -217,6 +223,13 @@ export const TOOLTIPS: { [key: string]: TooltipConfig } = {
     description: "NSW road network classified by function and hierarchy.",
     source: "NSW Department of Customer Service (Spatial Services)",
     link: "https://portal.spatial.nsw.gov.au/server/rest/services/NSW_Transport_Theme/MapServer/5"
+  },
+
+  "road-labels": {
+    name: "Road Labels",
+    description: "Text labels for roads and streets across NSW, including road names and types",
+    source: "NSW Department of Customer Service (Spatial Services)",
+    link: "https://maps.six.nsw.gov.au/arcgis/rest/services/sixmaps/LPI_RasterLabels_1/MapServer"
   },
 
   streetFrontage: {

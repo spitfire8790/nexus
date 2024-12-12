@@ -20,6 +20,8 @@ import { MapMeasureControl } from './map/map-measure-control';
 import { DevelopmentApplicationsLayer } from './map/development-applications-layer';
 import { ImageryDateOverlay } from './map/imagery-date-overlay';
 import { RoadsLayer } from './map/roads-layer';
+import { Layers, Tag } from 'lucide-react';
+import { RoadLabelsLayer } from './map/road-labels-layer';
 
 // Fix for default marker icons in Leaflet with Vite
 import icon from 'leaflet/dist/images/marker-icon.png';
@@ -281,13 +283,33 @@ function OverlayLayers() {
             }
 
             layerRefs.current[layer.id] = EL.dynamicMapLayer(layerOptions).addTo(map);
+          } else if (layer.type === 'wms') {
+            layerRefs.current[layer.id] = L.tileLayer.wms(layer.url || '', {
+              layers: layer.wmsLayers,
+              format: 'image/png',
+              transparent: layer.wmsParams?.transparent || true,
+              version: layer.wmsParams?.version || '1.1.1',
+              opacity: layer.opacity,
+              attribution: layer.attribution,
+              pane: OVERLAY_PANE,
+              maxZoom: 21,
+              maxNativeZoom: 21,
+              tileSize: 512,
+              className: 'seamless-tiles',
+              buffer: 0,
+              updateWhenIdle: false,
+              updateWhenZooming: false,
+              dpi: 192,
+              width: 512,
+              height: 512
+            }).addTo(map);
           } else if (layer.type === 'tile') {
             layerRefs.current[layer.id] = L.tileLayer(layer.url || '', {
               opacity: layer.opacity,
               attribution: layer.attribution,
               className: layer.className,
               pane: OVERLAY_PANE,
-              maxZoom: 19,
+              maxZoom: 21,
               maxNativeZoom: 19,
               tileSize: 256,
               crossOrigin: true
@@ -337,6 +359,9 @@ function OverlayLayers() {
       <LayersControl.Overlay name="Roads" checked>
         <RoadsLayer />
       </LayersControl.Overlay>
+      <LayersControl.Overlay name="Road Labels" checked>
+        <RoadLabelsLayer />
+      </LayersControl.Overlay>
     </>
   );
 }
@@ -375,7 +400,7 @@ function PropertyBoundary() {
           pane: BOUNDARY_PANE,
           style: {
             color: '#ef4444',
-            weight: 2,
+            weight: 3,
             opacity: 1,
             fillOpacity: 0.1
           }
@@ -558,8 +583,8 @@ export function MapView() {
         // Always add polygon layer when showing saved properties
         const layer = L.geoJSON(property.geometry, {
           style: {
-            color: '#2563eb',
-            weight: 2,
+            color: '#ef4444',
+            weight: 3,
             opacity: 0.7,
             fillOpacity: 0.1
           }
@@ -645,7 +670,8 @@ export function MapView() {
       <MapContainer
         center={[-33.8688, 151.2093]}
         zoom={13}
-        maxZoom={19}
+        maxZoom={21}
+        minZoom={4}
         className="w-full h-full"
         ref={mapRef}
         style={{ background: '#f8f9fa' }}
@@ -665,42 +691,44 @@ export function MapView() {
         <div className="absolute bottom-4 right-4 z-[1000] flex flex-col gap-2">
           <ZoomControl position="bottomright" />
         </div>
-        <LayersControl 
-          position="topright"
-          collapsed={true} // Collapse by default on mobile
-        >
-          <LayersControl.BaseLayer checked name="Carto">
-            <TileLayer
-              url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png"
-              maxZoom={19}
-              attribution='&copy; OpenStreetMap contributors, &copy; CARTO'
-              maxNativeZoom={19}
-              crossOrigin={true}
-              className="seamless-tiles"
-              pane={BASE_PANE}
-            />
-          </LayersControl.BaseLayer>
-          <LayersControl.BaseLayer name="NSW Imagery">
-            <TileLayer
-              url="https://maps.six.nsw.gov.au/arcgis/rest/services/public/NSW_Imagery/MapServer/tile/{z}/{y}/{x}"
-              maxZoom={19}
-              maxNativeZoom={19}
-              attribution='&copy; NSW Government - Maps NSW'
-              tileSize={256}
-              crossOrigin={true}
-              className="seamless-tiles"
-              pane={BASE_PANE}
-            />
-          </LayersControl.BaseLayer>
-          <LayersControl.BaseLayer name="OpenStreetMap">
-            <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              maxZoom={19}
-              pane={BASE_PANE}
-            />
-          </LayersControl.BaseLayer>
-        </LayersControl>
+        <div className="absolute top-4 right-4 z-[1000] flex items-center">
+          <LayersControl 
+            position="topright"
+            collapsed={true}
+          >
+            <LayersControl.BaseLayer checked name="Carto">
+              <TileLayer
+                url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png"
+                maxZoom={21}
+                attribution='&copy; OpenStreetMap contributors, &copy; CARTO'
+                maxNativeZoom={19}
+                crossOrigin={true}
+                className="seamless-tiles"
+                pane={BASE_PANE}
+              />
+            </LayersControl.BaseLayer>
+            <LayersControl.BaseLayer name="NSW Imagery">
+              <TileLayer
+                url="https://maps.six.nsw.gov.au/arcgis/rest/services/public/NSW_Imagery/MapServer/tile/{z}/{y}/{x}"
+                maxZoom={21}
+                maxNativeZoom={19}
+                attribution='&copy; NSW Government - Maps NSW'
+                tileSize={256}
+                crossOrigin={true}
+                className="seamless-tiles"
+                pane={BASE_PANE}
+              />
+            </LayersControl.BaseLayer>
+            <LayersControl.BaseLayer name="OpenStreetMap">
+              <TileLayer
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                maxZoom={21}
+                pane={BASE_PANE}
+              />
+            </LayersControl.BaseLayer>
+          </LayersControl>
+        </div>
         <TrainStationsLayer />
         <LightRailStopsLayer />
         <MetroStationsLayer />

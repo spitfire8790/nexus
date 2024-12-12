@@ -214,14 +214,22 @@ export const useMapStore = create<MapState>((set, get) => ({
       name: 'Imagery',
       layers: [
         {
-          id: 'metromap',
-          name: 'Metro Map',
+          id: 'nearmap',
+          name: 'Nearmap',
           url: '',
           enabled: false,
-          type: 'tile',
-          hidden: true,
+          type: 'wms',
+          hidden: false,
           opacity: 0.7,
-          attribution: ' Metromap'
+          attribution: ' Nearmap',
+          wmsLayers: 'Vert',
+          wmsParams: {
+            format: 'image/jpeg',
+            transparent: true,
+            version: '1.1.1'
+          },
+          tooltipKey: 'nearmap',
+          showKeyDialog: true
         },
         {
           id: 'imagery',
@@ -232,7 +240,7 @@ export const useMapStore = create<MapState>((set, get) => ({
           opacity: 1,
           attribution: ' NSW Government - Department of Customer Service',
           className: 'seamless-tiles',
-          maxZoom: 19,
+          maxZoom: 21,
           maxNativeZoom: 19,
           tileSize: 256
         }
@@ -404,6 +412,16 @@ export const useMapStore = create<MapState>((set, get) => ({
           layerId: 5,
           opacity: 1,
           attribution: '© Transport for NSW'
+        },
+        {
+          id: 'road-labels',
+          name: 'Road Labels',
+          url: 'https://maps.six.nsw.gov.au/arcgis/rest/services/sixmaps/LPI_RasterLabels_1/MapServer',
+          enabled: false,
+          type: 'dynamic',
+          layerId: 0,
+          opacity: 1,
+          attribution: '© Department of Customer Service (Spatial Services)'
         }
       ]
     }
@@ -416,6 +434,9 @@ export const useMapStore = create<MapState>((set, get) => ({
         ...group,
         layers: group.layers.map(layer => {
           if (layer.id === id) {
+            if (layer.type === 'wms' && !layer.url) {
+              return { ...layer, enabled: !layer.enabled };
+            }
             if (!layer.enabled && layer.type === 'wms' && !layer.wmsLayers) {
               console.warn(`Layer ${id} is missing wmsLayers property`);
               return layer;

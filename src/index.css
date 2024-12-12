@@ -540,3 +540,52 @@ html, body {
     height: 100vh;
   }
 }
+
+/* Add after the existing .leaflet-control-zoom styles */
+.labels-control.leaflet-control-layers {
+  margin-left: 10px;
+}
+
+.leaflet-control-layers {
+  display: inline-block;
+  margin-right: 10px !important;
+}
+
+.leaflet-control-layers-list {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Update the labels control icon */
+.labels-control.leaflet-control-layers .leaflet-control-layers-toggle {
+  width: 36px;
+  height: 36px;
+  line-height: 36px;
+  background-image: none;
+  text-align: center;
+  background-color: white;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.labels-control.leaflet-control-layers .leaflet-control-layers-toggle::before {
+  content: '';
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><text x="50%" y="50%" text-anchor="middle" dy=".3em" font-family="Arial" font-size="16">A</text></svg>');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+}
+
+/* Add mobile-specific adjustments */
+@media (max-width: 768px) {
+  .leaflet-control-layers {
+    margin-right: 8px !important;
+  }
+  
+  .labels-control.leaflet-control-layers {
+    margin-left: 8px;
+  }
+}

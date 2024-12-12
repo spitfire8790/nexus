@@ -37,6 +37,8 @@ import { Info as InfoIcon } from "lucide-react";
 import { create } from 'zustand';
 import { cn } from "@/lib/utils";
 import { TooltipWrapper } from "@/components/ui/tooltip-wrapper";
+import { NearmapKeyDialog } from '@/components/map/nearmap-key-dialog';
+import { useNearmapKey } from '@/hooks/use-nearmap-key';
 
 
 interface SortableLayerItemProps {
@@ -65,7 +67,7 @@ function SortableLayerItem({
   const [maxFSR, setMaxFSR] = useState('');
   
   // Add this line to allow toggling for custom layers
-  const canToggle = layer.type === 'dynamic' || layer.type === 'tile' || layer.type === 'geojson' || layer.type === 'custom';
+  const canToggle = layer.type === 'dynamic' || layer.type === 'tile' || layer.type === 'geojson' || layer.type === 'custom' || layer.type === 'wms';
   
   const {
     attributes,
@@ -82,18 +84,13 @@ function SortableLayerItem({
     opacity: isDragging ? 0.5 : 1,
   };
 
+  const { updateApiKey } = useNearmapKey();
+
   const handleLayerToggle = async (layerId: string) => {
-    if (layerId === 'metromap' && !metromapToken) {
-      const token = prompt('Please enter your Metromap API token:');
+    if (layerId === 'nearmap' && !layer.url) {
+      const token = prompt('Please enter your Nearmap API key:');
       if (token) {
-        setMetromapToken(token);
-        // Update the layer URL in the store before toggling
-        const updatedLayer = {
-          ...layer,
-          url: `https://api.metromap.com.au/ogc/gda2020/key/${token}/service?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&BBOX={bbox-epsg-3857}&CRS=EPSG:3857&WIDTH=512&HEIGHT=512&LAYERS=Australia_latest&STYLES=&FORMAT=image/png&DPI=300&MAP_RESOLUTION=72&FORMAT_OPTIONS=dpi:72&TRANSPARENT=TRUE`
-        };
-        // You might need to add a method to update the layer URL in your store
-        onUpdateLayerUrl?.(layerId, updatedLayer.url);
+        await updateApiKey(token);
       }
     }
     onToggle(layerId);
@@ -160,7 +157,7 @@ function SortableLayerItem({
           id={layer.id}
           checked={layer.enabled}
           onCheckedChange={() => handleLayerToggle(layer.id)}
-          disabled={layer.id !== 'metromap' && layer.type !== 'custom' && !layer.url}
+          disabled={!canToggle || (layer.id !== 'metromap' && layer.id !== 'nearmap' && !layer.url)}
         />
         <Label htmlFor={layer.id} className="text-left flex items-center gap-2">
           {layer.name}
@@ -226,6 +223,7 @@ function SortableLayerItem({
                 </div>
               </PopoverContent>
             </Popover>
+            {layer.id === 'nearmap' && <NearmapKeyDialog />}
           </>
         )}
       </div>
@@ -352,10 +350,16 @@ function SortableLayerItem({
 
 function getLayerDescription(layerId: string): { name: string; description: string; source: string; link: string } {
   const descriptions: Record<string, { name: string; description: string; source: string; link: string }> = {
+    'nearmap': {
+      name: 'Nearmap',
+      description: 'High-resolution aerial imagery with frequent updates',
+      source: 'Nearmap',
+      link: 'https://www.nearmap.com/'
+    },
     'imagery': {
       name: 'NSW Imagery',
       description: 'Aerial imagery of NSW - Progressively from scales larger than 1:150,000 higher resolution imagery overlays lower resolution imagery and most recent imagery overlays older imagery within each resolution',
-      source: 'NSW Department of Customer Servie (Spatial Services)',
+      source: 'NSW Department of Customer Service (Spatial Services)',
       link: 'https://maps.six.nsw.gov.au/arcgis/rest/services/public/NSW_Imagery/MapServer'
     },
     'cadastre': {
@@ -399,6 +403,12 @@ function getLayerDescription(layerId: string): { name: string; description: stri
       description: 'This dataset includes contaminated land notified under section 60 of the Contaminated Land Management Act 1997 (CLM Act). These have been assessed by the EPA as being contaminated, but may not always require regulation under the CLM Act.',
       source: 'NSW Environment Protection Authority',
       link: 'https://maptest2.environment.nsw.gov.au/arcgis/rest/services/EPA/EPACS/MapServer/1'
+    },
+    'road-labels': {
+      name: 'Road Labels',
+      description: 'Text labels for roads and streets across NSW, including road names and types',
+      source: 'NSW Department of Customer Service (Spatial Services)',
+      link: 'https://maps.six.nsw.gov.au/arcgis/rest/services/sixmaps/LPI_RasterLabels_1/MapServer'
     }
   };
   
