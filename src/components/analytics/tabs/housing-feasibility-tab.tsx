@@ -1,32 +1,74 @@
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useMapStore } from "@/lib/map-store";
-import { Loader2, Home, Building2, Building, Store, Check, X, House } from "lucide-react";
+import { Loader2, Home, Building2, Building, Store, Check, X, House, Bed, Bath, Car } from "lucide-react";
 import { useEffect, useState } from "react";
 import { apiThrottle } from "@/lib/api-throttle";
 import { calculateStreetFrontage } from "@/components/analytics/tabs/overview-tab";
 import { Ruler } from "lucide-react";
 import { supabase } from '@/lib/supabase';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { loadSaleData } from '@/lib/csv-parser';
 import { useQuery } from '@tanstack/react-query';
+import { csv } from 'd3-fetch';
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { ResponsiveBar } from '@nivo/bar';
+import { mobileStyles as m } from '@/styles/mobile-responsive';
+
+/**
+ * Housing Feasibility Analysis Component
+ * ====================================
+ * This component provides comprehensive analysis of residential development potential
+ * for selected properties, incorporating:
+ * 
+ * 1. Zoning Analysis
+ *    - Checks permitted uses under LEP
+ *    - Validates against DCP requirements
+ *    - Calculates street frontage compliance
+ * 
+ * 2. Development Metrics
+ *    - Historical construction costs
+ *    - Typical GFA per dwelling
+ *    - Common building heights
+ *    - Experienced builders in area
+ * 
+ * 3. Market Analysis
+ *    - Recent sales data by dwelling type
+ *    - Price analysis by bedroom count
+ *    - Statistical validity checks
+ */
 
 /**
  * Interface Definitions
  * ====================
- * DwellingType: Defines the structure for different types of residential developments
- * - Includes basic info (name, icon, id) and statistical data (GFA, storeys, costs)
- * - Can contain subtypes (e.g., Multi Dwelling Housing contains Manor Houses, Terraces, etc.)
+ * Core data structures used throughout the component:
  */
 
 interface DwellingType {
-  name: string;
-  icon: React.ReactNode;
-  id: string;
-  averageGFA?: number;
-  medianStoreys?: number;
-  medianCostPerSqm?: number;
+  name: string;          // Display name of dwelling type
+  icon: React.ReactNode; // Visual representation
+  id: string;           // Unique identifier
+  averageGFA?: number;  // Typical Gross Floor Area
+  medianStoreys?: number; // Typical building height
+  medianCostPerSqm?: number; // Construction cost metrics
   medianCostPerDwelling?: number;
-  subTypes?: Array<{
+  subTypes?: Array<{    // Optional subtypes (e.g., for Multi Dwelling Housing)
     name: string;
     id: string;
     averageGFA?: number;
@@ -35,9 +77,8 @@ interface DwellingType {
     medianCostPerDwelling?: number;
     builderInfo?: string;
   }>;
-  builderInfo?: string;
+  builderInfo?: string; // Information about common builders
 }
-
 
 interface DcpRequirement {
   dwellingType: string;
@@ -45,7 +86,6 @@ interface DcpRequirement {
   zone: string | null;
   streetFrontage: number;
 }
-
 
 interface FeasibleDevelopmentType {
   id: string;
@@ -62,6 +102,15 @@ interface MedianPrices {
   [key: string]: {
     median: number;
     count: number;
+    sales: Array<{
+      address: string;
+      price: number;
+      sold_date: string;
+      property_type: string;
+      bedrooms: number;
+      bathrooms: number;
+      parking: number;
+    }>;
   };
 }
 
@@ -69,6 +118,19 @@ interface DevelopmentTypeRecord {
   DevelopmentType: string;
 }
 
+// Add new interface for construction data
+interface ConstructionRecord {
+  development_type: { DevelopmentType: string }[];
+  proposed_gfa: number;
+  units_proposed: number;
+  storeys_proposed: number;
+  builder_legal_name: string;
+  council_name: string;
+  development_applications: {
+    cost_of_development: number;
+    number_of_new_dwellings: number;
+  };
+}
 
 /**
  * Constants
@@ -133,133 +195,306 @@ const StatusIcon = ({ status }: { status: string }) => {
 /**
  * Utility Functions
  * ================
- * getPropertyTypesForDevelopmentType: Maps development types to property categories
- * - Used for filtering sales data analysis
- * - Returns array of property types that match the development category
- * 
- * calculatePricesByBedrooms: Analyzes sales data to compute median prices
- * - Groups sales by number of bedrooms
- * - Calculates median prices and sample sizes for each bedroom category
- * - Handles special cases like studios and 3+ bedrooms
  */
 
-function getPropertyTypesForDevelopmentType(developmentType: string, subType: string | null): string[] {
-  switch (developmentType) {
-    case 'Dual Occupancies':
-      return ['duplex', 'semi-detached', 'duplex-semi-detached', 'duplex/semi-detached'];
-    case 'Dwelling Houses':
-      return ['house', 'single house', 'detached'];
-    case 'Multi Dwelling Housing':
-      return ['terrace', 'townhouse', 'villa'];
-    case 'Residential Flat Buildings':
-    case 'Shop Top Housing':
-      return ['unit', 'apartment', 'flat', 'studio'];
-    default:
-      return [];
-  }
-}
-
-function calculatePricesByBedrooms(data: any[], propertyTypes: string[]) {
-  const lowerPropertyTypes = propertyTypes.map(t => t.toLowerCase());
-  console.log('Looking for property types:', lowerPropertyTypes);
+/**
+ * getPropertyTypesForDevelopmentType
+ * ---------------------------------
+ * Maps high-level development categories to specific property types
+ * Used for filtering sales data analysis
+ * 
+ * @param developmentType - The broad category (e.g., "Dual Occupancies")
+ * @param subType - Optional subtype specification
+ * @returns Array of property type strings for sales data filtering
+ */
+function getPropertyTypesForDevelopmentType(developmentType: string): string[] {
+  console.log('Mapping development type to property types:', developmentType);
   
-  // Log a few sample records to see what we're working with
-  console.log('Sample raw data:', data?.slice(0, 5));
+  // Remove any subtype information from the development type
+  const baseType = developmentType.split(' - ')[0];
   
-  const filteredSales = data?.filter(sale => {
-    const salePropertyType = sale.property_type?.toLowerCase().trim();
-    
-    // More detailed logging for property type matching
-    if (sale.price > 0 && sale.bedrooms !== null) {
-      console.log('Checking property type match:', {
-        saleType: salePropertyType,
-        lookingFor: lowerPropertyTypes,
-        matches: lowerPropertyTypes.some(t => salePropertyType.includes(t)),
-        price: sale.price,
-        bedrooms: sale.bedrooms
-      });
-    }
-    
-    const isValidSale = lowerPropertyTypes.some(t => salePropertyType.includes(t)) && 
-                       sale.price > 0 && 
-                       sale.bedrooms !== null;
-    return isValidSale;
-  });
+  const types = {
+    'Dual Occupancies': ['duplex', 'semi-detached'],
+    'Dwelling Houses': ['house', 'single house', 'detached'],
+    'Multi Dwelling Housing': ['townhouse', 'villa', 'terrace'],
+    'Residential Flat Buildings': ['unit', 'apartment', 'flat'],
+    'Shop Top Housing': ['unit', 'apartment', 'flat']
+  }[baseType] || [];
 
-  console.log('Filtered sales count:', filteredSales?.length);
-  console.log('Sample filtered sales:', filteredSales?.slice(0, 5));
-
-  const pricesByBedrooms: { [key: string]: { median: number; count: number } } = {
-    'studio': { median: 0, count: 0 },
-    '1': { median: 0, count: 0 },
-    '2': { median: 0, count: 0 },
-    '3': { median: 0, count: 0 },
-    '>3': { median: 0, count: 0 }
-  };
-
-  // Group sales by bedroom count
-  const salesByBedrooms: { [key: string]: number[] } = {};
-  
-  filteredSales?.forEach(sale => {
-    let category;
-    if (!sale.bedrooms || sale.bedrooms === 0) {
-      category = 'studio';
-    } else if (sale.bedrooms > 3) {
-      category = '>3';
-    } else {
-      category = String(sale.bedrooms);
-    }
-
-    if (!salesByBedrooms[category]) {
-      salesByBedrooms[category] = [];
-    }
-    salesByBedrooms[category].push(Number(sale.price));
-  });
-
-  // Calculate medians
-  Object.keys(pricesByBedrooms).forEach(category => {
-    const prices = salesByBedrooms[category];
-    if (prices?.length) {
-      prices.sort((a, b) => a - b);
-      const middle = Math.floor(prices.length / 2);
-      pricesByBedrooms[category] = {
-        median: prices.length % 2 === 0
-          ? (prices[middle - 1] + prices[middle]) / 2
-          : prices[middle],
-        count: prices.length
-      };
-    }
-  });
-
-  return pricesByBedrooms;
+  console.log('Mapped to property types:', types);
+  return types;
 }
 
 /**
- * Main Component: HousingFeasibilityTab
- * ====================================
- * Primary component for analysing housing development feasibility
+ * calculatePricesByBedrooms
+ * ------------------------
+ * Processes sales data to compute median prices and sample sizes
  * 
- * State Management:
- * - Uses useMapStore for property and zoning information
- * - Local state for DCP requirements, LEP info, street frontage, etc.
- * - Manages feasible development types and median prices
- * 
- * Key Features:
- * 1. Property Analysis
- *    - Zoning information lookup
- *    - Street frontage calculation
- *    - Permitted use determination
- * 
- * 2. Development Feasibility
- *    - Matches property characteristics with DCP requirements
- *    - Calculates feasible development types
- *    - Provides construction cost metrics
- * 
- * 3. Market Analysis
- *    - Analyzes local sales data
- *    - Computes median prices by bedroom count
- *    - Provides sample sizes for statistical relevance
+ * @param data - Raw sales records
+ * @param propertyTypes - Types to include in analysis
+ * @param suburb - Target suburb for filtering
+ * @returns Object containing median prices and sample sizes by bedroom count
  */
+function calculatePricesByBedrooms(propertyTypes: string[], suburb: string | null) {
+  if (!suburb) {
+    console.log('No suburb provided to calculatePricesByBedrooms');
+    return null;
+  }
+
+  console.log('Starting sales data fetch:', {
+    suburb: suburb.toUpperCase(),
+    propertyTypes
+  });
+
+  const query = supabase
+    .from('nsw_property_sales')
+    .select('*')
+    .eq('suburb', suburb.toUpperCase())
+    .in('property_type', propertyTypes)
+    .gt('price', 50000) // Filter out prices below 50k
+    .not('bedrooms', 'is', null)
+    .order('sold_date', { ascending: false })
+    .limit(1000);
+
+  return query.then(({ data: sales, error }) => {
+    if (error) {
+      console.error('Supabase query error:', error);
+      return null;
+    }
+
+    if (!sales?.length) {
+      console.log('No sales data found for criteria');
+      return null;
+    }
+
+    const pricesByBedrooms: MedianPrices = {
+      '1': { median: 0, count: 0, sales: [] },
+      '2': { median: 0, count: 0, sales: [] },
+      '3': { median: 0, count: 0, sales: [] },
+      '>3': { median: 0, count: 0, sales: [] }
+    };
+
+    // Group sales by bedroom count
+    const salesByBedrooms: { [key: string]: number[] } = {};
+    const salesRecordsByBedrooms: { [key: string]: typeof sales } = {};
+    
+    sales.forEach(sale => {
+      let category;
+      if (!sale.bedrooms || sale.bedrooms === 0) {
+        return; // Skip properties with no bedroom data
+      } else if (Number(sale.bedrooms) > 3) {
+        category = '>3';
+      } else {
+        category = String(sale.bedrooms);
+      }
+
+      if (!salesByBedrooms[category]) {
+        salesByBedrooms[category] = [];
+        salesRecordsByBedrooms[category] = [];
+      }
+      salesByBedrooms[category].push(Number(sale.price));
+      salesRecordsByBedrooms[category].push(sale);
+    });
+
+    // Calculate medians and store sales records
+    Object.keys(pricesByBedrooms).forEach(category => {
+      const prices = salesByBedrooms[category];
+      if (prices?.length) {
+        prices.sort((a, b) => a - b);
+        const middle = Math.floor(prices.length / 2);
+        pricesByBedrooms[category] = {
+          median: prices.length % 2 === 0
+            ? (prices[middle - 1] + prices[middle]) / 2
+            : prices[middle],
+          count: prices.length,
+          sales: salesRecordsByBedrooms[category]
+        };
+      }
+    });
+
+    return pricesByBedrooms;
+  });
+}
+
+/**
+ * Calculates the median value from an array of numbers
+ */
+function calculateMedian(numbers: number[]): number | undefined {
+  if (!numbers.length) return undefined;
+  const sorted = [...numbers].sort((a, b) => a - b);
+  const middle = Math.floor(sorted.length / 2);
+  return sorted.length % 2 === 0
+    ? (sorted[middle - 1] + sorted[middle]) / 2
+    : sorted[middle];
+}
+
+/**
+ * Gets the neighboring LGAs for a given council name
+ * @param councilName - The name of the council to find neighbors for
+ * @returns Array of neighboring LGA names
+ */
+async function getNeighboringLgas(councilName: string): Promise<string[]> {
+  try {
+    const response = await fetch('/data/lga_neighbors_data.csv');
+    const csvText = await response.text();
+    
+    // Split into rows, skipping header
+    const rows = csvText.split('\n').slice(1);
+    
+    // Parse each row carefully to handle quoted values
+    const parsedRows = rows.map(row => {
+      const [lga, council, neighbors] = row.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/);
+      return {
+        lga: lga?.trim() || '',
+        council: council?.trim() || '',
+        neighbors: neighbors ? neighbors.replace(/"/g, '').split(',').map(n => n.trim()) : []
+      };
+    });
+
+    // Find the matching council
+    const matchingRow = parsedRows.find(row => 
+      row.council.toLowerCase().includes(councilName.toLowerCase().replace(/\s*city of\s*/i, '').trim())
+    );
+
+    if (!matchingRow) {
+      console.log('Could not find LGA for council:', councilName);
+      return [];
+    }
+
+    console.log('Found current LGA:', matchingRow.lga);
+    console.log('Found neighboring LGAs:', matchingRow.neighbors);
+
+    // Map neighboring LGAs back to council names
+    const neighboringCouncils = matchingRow.neighbors.map(neighborLga => {
+      const neighborRow = parsedRows.find(row => row.lga.trim() === neighborLga.trim());
+      return neighborRow?.council || null;
+    }).filter((council): council is string => council !== null);
+
+    console.log('Mapped to neighboring councils:', neighboringCouncils);
+    return neighboringCouncils;
+  } catch (error) {
+    console.error('Error loading neighboring LGAs:', error);
+    return [];
+  }
+}
+
+/**
+ * Main Component Implementation
+ * ===========================
+ */
+
+const isValidRecord = (record: ConstructionRecord): boolean => {
+  const costPerDwelling = record.development_applications?.cost_of_development / 
+                         record.development_applications?.number_of_new_dwellings;
+                         
+  return !!(
+    record.proposed_gfa > 0 &&
+    record.units_proposed > 0 &&
+    record.development_applications?.number_of_new_dwellings > 0 &&
+    record.storeys_proposed > 0 &&
+    record.development_applications?.cost_of_development > 0 &&
+    costPerDwelling >= 50000 && // Minimum $50k per dwelling
+    costPerDwelling <= 5000000  // Maximum $5M per dwelling
+  );
+};
+
+// Add the chart first
+const BuilderCostChart = ({ data }: { data: ConstructionRecord[] }) => {
+  const builderStats = data.reduce((acc, record) => {
+    const builder = record.builder_legal_name;
+    if (!builder || !isValidRecord(record)) return acc;
+    
+    const costPerSqm = record.development_applications.cost_of_development / record.proposed_gfa;
+    if (!acc[builder]) acc[builder] = { costs: [], count: 0 };
+    acc[builder].costs.push(costPerSqm);
+    acc[builder].count++;
+    return acc;
+  }, {} as Record<string, { costs: number[], count: number }>);
+
+  const chartData = Object.entries(builderStats)
+    .map(([builder, { costs, count }]) => ({
+      builder: builder === 'N/A' ? 'Unknown' : builder,
+      costPerSqm: calculateMedian(costs) || 0,
+      count
+    }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 5);
+
+  return (
+    <div className="h-[200px] mb-6">
+      <ResponsiveBar
+        data={chartData}
+        keys={['costPerSqm']}
+        indexBy="builder"
+        margin={{ top: 10, right: 10, bottom: 50, left: 70 }}
+        padding={0.3}
+        valueFormat={value => `$${Math.round(value).toLocaleString()}`}
+        axisBottom={{
+          tickRotation: -45
+        }}
+        axisLeft={{
+          format: value => `$${Math.round(value).toLocaleString()}`
+        }}
+        label={d => `$${Math.round(d.value).toLocaleString()}`}
+      />
+    </div>
+  );
+};
+
+const formatCurrency = (value: number) => {
+  return new Intl.NumberFormat('en-AU', {
+    style: 'currency',
+    currency: 'AUD',
+    maximumFractionDigits: 0
+  }).format(value);
+};
+
+const formatNumber = (value: number) => {
+  return new Intl.NumberFormat('en-AU').format(value);
+};
+
+// Add this helper function for date formatting
+function formatDate(dateString: string): string | null {
+  const date = new Date(dateString);
+  
+  // Check if date is valid and is from 2024
+  if (isNaN(date.getTime()) || date.getFullYear() !== 2024) {
+    return null;
+  }
+  
+  // Format as 1-Feb-24
+  return date.toLocaleDateString('en-AU', {
+    day: 'numeric',
+    month: 'short',
+    year: '2-digit'
+  }).replace(/\s/g, '-');
+}
+
+// Update the residential types rendering
+const ResidentialTypeCard = ({ type }: { type: DwellingType }) => {
+  return (
+    <div className={`${m.card} flex flex-col space-y-2`}>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-2">
+          <div className={m.icon}>{type.icon}</div>
+          <h3 className={m.subheading}>{type.name}</h3>
+        </div>
+        <StatusIcon status={getPermissionType(type.id)} />
+      </div>
+      
+      {type.subTypes && (
+        <div className="pl-4 mt-2 space-y-1.5">
+          {type.subTypes.map(subType => (
+            <div key={subType.id} className="flex items-center justify-between">
+              <span className={m.body}>{subType.name}</span>
+              <StatusIcon status={getPermissionType(subType.id)} />
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 export function HousingFeasibilityTab() {
   const selectedProperty = useMapStore((state) => state.selectedProperty);
@@ -273,111 +508,81 @@ export function HousingFeasibilityTab() {
   
   // Move the DCP requirements state inside the component
   const [dcpRequirements, setDcpRequirements] = useState<DcpRequirement[]>([]);
-  const [lepInfo, setLepInfo] = useState<{ name: string; url: string } | null>(null);
   const [streetFrontage, setStreetFrontage] = useState<{ total: number; roads: Array<{ name: string; length: number }> } | null>(null);
   const [residentialTypes, setResidentialTypes] = useState<DwellingType[]>(RESIDENTIAL_TYPES);
   const [selectedDevelopmentType, setSelectedDevelopmentType] = useState<string>("");
   const [feasibleTypes, setFeasibleTypes] = useState<FeasibleDevelopmentType[]>([]);
   const [medianPrices, setMedianPrices] = useState<MedianPrices | null>(null);
+  const [includeNeighbors, setIncludeNeighbors] = useState(false);
+  const [neighboringLgas, setNeighboringLgas] = useState<string[]>([]);
+  const [constructionData, setConstructionData] = useState<ConstructionRecord[]>([]);
+  const [selectedTypeData, setSelectedTypeData] = useState<{
+    type: string;
+    icon: React.ReactNode;
+    data: ConstructionRecord[];
+  } | null>(null);
+  const [selectedBedroomData, setSelectedBedroomData] = useState<{
+    bedrooms: string;
+    sales: Array<{
+      address: string;
+      price: number;
+      sold_date: string;
+      property_type: string;
+      bedrooms: number;
+      bathrooms: number;
+      parking: number;
+    }>;
+    icon: React.ReactNode;
+  } | null>(null);
+  const [landApplicationLayer, setLandApplicationLayer] = useState<any>(null);
 
-  const { data: salesData, isLoading: isSalesLoading, error: salesError } = useQuery({
-    queryKey: ['saleData', suburb],
-    queryFn: async () => {
-      if (!suburb) {
-        console.log('No suburb selected yet');
-        return null;
+  // Update the median prices effect
+  useEffect(() => {
+    if (selectedDevelopmentType && suburb) {
+      // Find the selected type to get its name
+      const selectedType = feasibleTypes.find(type => type.id === selectedDevelopmentType);
+      if (!selectedType) {
+        console.log('No matching development type found:', {
+          selectedDevelopmentType,
+          feasibleTypes
+        });
+        return;
       }
+
+      const propertyTypes = getPropertyTypesForDevelopmentType(selectedType.name);
       
-      // Fetch last 24 months of sales
-      const startDate = new Date();
-      startDate.setMonth(startDate.getMonth() - 24);
-      
-      console.log('Fetching sales data for:', {
-        suburb,
-        startDate: startDate.toISOString()
+      console.log('Starting sales data fetch:', {
+        selectedType: selectedType.name,
+        propertyTypes,
+        suburb
       });
       
-      const { data, error } = await supabase
-        .from('nsw_property_sales')
-        .select('*')
-        .eq('suburb', suburb)
-        .gte('sold_date', startDate.toISOString())
-        .not('price', 'is', null)
-        .not('property_type', 'is', null);
-        
-      if (error) {
-        console.error('Error fetching sales data:', error);
-        throw error;
-      }
-
-      console.log('Sales data summary:', {
-        total: data?.length,
-        sample: data?.slice(0, 3),
-        propertyTypes: [...new Set(data?.map(s => s.property_type))]
-      });
-
-      return data;
-    },
-    enabled: !!suburb
-  });
-
-  // Add useEffect to log when suburb changes
-  useEffect(() => {
-    console.log('Current suburb state:', {
-      suburb,
-      hasSuburb: !!suburb,
-      timestamp: new Date().toISOString()
-    });
-  }, [suburb]);
-
-  // Add useEffect to log when salesData changes
-  useEffect(() => {
-    console.log('Sales data updated:', {
-      hasData: !!salesData,
-      count: salesData?.length,
-      selectedType: selectedDevelopmentType,
-      isLoading: isSalesLoading,
-      error: salesError
-    });
-  }, [salesData, selectedDevelopmentType, isSalesLoading, salesError]);
-
-  // Calculate median prices when development type or sale data changes
-  useEffect(() => {
-    if (selectedDevelopmentType && salesData) {
-      const propertyTypes = getPropertyTypesForDevelopmentType(
-        selectedDevelopmentType, 
-        null // or pass the subType if you have it
-      );
-      const prices = calculatePricesByBedrooms(salesData, propertyTypes);
-      setMedianPrices(prices);
+      calculatePricesByBedrooms(propertyTypes, suburb)
+        .then(prices => {
+          console.log('Calculated median prices:', prices);
+          setMedianPrices(prices);
+        })
+        .catch(error => {
+          console.error('Error in price calculation:', error);
+          setMedianPrices(null);
+        });
     } else {
-      setMedianPrices(null);
+      console.log('Missing required data for price calculation:', {
+        selectedDevelopmentType,
+        suburb,
+        feasibleTypes
+      });
     }
-  }, [selectedDevelopmentType, salesData]);
+  }, [selectedDevelopmentType, suburb, feasibleTypes]);
 
   /**
-   * Effect Hooks
-   * ============
-   * 1. Construction Data Fetching
-   *    - Retrieves historical construction certificates
-   *    - Calculates median costs and building metrics
-   *    - Identifies common builders in the area
-   * 
-   * 2. DCP Requirements Loading
-   *    - Loads development control plan requirements
-   *    - Parses CSV data for frontage requirements
-   * 
-   * 3. Zoning and Permitted Uses
-   *    - Fetches zoning information from NSW Planning Portal
-   *    - Determines permitted development types
-   *    - Updates feasibility calculations
-   * 
-   * 4. Sales Data Analysis
-   *    - Processes local property sales data
-   *    - Computes market metrics for feasibility analysis
+   * Effect: Construction Data Analysis
+   * --------------------------------
+   * Fetches and processes historical construction certificates to:
+   * 1. Calculate typical building metrics (GFA, storeys)
+   * 2. Determine construction costs
+   * 3. Identify experienced builders
    */
-
-  // Add useEffect to fetch construction certificate data
   useEffect(() => {
     async function fetchConstructionData() {
       if (!selectedProperty || !zoneInfo?.lgaName) {
@@ -386,30 +591,29 @@ export function HousingFeasibilityTab() {
       }
 
       const councilName = zoneInfo.lgaName;
-      console.log('Current zoneInfo:', zoneInfo);
-      console.log('Using council name:', councilName);
+      console.log('Current council:', councilName);
 
       try {
-        // First, let's check what councils are available
-        const { data: allCouncils, error: councilError } = await supabase
-          .from('construction_certificates')
-          .select('council_name')
-          .not('council_name', 'is', null);
+        let councilsToQuery = [councilName];
 
-        if (councilError) {
-          console.error('Error fetching councils:', councilError);
-          return;
+        // If includeNeighbors is true, add neighboring councils
+        if (includeNeighbors) {
+          const neighbors = await getNeighboringLgas(councilName);
+          councilsToQuery = [...councilsToQuery, ...neighbors];
+          setNeighboringLgas(neighbors);
+          console.log('Including neighboring councils:', neighbors);
+        } else {
+          setNeighboringLgas([]);
         }
 
-        // Get unique council names using Set
-        const uniqueCouncils = [...new Set(allCouncils.map(c => c.council_name))]
-          .filter(Boolean)  // Remove any null/undefined values
-          .sort();  // Sort alphabetically
+        // Create the query filter for all councils
+        const councilFilter = councilsToQuery
+          .map(council => `council_name.ilike.%${council.toLowerCase().replace('city of ', '')}%`)
+          .join(',');
 
-        console.log('Available councils in database:', uniqueCouncils);
-        
-        // Use ilike for case-insensitive matching and handle variations of the name
-        const { data, error } = await supabase
+        console.log('Fetching data for councils:', councilsToQuery);
+
+        const { data: constructionData, error } = await supabase
           .from('construction_certificates')
           .select(`
             development_type,
@@ -420,50 +624,51 @@ export function HousingFeasibilityTab() {
             builder_legal_name,
             development_applications!inner(cost_of_development, number_of_new_dwellings)
           `)
-          .ilike('council_name', `%${councilName.toLowerCase().replace('city of ', '')}%`);
+          .or(councilFilter);
 
-        if (error) {
-          console.error('Error fetching construction data:', error);
-          return;
-        }
+        if (error) throw error;
 
-        console.log('Received construction data:', data);
+        setConstructionData(constructionData);
 
         // Process the data for each dwelling type
         const updatedTypes = RESIDENTIAL_TYPES.map(type => {
-          const relevantCertificates = data
-            .filter(cert => 
-              cert.development_type.some((dt: DevelopmentTypeRecord) => {
-                const devType = dt.DevelopmentType;
-                switch(type.name) {
-                  case 'Dual Occupancies':
-                    return devType === 'Dual occupancy' || 
-                           devType === 'Dual occupancy (attached)' || 
-                           devType === 'Dual occupancy (detached)';
-                  case 'Dwelling Houses':
-                    return devType === 'Dwelling' || 
-                           devType === 'Dwelling house';
-                  case 'Multi Dwelling Housing':
-                    return devType === 'Multi-dwelling housing' || 
-                           devType === 'Multi dwelling housing (terraces)' || 
-                           devType === 'Multi-dwelling housing (terraces)' ||
-                           devType === 'Medium Density Housing' ||
-                           devType === 'Manor house' || 
-                           devType === 'Attached dwelling' || 
-                           devType === 'Manor houses';
-                  case 'Residential Flat Buildings':
-                    return devType === 'Residential flat building';
-                  case 'Shop Top Housing':
-                    return devType === 'Shop top housing';
-                  default:
-                    return false;
-                }
-              })
-            )
-            .filter(cert => cert.units_proposed > 0);
+          const typeData = constructionData?.filter(cert => {
+            // First check if the record is valid including cost constraints
+            if (!isValidRecord(cert)) return false;
+            
+            // Then check development type matching
+            return cert.development_type.some((dt: DevelopmentTypeRecord) => {
+              const devType = dt.DevelopmentType;
+              switch(type.name) {
+                case 'Dual Occupancies':
+                  return devType === 'Dual occupancy' || 
+                         devType === 'Dual occupancy (attached)' || 
+                         devType === 'Dual occupancy (detached)';
+                case 'Dwelling Houses':
+                  return devType === 'Dwelling' || 
+                         devType === 'Dwelling house';
+                case 'Multi Dwelling Housing':
+                  return devType === 'Multi-dwelling housing' || 
+                         devType === 'Multi dwelling housing (terraces)' || 
+                         devType === 'Multi-dwelling housing (terraces)' ||
+                         devType === 'Medium Density Housing' ||
+                         devType === 'Manor house' || 
+                         devType === 'Attached dwelling' || 
+                         devType === 'Manor houses';
+                case 'Residential Flat Buildings':
+                  return devType === 'Residential flat building';
+                case 'Shop Top Housing':
+                  return devType === 'Shop top housing';
+                default:
+                  return false;
+              }
+            });
+          }) || [];
+
+          if (typeData.length === 0) return type;
 
           // Get the most frequent builder
-          const builderCounts = relevantCertificates.reduce((acc, cert) => {
+          const builderCounts = typeData.reduce((acc, cert) => {
             if (cert.builder_legal_name) {
               acc[cert.builder_legal_name] = (acc[cert.builder_legal_name] || 0) + 1;
             }
@@ -481,49 +686,44 @@ export function HousingFeasibilityTab() {
 
           const builderInfo = topBuilder ? `${topBuilder} (${topCount})` : '-';
 
-          console.log(`Matching certificates for ${type.name}:`, relevantCertificates);
+          console.log(`Matching certificates for ${type.name}:`, typeData);
 
           // Calculate medians
-          const medianGFA = relevantCertificates.length > 0
-            ? calculateMedian(relevantCertificates.map(cert => cert.proposed_gfa / cert.units_proposed))
+          const medianGFA = typeData.length > 0
+            ? calculateMedian(typeData.map(cert => cert.proposed_gfa / cert.units_proposed))
             : undefined;
 
-          const medianStoreys = relevantCertificates.length > 0
-            ? calculateMedian(relevantCertificates.filter(cert => cert.storeys_proposed > 0).map(cert => cert.storeys_proposed))
+          const medianStoreys = typeData.length > 0
+            ? calculateMedian(typeData.filter(cert => cert.storeys_proposed > 0).map(cert => cert.storeys_proposed))
             : undefined;
 
-          const medianCostPerSqm = relevantCertificates.length > 0
+          const medianCostPerSqm = typeData.length > 0
             ? calculateMedian(
-                relevantCertificates
+                typeData
                   .filter(cert => {
-                    const hasValidCost = cert.development_applications?.cost_of_development > 0;
-                    const costPerSqm = hasValidCost ? cert.development_applications.cost_of_development / cert.proposed_gfa : 0;
-                    return hasValidCost && costPerSqm >= 500;
+                    const da = cert.development_applications;
+                    const costPerSqm = da.cost_of_development / cert.proposed_gfa;
+                    return costPerSqm >= 500;
                   })
                   .map(cert => cert.development_applications.cost_of_development / cert.proposed_gfa)
               )
             : undefined;
 
-          const medianCostPerDwelling = relevantCertificates.length > 0
+          const medianCostPerDwelling = typeData.length > 0
             ? calculateMedian(
-                relevantCertificates
-                  .filter(cert => {
-                    const hasValidCost = cert.development_applications?.cost_of_development > 0;
-                    const hasValidDwellings = cert.development_applications?.number_of_new_dwellings > 0;
-                    const costPerDwelling = (hasValidCost && hasValidDwellings) 
-                      ? cert.development_applications.cost_of_development / cert.development_applications.number_of_new_dwellings 
-                      : 0;
-                    return hasValidCost && hasValidDwellings && costPerDwelling >= 50000;
+                typeData
+                  .map(cert => {
+                    const costPerDwelling = cert.development_applications.cost_of_development / 
+                                          cert.development_applications.number_of_new_dwellings;
+                    return costPerDwelling;
                   })
-                  .map(cert => 
-                    cert.development_applications.cost_of_development / cert.development_applications.number_of_new_dwellings
-                  )
+                  .filter(cost => cost >= 50000 && cost <= 5000000) // Additional validation
               )
             : undefined;
 
           if (type.subTypes) {
             const updatedSubTypes = type.subTypes.map(subType => {
-              const subTypeCertificates = data
+              const subTypeCertificates = typeData
                 .filter(cert =>
                   cert.development_type.some((dt: DevelopmentTypeRecord) => {
                     const devType = dt.DevelopmentType;
@@ -559,17 +759,12 @@ export function HousingFeasibilityTab() {
               const subTypeMedianCostPerDwelling = subTypeCertificates.length > 0
                 ? calculateMedian(
                     subTypeCertificates
-                      .filter(cert => {
-                        const hasValidCost = cert.development_applications?.cost_of_development > 0;
-                        const hasValidDwellings = cert.development_applications?.number_of_new_dwellings > 0;
-                        const costPerDwelling = (hasValidCost && hasValidDwellings) 
-                          ? cert.development_applications.cost_of_development / cert.development_applications.number_of_new_dwellings 
-                          : 0;
-                        return hasValidCost && hasValidDwellings && costPerDwelling >= 50000;
+                      .map(cert => {
+                        const costPerDwelling = cert.development_applications.cost_of_development / 
+                                              cert.development_applications.number_of_new_dwellings;
+                        return costPerDwelling;
                       })
-                      .map(cert => 
-                        cert.development_applications.cost_of_development / cert.development_applications.number_of_new_dwellings
-                      )
+                      .filter(cost => cost >= 50000 && cost <= 5000000) // Additional validation
                   )
                 : undefined;
 
@@ -614,58 +809,37 @@ export function HousingFeasibilityTab() {
     }
 
     fetchConstructionData();
-  }, [selectedProperty, zoneInfo]);
-
-  // Helper function to calculate median
-  const calculateMedian = (numbers: number[]): number => {
-    const sorted = numbers.sort((a, b) => a - b);
-    const middle = Math.floor(sorted.length / 2);
-
-    if (sorted.length % 2 === 0) {
-      return (sorted[middle - 1] + sorted[middle]) / 2;
-    }
-    return sorted[middle];
-  };
+  }, [selectedProperty, zoneInfo, includeNeighbors]);
 
   // Add function to check if street frontage meets requirement
   function meetsStreetFrontageRequirement(
     type: string, 
-    subType: string | null, 
-    zoneCode: string | null, 
+    zoneCode: string | null,
     currentFrontage: number | null
   ): { required: number | null; meets: boolean } {
-    if (!currentFrontage) return { required: null, meets: false };
+    if (!currentFrontage || typeof currentFrontage !== 'number') {
+      return { required: null, meets: false };
+    }
 
     // Clean up the zone code by removing any colons and trimming
     const cleanZoneCode = zoneCode?.split(':')[0]?.trim() || null;
 
-    console.log('Looking up requirement for:', {
-      type,
-      subType,
-      originalZoneCode: zoneCode,
-      cleanZoneCode,
-      currentFrontage
-    });
-
     // First try to find a zone-specific requirement
     let requirement = dcpRequirements.find(req => 
       req.dwellingType === type && 
-      (!req.subType || req.subType === subType) &&
-      req.zone === cleanZoneCode // Use cleaned zone code
+      req.zone === cleanZoneCode
     );
 
     // If no zone-specific requirement found, look for a general requirement
     if (!requirement) {
       requirement = dcpRequirements.find(req => 
-        req.dwellingType === type && 
-        (!req.subType || req.subType === subType) &&
+        req.dwellingType === type &&
         !req.zone
       );
     }
 
-    console.log('Found requirement:', requirement);
-
     if (!requirement) return { required: null, meets: false };
+
     return {
       required: requirement.streetFrontage,
       meets: currentFrontage >= requirement.streetFrontage
@@ -730,20 +904,12 @@ export function HousingFeasibilityTab() {
         }
 
         const zoningData = await zoningResponse.json();
-        const landApplicationLayer = zoningData.find((l: any) => l.layerName === "Land Application Map");
+        const landApplicationLayerData = zoningData.find((l: any) => l.layerName === "Land Application Map");
         
-        // Add console log to debug LEP info
-        console.log('Land Application Layer:', landApplicationLayer);
+        // Set the land application layer state
+        setLandApplicationLayer(landApplicationLayerData);
         
-        if (landApplicationLayer?.results?.[0]) {
-          const lepInfo = {
-            name: landApplicationLayer.results[0]["EPI Name"],
-            url: landApplicationLayer.results[0].legislationUrl
-          };
-          console.log('Setting LEP Info:', lepInfo);
-          setLepInfo(lepInfo);
-        }
-
+        // Rest of your existing code...
         const zoningLayer = zoningData.find((l: any) => l.layerName === "Land Zoning Map");
 
         if (!zoningLayer?.results?.[0]) {
@@ -850,20 +1016,26 @@ export function HousingFeasibilityTab() {
     const feasible: FeasibleDevelopmentType[] = [];
     
     residentialTypes.forEach(type => {
-      const isWithoutConsent = permittedUses.withoutConsent?.includes(type.id);
-      const isWithConsent = permittedUses.withConsent?.includes(type.id);
+      const isWithoutConsent = permittedUses.withoutConsent?.includes(type.name);
+      const isWithConsent = permittedUses.withConsent?.includes(type.name);
+      const isPermitted = isWithoutConsent || isWithConsent;
       
-      if (!isWithoutConsent && !isWithConsent) return;
-      
+      // Check street frontage requirement
       const frontageCheck = meetsStreetFrontageRequirement(
         type.name,
-        null,
         zoneInfo?.zoneName?.split(' ')[0] || null,
         streetFrontage?.total || null
       );
 
-      // Add main type if it meets frontage requirements
-      if (!type.subTypes && frontageCheck.meets) {
+      console.log(`Checking feasibility for ${type.name}:`, {
+        isPermitted,
+        frontageRequirement: frontageCheck.required,
+        currentFrontage: streetFrontage?.total,
+        meetsFrontage: frontageCheck.meets
+      });
+
+      // Only add if both permitted and meets frontage requirements
+      if (isPermitted && frontageCheck.meets) {
         feasible.push({
           id: type.id,
           name: type.name,
@@ -874,12 +1046,11 @@ export function HousingFeasibilityTab() {
         });
       }
 
-      // Add subtypes if they meet frontage requirements
-      if (type.subTypes) {
+      // Check subtypes if they exist
+      if (type.subTypes && isPermitted) {
         type.subTypes.forEach(subType => {
           const subTypeFrontageCheck = meetsStreetFrontageRequirement(
             type.name,
-            subType.name,
             zoneInfo?.zoneName?.split(' ')[0] || null,
             streetFrontage?.total || null
           );
@@ -900,17 +1071,30 @@ export function HousingFeasibilityTab() {
       }
     });
 
+    console.log('Feasible development types:', feasible);
     setFeasibleTypes(feasible);
   }, [residentialTypes, permittedUses, zoneInfo, streetFrontage]);
 
   // Update useEffect to fetch permitted uses from API
   useEffect(() => {
     const fetchPermittedUses = async () => {
-      if (!zoneInfo?.lgaName || !zoneInfo?.zoneName) return;
+      if (!zoneInfo?.lgaName || !zoneInfo?.zoneName) {
+        console.log('Missing required zoning info:', { zoneInfo });
+        return;
+      }
 
       try {
-        const zoneCode = zoneInfo.zoneName.split(" ")[0];
-        console.log(`Fetching permitted uses for LGA: ${zoneInfo.lgaName}, Zone: ${zoneCode}`);
+        // Clean up the zone code - remove any text after brackets or colons
+        const zoneCode = zoneInfo.zoneName.split(/[\(\:]/)[0].trim();
+        // Clean up LGA name - remove "City of" and other common prefixes
+        const cleanLgaName = zoneInfo.lgaName
+          .replace(/^(City of|Municipality of|Shire of)\s+/i, '')
+          .trim();
+
+        console.log('Fetching permitted uses with:', {
+          lgaName: cleanLgaName,
+          zoneCode: zoneCode
+        });
 
         const API_BASE_URL = process.env.NODE_ENV === 'development' 
           ? 'http://localhost:5174'
@@ -918,7 +1102,7 @@ export function HousingFeasibilityTab() {
 
         const response = await fetch(`${API_BASE_URL}/api/proxy`, {
           headers: {
-            'EPINAME': zoneInfo.lgaName,
+            'EPINAME': cleanLgaName,
             'ZONECODE': zoneCode,
             'Content-Type': 'application/json',
             'Accept': 'application/json'
@@ -926,11 +1110,12 @@ export function HousingFeasibilityTab() {
         });
 
         if (!response.ok) {
-          throw new Error(`API call failed with status: ${response.status}`);
+          const errorText = await response.text();
+          throw new Error(`API call failed with status: ${response.status}. Details: ${errorText}`);
         }
 
         const jsonData = await response.json();
-        console.log('API Response:', jsonData);
+        console.log('Permitted uses API response:', jsonData);
 
         const precinct = jsonData?.[0]?.Precinct?.[0];
         const zone = precinct?.Zone?.find((z: { ZoneCode: string }) => z.ZoneCode === zoneCode);
@@ -962,7 +1147,7 @@ export function HousingFeasibilityTab() {
           withConsent: [],
           withoutConsent: [],
           loading: false,
-          error: 'Failed to fetch permitted uses'
+          error: error instanceof Error ? error.message : 'Failed to fetch permitted uses'
         });
       }
     };
@@ -970,47 +1155,109 @@ export function HousingFeasibilityTab() {
     fetchPermittedUses();
   }, [zoneInfo?.lgaName, zoneInfo?.zoneName]);
 
-  // Update the fetchSuburb function to handle ESRI geometry
-  async function fetchSuburb(geometry: any) {
+  // Function to load suburbs data
+  async function loadSuburbsData() {
     try {
-      // Get centroid from the first coordinate pair (assuming it's a polygon)
-      const coordinates = geometry.rings[0][0];
-      console.log('Raw coordinates:', coordinates);
-      
-      // Convert from Web Mercator to WGS84
-      const lon = (coordinates[0] * 180) / 20037508.34;
-      const lat = (Math.atan(Math.exp((coordinates[1] * Math.PI) / 20037508.34)) * 360) / Math.PI - 90;
-      
-      console.log('Converting coordinates:', { raw: coordinates, converted: { lat, lon } });
-
-      const response = await fetch(
-        `https://maps.six.nsw.gov.au/arcgis/rest/services/public/NSW_Administrative_Boundaries/MapServer/0/query?` +
-        `geometry=${lon},${lat}` +
-        `&geometryType=esriGeometryPoint` +
-        `&spatialRel=esriSpatialRelIntersects` +
-        `&outFields=suburbname` +
-        `&returnGeometry=false` +
-        `&f=json`
-      );
-
-      const data = await response.json();
-      console.log('Suburb API response:', data);
-      
-      if (data.features?.[0]?.attributes?.suburbname) {
-        const suburbName = data.features[0].attributes.suburbname;
-        console.log('Setting suburb to:', suburbName);
-        setSuburb(suburbName);
+      const data = await csv('/data/sale prices/suburbs.csv');
+      if (!data) {
+        console.warn('No suburbs data loaded');
+        return {};
       }
+      return data.reduce((acc: Record<string, string>, row: any) => {
+        if (row.suburb) {
+          acc[row.suburb.toUpperCase()] = row.postcode;
+        }
+        return acc;
+      }, {});
     } catch (error) {
-      console.error('Error fetching suburb:', error);
+      console.error('Error loading suburbs data:', error);
+      return {};
     }
   }
 
-  // Update the useEffect to use fetchSuburb
+  // Update the suburb detection logic
   useEffect(() => {
     if (!selectedProperty?.geometry) return;
-    fetchSuburb(selectedProperty.geometry);
-  }, [selectedProperty?.geometry]);
+
+    const fetchSuburbData = async () => {
+      const SUBURBS = await loadSuburbsData();
+
+      try {
+        // First try to parse suburb from address
+        const address = selectedProperty.address || '';
+        console.log('Processing address:', address);
+
+        // More robust postcode extraction
+        const postcodeMatch = address.match(/\b(2\d{3})\b/); // NSW postcodes start with 2
+        const postcode = postcodeMatch ? postcodeMatch[1] : null;
+
+        // More robust suburb extraction
+        let potentialSuburb = null;
+        if (postcode && address) {
+          const parts = address.split(',').map(part => part.trim());
+          // Look for the part before the postcode
+          for (let i = 0; i < parts.length; i++) {
+            if (parts[i].includes(postcode) && i > 0) {
+              potentialSuburb = parts[i - 1].toUpperCase();
+              break;
+            }
+          }
+        }
+
+        console.log('Address parsing results:', {
+          address,
+          postcode,
+          potentialSuburb
+        });
+
+        // Validate against known suburbs
+        if (potentialSuburb && SUBURBS[potentialSuburb] === postcode) {
+          console.log('Found suburb from address:', potentialSuburb);
+          setSuburb(potentialSuburb);
+          return;
+        }
+
+        // Fallback to coordinates lookup with better error handling
+        const coordinates = selectedProperty.geometry.rings[0][0];
+        const lon = (coordinates[0] * 180) / 20037508.34;
+        const lat = (Math.atan(Math.exp((coordinates[1] * Math.PI) / 20037508.34)) * 360) / Math.PI - 90;
+
+        console.log('Querying coordinates:', { lat, lon });
+
+        const queryUrl = `https://maps.six.nsw.gov.au/arcgis/rest/services/public/NSW_Administrative_Boundaries/MapServer/0/query?` +
+          `geometry=${lon},${lat}` +
+          `&geometryType=esriGeometryPoint` +
+          `&spatialRel=esriSpatialRelIntersects` +
+          `&outFields=suburbname` +
+          `&returnGeometry=false` +
+          `&f=json`;
+
+        const response = await fetch(queryUrl);
+        if (!response.ok) {
+          throw new Error(`Suburb API failed with status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('Suburb API response:', data);
+
+        if (data.features?.[0]?.attributes?.suburbname) {
+          const suburbName = data.features[0].attributes.suburbname.toUpperCase();
+          console.log('Found suburb from coordinates:', suburbName);
+          setSuburb(suburbName);
+          return;
+        }
+
+        console.warn('Could not determine suburb reliably');
+        setSuburb(null);
+
+      } catch (error) {
+        console.error('Error determining suburb:', error);
+        setSuburb(null);
+      }
+    };
+
+    fetchSuburbData();
+  }, [selectedProperty?.geometry, selectedProperty?.address]);
 
   /**
    * Render Logic
@@ -1059,26 +1306,21 @@ export function HousingFeasibilityTab() {
       <Card>
         <CardHeader>
           <CardTitle>
-            <div className="space-y-2.5">
-              <h2>Parramatta Local Environmental Plan 2023</h2>
-              <div className="space-y-2.5">
-                <p className="font-normal">Permitted residential development types in {zoneInfo?.zoneName}</p>
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Ruler className="h-5 w-5" />
-                  <span className="text-muted-foreground">
-                    Street frontage: {streetFrontage?.total}m 
-                    {streetFrontage?.roads && ` (${streetFrontage.roads.length}x frontages)`}
-                  </span>
-                  {suburb && (
-                    <>
-                      <span className="mx-2">·</span>
-                      <span>{suburb}</span>
-                    </>
-                  )}
-                </div>
+            <div className="space-y-1">
+              <h2>
+                {landApplicationLayer?.results?.[0]?.["EPI Name"] || "Local Environmental Plan"}
+              </h2>
+              <div className="text-base font-normal text-muted-foreground">
+                Permitted residential development types in {zoneInfo?.zoneName}
               </div>
             </div>
           </CardTitle>
+          <div className="space-y-1 text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <Ruler className="h-5 w-5" />
+              Street frontage: {streetFrontage?.total}m
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           {/* Legend */}
@@ -1101,242 +1343,332 @@ export function HousingFeasibilityTab() {
             </div>
           </div>
 
+          <div className="flex items-center space-x-2 mb-4">
+            <Switch
+              id="neighbor-toggle"
+              checked={includeNeighbors}
+              onCheckedChange={setIncludeNeighbors}
+            />
+            <Label htmlFor="neighbor-toggle">Include data from neighboring councils</Label>
+          </div>
+
+          {includeNeighbors && neighboringLgas.length > 0 && (
+            <div className="text-sm text-muted-foreground mb-4">
+              <p>Including data from: {neighboringLgas.join(', ')}</p>
+            </div>
+          )}
+
           <div className="relative">
             {/* Header */}
-            <div className="grid grid-cols-[160px_70px_90px_110px_80px_100px_100px_1fr] mb-3 border-b pb-2 text-xs">
-              <div>Dwelling Type</div>
-              <div>Permissible</div>
-              <div className="text-center">
+            <div className="grid grid-cols-[300px_100px_100px_120px_100px_120px_120px_1fr] mb-3 border-b pb-2 text-xs">
+              <div className="text-base">Dwelling Type</div>
+              <div className="text-base text-center">Permissible</div>
+              <div className="text-base text-center">
                 Min.<br/>
                 Frontage
               </div>
-              <div className="text-center">
+              <div className="text-base text-center">
                 Median GFA<br/>
                 (m²/Dwelling)
               </div>
-              <div className="text-center">
+              <div className="text-base text-center">
                 Median<br/>
                 Storeys
               </div>
-              <div className="text-center">
+              <div className="text-base text-center">
                 Cost<br/>
                 $/m² GFA
               </div>
-              <div className="text-center">
+              <div className="text-base text-center">
                 Cost<br/>
                 $/Dwelling
               </div>
-              <div>{/* Reserved for future columns */}</div>
+              <div className="text-base">{/* Reserved for future columns */}</div>
             </div>
-            
-            {/* Rows */}
-            <div className="space-y-4">
-              {residentialTypes.map((type) => {
-                const isWithoutConsent = permittedUses.withoutConsent?.includes(type.id);
-                const isWithConsent = permittedUses.withConsent?.includes(type.id);
-                const status = isWithoutConsent ? 'withoutConsent' : isWithConsent ? 'withConsent' : 'notPermitted';
 
-                // Check street frontage requirement for main type
-                const frontageCheck = meetsStreetFrontageRequirement(
-                  type.name,
-                  null,
-                  zoneInfo?.zoneName?.split(' ')[0] || null,
-                  streetFrontage?.total || null
-                );
+            {/* Development Types */}
+            {residentialTypes.map((type) => {
+              const isWithoutConsent = permittedUses.withoutConsent?.includes(type.name);
+              const isWithConsent = permittedUses.withConsent?.includes(type.name);
+              const frontageCheck = meetsStreetFrontageRequirement(
+                type.name,
+                zoneInfo?.zoneName?.split(' ')[0] || null,
+                streetFrontage?.total || null
+              );
 
-                return (
-                  <div key={type.id}>
-                    <div className="grid grid-cols-[160px_70px_90px_110px_80px_100px_100px_1fr] items-center text-xs">
+              return (
+                <div key={type.id}>
+                  <div 
+                    className="grid grid-cols-[300px_100px_100px_120px_100px_120px_120px_1fr] items-center py-2 hover:bg-muted/50 cursor-pointer"
+                    onClick={() => {
+                      const typeData = constructionData?.filter(cert => 
+                        cert.development_type.some((dt: DevelopmentTypeRecord) => {
+                          const devType = dt.DevelopmentType;
+                          switch(type.name) {
+                            case 'Dual Occupancies':
+                              return devType === 'Dual occupancy' || 
+                                     devType === 'Dual occupancy (attached)' || 
+                                     devType === 'Dual occupancy (detached)';
+                            case 'Dwelling Houses':
+                              return devType === 'Dwelling' || 
+                                     devType === 'Dwelling house';
+                            case 'Multi Dwelling Housing':
+                              return devType === 'Multi-dwelling housing' || 
+                                     devType === 'Multi dwelling housing (terraces)' || 
+                                     devType === 'Multi-dwelling housing (terraces)' ||
+                                     devType === 'Medium Density Housing' ||
+                                     devType === 'Manor house' || 
+                                     devType === 'Attached dwelling' || 
+                                     devType === 'Manor houses';
+                            case 'Residential Flat Buildings':
+                              return devType === 'Residential flat building';
+                            case 'Shop Top Housing':
+                              return devType === 'Shop top housing';
+                            default:
+                              return false;
+                          }
+                        })
+                      );
+                      setSelectedTypeData({
+                        type: type.name,
+                        icon: type.icon,
+                        data: typeData || []
+                      });
+                    }}
+                  >
+                    <div className="flex items-center gap-2">
+                      {type.icon}
+                      <span className="whitespace-nowrap">{type.name}</span>
+                    </div>
+                    <div className="flex justify-center">
+                      <StatusIcon status={isWithoutConsent ? 'withoutConsent' : isWithConsent ? 'withConsent' : 'notPermitted'} />
+                    </div>
+                    <div className="text-center">
+                      {frontageCheck.required}m
+                      {frontageCheck.meets ? 
+                        <Check className="inline-block h-4 w-4 text-green-500 ml-1" /> : 
+                        <X className="inline-block h-4 w-4 text-red-500 ml-1" />
+                      }
+                    </div>
+                    <div className="text-sm text-center">
+                      {type.averageGFA ? Math.round(type.averageGFA) : '-'}
+                    </div>
+                    <div className="text-sm text-center">
+                      {type.medianStoreys || '-'}
+                    </div>
+                    <div className="text-center">
+                      {type.medianCostPerSqm ? 
+                        `$${Math.round(type.medianCostPerSqm).toLocaleString('en-US')}` : 
+                        '-'}
+                    </div>
+                    <div className="text-sm text-center">
+                      {type.medianCostPerDwelling ? 
+                        type.medianCostPerDwelling >= 1000000 
+                          ? `$${(type.medianCostPerDwelling / 1000000).toFixed(1)}M`
+                          : `$${Math.round(type.medianCostPerDwelling / 1000)}k`
+                        : '-'}
+                    </div>
+                    <div className="text-base">{/* Reserved for future columns */}</div>
+                  </div>
+
+                  {/* Render subtypes if they exist */}
+                  {type.subTypes?.map(subType => (
+                    <div key={subType.id} className="grid grid-cols-[300px_100px_100px_120px_100px_120px_120px_1fr] items-center py-2 pl-8 text-sm text-muted-foreground hover:bg-muted/50">
                       <div className="flex items-center gap-2">
-                        {type.icon}
-                        <span className="text-sm">{type.name}</span>
+                        {subType.icon}
+                        <span>{subType.name}</span>
                       </div>
                       <div className="flex justify-center">
-                        <StatusIcon status={status} />
+                        <StatusIcon status={isWithoutConsent ? 'withoutConsent' : isWithConsent ? 'withConsent' : 'notPermitted'} />
                       </div>
-                      <div className="text-sm text-center">
-                        {type.subTypes ? null : frontageCheck.required ? (
-                          <span className={frontageCheck.meets ? 'text-green-600' : 'text-red-600'}>
-                            {frontageCheck.required}m {frontageCheck.meets ? '✓' : '✗'}
-                          </span>
-                        ) : '-'}
+                      <div className="text-center">
+                        {frontageCheck.required}m
+                        {frontageCheck.meets ? 
+                          <Check className="inline-block h-4 w-4 text-green-500 ml-1" /> : 
+                          <X className="inline-block h-4 w-4 text-red-500 ml-1" />
+                        }
                       </div>
-                      <div className="text-sm text-center">
-                        {type.averageGFA ? 
-                          Math.round(type.averageGFA).toLocaleString() 
+                      <div className="text-center">
+                        {subType.averageGFA ? Math.round(subType.averageGFA) : '-'}
+                      </div>
+                      <div className="text-center">
+                        {subType.medianStoreys || '-'}
+                      </div>
+                      <div className="text-center">
+                        {subType.medianCostPerSqm ? 
+                          `$${Math.round(subType.medianCostPerSqm).toLocaleString('en-US')}` : 
+                          '-'}
+                      </div>
+                      <div className="text-center">
+                        {subType.medianCostPerDwelling ? 
+                          subType.medianCostPerDwelling >= 1000000 
+                            ? `$${(subType.medianCostPerDwelling / 1000000).toFixed(1)}M`
+                            : `$${Math.round(subType.medianCostPerDwelling / 1000)}k`
                           : '-'}
                       </div>
-                      <div className="text-sm text-center">
-                        {type.medianStoreys ? 
-                          Math.round(type.medianStoreys).toLocaleString() 
-                          : '-'}
-                      </div>
-                      <div className="text-sm text-center">
-                        {type.medianCostPerSqm ? 
-                          Math.round(type.medianCostPerSqm).toLocaleString() 
-                          : '-'}
-                      </div>
-                      <div className="text-sm text-center">
-                        {type.medianCostPerDwelling ? 
-                          type.medianCostPerDwelling >= 1000000 
-                            ? `$${(type.medianCostPerDwelling / 1000000).toFixed(1)}M`
-                            : `$${Math.round(type.medianCostPerDwelling / 1000)}k`
-                          : '-'}
-                      </div>
-                      <div>{/* Reserved for future columns */}</div>
+                      <div className="text-base">{/* Reserved for future columns */}</div>
                     </div>
-                    
-                    {/* Sub-types */}
-                    {type.subTypes && isWithConsent && (
-                      <div className="mt-2 space-y-2">
-                        {type.subTypes.map(subType => {
-                          const subTypeFrontageCheck = meetsStreetFrontageRequirement(
-                            type.name,
-                            subType.name,
-                            zoneInfo?.zoneName?.split(' ')[0] || null,
-                            streetFrontage?.total || null
-                          );
-
-                          return (
-                            <div key={subType.id} className="grid grid-cols-[160px_70px_90px_110px_80px_100px_100px_1fr] items-center text-xs">
-                              <div className="ml-8 text-sm text-muted-foreground">
-                                {subType.name}
-                              </div>
-                              <div className="flex justify-center">
-                                <StatusIcon status={status} />
-                              </div>
-                              <div className="text-sm text-center">
-                                {subTypeFrontageCheck.required ? (
-                                  <span className={subTypeFrontageCheck.meets ? 'text-green-600' : 'text-red-600'}>
-                                    {subTypeFrontageCheck.required}m {subTypeFrontageCheck.meets ? '✓' : '✗'}
-                                  </span>
-                                ) : '-'}
-                              </div>
-                              <div className="text-sm text-center">
-                                {subType.averageGFA ? 
-                                  Math.round(subType.averageGFA).toLocaleString() 
-                                  : '-'}
-                              </div>
-                              <div className="text-sm text-center">
-                                {subType.medianStoreys ? 
-                                  Math.round(subType.medianStoreys).toLocaleString() 
-                                  : '-'}
-                              </div>
-                              <div className="text-sm text-center">
-                                {subType.medianCostPerSqm ? 
-                                  Math.round(subType.medianCostPerSqm).toLocaleString() 
-                                  : '-'}
-                              </div>
-                              <div className="text-sm text-center">
-                                {subType.medianCostPerDwelling ? 
-                                  subType.medianCostPerDwelling >= 1000000 
-                                    ? `$${(subType.medianCostPerDwelling / 1000000).toFixed(1)}M`
-                                    : `$${Math.round(subType.medianCostPerDwelling / 1000)}k`
-                                  : '-'}
-                              </div>
-                              <div>{/* Reserved for future columns */}</div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+                  ))}
+                </div>
+              );
+            })}
           </div>
         </CardContent>
       </Card>
-      {/* Feasibility Analysis Card */}
+
+      {/* Development Type Selection Card */}
       <Card className="mt-4">
         <CardHeader>
-          <CardTitle>Feasibility Analysis</CardTitle>
+          <CardTitle>Market Analysis</CardTitle>
           <CardDescription>
-            Analyse development feasibility for permitted residential types
+            Select a development type to view recent sales data
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Development Type</label>
-              <Select
-                value={selectedDevelopmentType}
-                onValueChange={setSelectedDevelopmentType}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select a development type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {feasibleTypes.map((type) => (
-                    <SelectItem key={type.id} value={type.id}>
-                      {type.subTypeName 
-                        ? `${type.name} - ${type.subTypeName}`
-                        : type.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {selectedDevelopmentType && medianPrices && (
-              <div className="mt-4">
-                <h3 className="text-sm font-medium mb-3">Market Analysis - Median Sale Prices</h3>
-                <div className="rounded-md border">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b bg-muted/50">
-                        <th className="p-2 text-left">Bedrooms</th>
-                        <th className="p-2 text-right">Median Price</th>
-                        <th className="p-2 text-right">Sample Size</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {Object.entries(medianPrices).map(([bedrooms, data]) => (
-                        <tr key={bedrooms} className="border-b last:border-0">
-                          <td className="p-2">{bedrooms} {parseInt(bedrooms) === 1 ? 'Bedroom' : 'Bedrooms'}</td>
-                          <td className="p-2 text-right">
-                            {data.count > 0 
-                              ? data.median >= 1000000
-                                ? `$${(data.median / 1000000).toFixed(2)}M`
-                                : `$${(data.median / 1000).toFixed(0)}K`
-                              : '-'}
-                          </td>
-                          <td className="p-2 text-right text-muted-foreground">
-                            {data.count > 0 ? data.count : '-'}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
-
-            {selectedDevelopmentType && (
-              <div className="grid grid-cols-2 gap-4">
-                {/* We'll add more feasibility analysis content here in the next iteration */}
-              </div>
-            )}
-          </div>
+          <Select
+            value={selectedDevelopmentType}
+            onValueChange={setSelectedDevelopmentType}
+          >
+            <SelectTrigger className="w-[300px]">
+              <SelectValue placeholder="Select development type" />
+            </SelectTrigger>
+            <SelectContent>
+              {feasibleTypes.map((type) => (
+                <SelectItem key={type.id} value={type.id}>
+                  <div className="flex items-center gap-2">
+                    {residentialTypes.find(rt => rt.id === type.id.split('-')[0])?.icon}
+                    <span>
+                      {type.name}
+                      {type.subTypeName && ` - ${type.subTypeName}`}
+                    </span>
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </CardContent>
       </Card>
-      {/* Footnotes */}
-      <div className="mt-4 text-xs text-muted-foreground space-y-2">
-        <p>
-          Development cost data sourced from{' '}
-          <a 
-            href="https://www.planningportal.nsw.gov.au/opendata/dataset/online-da-data-api" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="text-blue-600 hover:underline"
-          >
-            NSW Online DA Data API
-          </a>
-        </p>
-        <p>
-          Currently using development requirements from the City of Parramatta Council's Development Control Plan (DCP). Additional Council DCPs to be added.
-        </p>
-      </div>
+
+      {/* Sales Analysis Card */}
+      {selectedDevelopmentType && medianPrices && (
+        <Card className="mt-4">
+          <CardHeader>
+            <CardTitle>Recent Sales Analysis</CardTitle>
+            <CardDescription>
+              Median sale prices for {selectedDevelopmentType} in {suburb}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-4 gap-4">
+              {Object.entries(medianPrices).map(([bedrooms, data]) => (
+                <div 
+                  key={bedrooms} 
+                  className="space-y-2 cursor-pointer hover:bg-muted/50 p-4 rounded-lg transition-colors"
+                  onClick={() => {
+                    const selectedType = residentialTypes.find(
+                      type => type.id === selectedDevelopmentType.split('-')[0]
+                    );
+                    setSelectedBedroomData({
+                      bedrooms,
+                      sales: data.sales,
+                      icon: selectedType?.icon
+                    });
+                  }}
+                >
+                  <div className="text-sm font-medium">
+                    {bedrooms === '>3' ? '4+ Beds' : `${bedrooms} Bed`}
+                  </div>
+                  <div className="text-2xl font-bold">
+                    {data.count > 0
+                      ? data.median >= 1000000 
+                        ? `$${(data.median / 1000000).toFixed(1)}M`
+                        : `$${Math.round(data.median / 1000)}k`
+                      : 'N/A'}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Median price ({data.count} sales)
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Error Alert */}
+      {permittedUses.error && (
+        <Alert variant="destructive" className="mt-4">
+          <AlertTitle>Error</AlertTitle>
+          {permittedUses.error}
+        </Alert>
+      )}
+
+      {/* Add Modal */}
+      <Dialog 
+        open={selectedBedroomData !== null} 
+        onOpenChange={() => setSelectedBedroomData(null)}
+      >
+        <DialogContent className="max-w-4xl max-h-[80vh]">
+          {/* Dialog Header */}
+          <div className="mb-4">
+            <DialogTitle className="flex items-center gap-2">
+              {selectedBedroomData?.icon}
+              {feasibleTypes.find(type => type.id === selectedDevelopmentType)?.name} - {' '}
+              {selectedBedroomData?.bedrooms === '>3' ? '4+ Bedroom' : `${selectedBedroomData?.bedrooms} Bedroom`} Sales Data
+            </DialogTitle>
+            <div className="text-sm text-muted-foreground mt-1">
+              Suburb: {suburb}
+            </div>
+          </div>
+
+          {/* Table Container */}
+          <div className="relative border rounded-md">
+            <div className="max-h-[calc(80vh-140px)] overflow-y-auto">
+              <table className="w-full">
+                <thead className="sticky top-0 bg-background z-10 border-b">
+                  <tr>
+                    <th className="text-left px-4 py-3 font-medium">Address</th>
+                    <th className="text-center px-4 py-3 font-medium w-[100px]">Price</th>
+                    <th className="text-center px-4 py-3 font-medium w-[120px]">Sold Date</th>
+                    <th className="text-center px-4 py-3 font-medium w-[60px]">
+                      <Bed className="h-5 w-5 mx-auto" />
+                    </th>
+                    <th className="text-center px-4 py-3 font-medium w-[60px]">
+                      <Bath className="h-5 w-5 mx-auto" />
+                    </th>
+                    <th className="text-center px-4 py-3 font-medium w-[60px]">
+                      <Car className="h-5 w-5 mx-auto" />
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {selectedBedroomData?.sales
+                    .filter(sale => formatDate(sale.sold_date) !== null)
+                    .map((sale, index) => (
+                      <tr key={index} className="hover:bg-muted/50">
+                        <td className="px-4 py-3">{sale.address}</td>
+                        <td className="text-center px-4 py-3">
+                          {sale.price >= 1000000 
+                            ? `$${(sale.price / 1000000).toFixed(1)}M`
+                            : `$${Math.round(sale.price / 1000)}k`}
+                        </td>
+                        <td className="text-center px-4 py-3">{formatDate(sale.sold_date)}</td>
+                        <td className="text-center px-4 py-3">{sale.bedrooms}</td>
+                        <td className="text-center px-4 py-3">{sale.bathrooms}</td>
+                        <td className="text-center px-4 py-3">{sale.parking}</td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Add DialogDescription for accessibility */}
+          <DialogDescription className="sr-only">
+            List of recent property sales in {suburb}
+          </DialogDescription>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 } 

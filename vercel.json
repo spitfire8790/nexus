@@ -31,7 +31,7 @@
           "key": "ZONECODE"
         }
       ],
-      "destination": "https://api-uat.apps1.nsw.gov.au/eplanning/data/v0/FetchEPILandUsePermissibility"
+      "destination": "https://api.apps1.nsw.gov.au/eplanning/data/v0/FetchEPILandUsePermissibility"
     }
   ]
 }

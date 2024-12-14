@@ -249,3 +249,10 @@ export interface TooltipConfig {
     imageUrl?: string;
   };
 }
+
+export const tooltipStyles = {
+  base: "z-50 rounded-lg shadow-lg bg-white/90 backdrop-blur-sm p-3 md:p-4 max-w-[90vw] md:max-w-md",
+  title: "font-medium text-sm md:text-base mb-1",
+  description: "text-xs md:text-sm text-gray-600",
+  source: "mt-2 text-xs text-gray-500 flex items-center gap-1"
+};

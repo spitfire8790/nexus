@@ -1,4 +1,6 @@
 interface SaleData {
+  id: string;
+  suburb: string;
   address: string;
   price: number;
   sold_date: string;
@@ -7,6 +9,7 @@ interface SaleData {
   bathrooms: number;
   parking: number;
   land_size: string;
+  collected_at: string;
 }
 
 function parseCSVRow(row: string): string[] {
@@ -37,7 +40,7 @@ function parseCSVRow(row: string): string[] {
 
 export async function loadSaleData(): Promise<SaleData[]> {
   try {
-    const response = await fetch('/data/sale prices/parramatta_suburb_2024.csv');
+    const response = await fetch('/data/sale prices/sale_prices_all.csv');
     const text = await response.text();
     
     // Parse CSV
@@ -46,6 +49,8 @@ export async function loadSaleData(): Promise<SaleData[]> {
       .filter(row => row.trim()) // Remove empty rows
       .map(row => {
         const [
+          id,
+          suburb,
           address,
           price,
           sold_date,
@@ -53,10 +58,13 @@ export async function loadSaleData(): Promise<SaleData[]> {
           bedrooms,
           bathrooms,
           parking,
-          land_size
+          land_size,
+          collected_at
         ] = parseCSVRow(row);
 
         const sale = {
+          id,
+          suburb, 
           address,
           price: parseInt(price) || 0,
           sold_date,
@@ -64,7 +72,8 @@ export async function loadSaleData(): Promise<SaleData[]> {
           bedrooms: parseInt(bedrooms) || 0,
           bathrooms: parseInt(bathrooms) || 0,
           parking: parseInt(parking) || 0,
-          land_size
+            land_size,
+          collected_at
         };
 
         // Debug log

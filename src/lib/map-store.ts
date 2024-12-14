@@ -53,8 +53,15 @@ interface MapState {
   zoneInfo: {
     zoneName: string | null;
     lgaName: string | null;
+    epiName: string | null;
+    zoneObjective: string | null;
   } | null;
-  setZoneInfo: (info: { zoneName: string; lgaName: string } | null) => void;
+  setZoneInfo: (info: { 
+    zoneName: string; 
+    lgaName: string; 
+    epiName: string;
+    zoneObjective: string;
+  } | null) => void;
   setLayerGroups: (groups: LayerGroup[]) => void;
   mapInstance: L.Map | null;
   setMapInstance: (map: L.Map | null) => void;
@@ -486,7 +493,12 @@ export const useMapStore = create<MapState>((set, get) => ({
   bufferGeometry: null,
   setBufferGeometry: (geometry) => set({ bufferGeometry: geometry }),
   zoneInfo: null,
-  setZoneInfo: (info: { zoneName: string; lgaName: string } | null) => 
+  setZoneInfo: (info: { 
+    zoneName: string; 
+    lgaName: string; 
+    epiName: string;
+    zoneObjective: string;
+  } | null) => 
     set({ zoneInfo: info }),
   setLayerGroups: (groups) => set({ layerGroups: groups }),
   mapInstance: null,
