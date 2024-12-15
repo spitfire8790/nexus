@@ -1,11 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useMap, useMapEvents } from 'react-leaflet';
 import * as L from 'leaflet';
-import { supabase } from '@/lib/supabase-client';
+import { supabase } from '@/lib/supabase';
 import { useDebounce } from '@/hooks/useDebounce';
 
 interface DevelopmentApplication {
-  id: string;
+  id: bigint;
   location: {
     X: string;
     Y: string;
@@ -23,6 +23,7 @@ export function DevelopmentApplicationsLayer() {
   const [markers, setMarkers] = useState<L.Marker[]>([]);
   const [bounds, setBounds] = useState(map.getBounds());
   const [zoom, setZoom] = useState(map.getZoom());
+  const abortControllerRef = useRef<AbortController | null>(null);
   
   // Debounce the bounds and zoom updates to prevent too many queries
   const debouncedBounds = useDebounce(bounds, 500);
@@ -36,54 +37,81 @@ export function DevelopmentApplicationsLayer() {
     },
   });
 
+  const markersLayerRef = useRef<L.LayerGroup | null>(null);
+
   useEffect(() => {
     const fetchDevelopmentApplications = async () => {
-      // Only fetch data if zoom is above a certain level to prevent overloading
       if (debouncedZoom < 12) {
-        // Clear existing markers if zoom is too low
-        markers.forEach(marker => marker.remove());
-        setMarkers([]);
-        return;
-      }
-
-      const sw = debouncedBounds.getSouthWest();
-      const ne = debouncedBounds.getNorthEast();
-
-      // Query Supabase with a raw SQL query to filter by coordinates
-      const { data, error } = await supabase
-        .from('development_applications')
-        .select('*')
-        .filter('location', 'cs', `[{"X":{"gte":"${sw.lng}","lte":"${ne.lng}"},"Y":{"gte":"${sw.lat}","lte":"${ne.lat}"}}]`);
-
-      if (error) {
-        console.error('Error fetching development applications:', error);
-        return;
-      }
-
-      // Remove existing markers
-      markers.forEach(marker => marker.remove());
-
-      // Create new markers
-      const newMarkers = (data || []).map((app: DevelopmentApplication) => {
-        if (app.location && app.location[0]) {
-          const { X, Y, FullAddress } = app.location[0];
-          const marker = L.marker([parseFloat(Y), parseFloat(X)])
-            .bindPopup(FullAddress);
-          
-          marker.addTo(map);
-          return marker;
+        if (markersLayerRef.current) {
+          markersLayerRef.current.clearLayers();
+          map.removeLayer(markersLayerRef.current);
         }
-        return null;
-      }).filter(Boolean) as L.Marker[];
+        return;
+      }
 
-      setMarkers(newMarkers);
+      try {
+        // Cancel any pending requests
+        if (abortControllerRef.current) {
+          abortControllerRef.current.abort();
+        }
+        abortControllerRef.current = new AbortController();
+
+        const sw = debouncedBounds.getSouthWest();
+        const ne = debouncedBounds.getNorthEast();
+
+        // Use RPC call for optimized spatial query
+        const { data, error } = await supabase.rpc('get_development_applications_in_bounds', {
+          min_lng: sw.lng,
+          max_lng: ne.lng,
+          min_lat: sw.lat,
+          max_lat: ne.lat
+        });
+
+        if (error) {
+          console.error('Error fetching development applications:', error);
+          return;
+        }
+
+        // Create a new layer group
+        const newLayerGroup = L.layerGroup();
+
+        // Add markers to the layer group
+        (data || []).forEach((app: DevelopmentApplication) => {
+          if (app.location?.[0]) {
+            const { X, Y, FullAddress } = app.location[0];
+            const marker = L.marker([parseFloat(Y), parseFloat(X)])
+              .bindPopup(FullAddress);
+            marker.addTo(newLayerGroup);
+          }
+        });
+
+        // Remove old layer group
+        if (markersLayerRef.current) {
+          markersLayerRef.current.clearLayers();
+          map.removeLayer(markersLayerRef.current);
+        }
+
+        // Add new layer group
+        newLayerGroup.addTo(map);
+        markersLayerRef.current = newLayerGroup;
+
+      } catch (error) {
+        if (error.name !== 'AbortError') {
+          console.error('Error:', error);
+        }
+      }
     };
 
     fetchDevelopmentApplications();
 
-    // Cleanup function to remove markers when component unmounts
     return () => {
-      markers.forEach(marker => marker.remove());
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      if (markersLayerRef.current) {
+        markersLayerRef.current.clearLayers();
+        map.removeLayer(markersLayerRef.current);
+      }
     };
   }, [debouncedBounds, debouncedZoom, map]);
 

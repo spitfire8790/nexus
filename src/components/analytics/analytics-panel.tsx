@@ -110,7 +110,7 @@ export function AnalyticsPanel() {
           setIsReporterActive(value === "reporter");
         }}
         className={cn(
-          "h-full flex",
+          "h-full flex analytics-tabs",
           isReporterActive && "!fixed inset-0 z-50 bg-background"
         )}
       >
@@ -122,57 +122,56 @@ export function AnalyticsPanel() {
           <TabsList className="flex flex-col gap-6 p-4">
             <TabsTrigger value="overview" className="w-10 h-10 p-0 relative group">
               <MapPin className="h-6 w-6" />
-              <span className="absolute left-[calc(100%+0.5rem)] bg-popover text-popover-foreground px-2 py-1 rounded-md text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 shadow-md z-50">
+              <span className="hidden md:hidden">
                 Overview
-
               </span>
             </TabsTrigger>
             <TabsTrigger value="planning" className="w-10 h-10 p-0 relative group">
               <Building2 className="h-6 w-6" />
-              <span className="absolute left-[calc(100%+0.5rem)] bg-popover text-popover-foreground px-2 py-1 rounded-md text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 shadow-md z-50">
+              <span className="hidden md:hidden">
                 Planning
               </span>
             </TabsTrigger>
             <TabsTrigger value="constraints" className="w-10 h-10 p-0 relative group">
               <AlertTriangle className="h-6 w-6" />
-              <span className="absolute left-[calc(100%+0.5rem)] bg-popover text-popover-foreground px-2 py-1 rounded-md text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 shadow-md z-50">
+              <span className="hidden md:hidden">
                 Constraints
               </span>
             </TabsTrigger>
             <TabsTrigger value="sales" className="w-10 h-10 p-0 relative group">
               <DollarSign className="h-6 w-6" />
-              <span className="absolute left-[calc(100%+0.5rem)] bg-popover text-popover-foreground px-2 py-1 rounded-md text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 shadow-md z-50">
+              <span className="hidden md:hidden">
                 Sales
               </span>
             </TabsTrigger>
             <TabsTrigger value="amenities" className="w-10 h-10 p-0 relative group">
               <Coffee className="h-6 w-6" />
-              <span className="absolute left-[calc(100%+0.5rem)] bg-popover text-popover-foreground px-2 py-1 rounded-md text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 shadow-md z-50">
+              <span className="hidden md:hidden">
                 Amenities
               </span>
             </TabsTrigger>
             <TabsTrigger value="demographics" className="w-10 h-10 p-0 relative group">
               <Users className="h-6 w-6" />
-              <span className="absolute left-[calc(100%+0.5rem)] bg-popover text-popover-foreground px-2 py-1 rounded-md text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 shadow-md z-50">
+              <span className="hidden md:hidden">
                 Demographics
               </span>
             </TabsTrigger>
             <TabsTrigger value="climate" className="w-10 h-10 p-0 relative group">
               <Cloud className="h-6 w-6" />
-              <span className="absolute left-[calc(100%+0.5rem)] bg-popover text-popover-foreground px-2 py-1 rounded-md text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 shadow-md z-50">
+              <span className="hidden md:hidden">
                 Climate
               </span>
             </TabsTrigger>
             <TabsTrigger value="wiki" className="w-10 h-10 p-0 relative group">
               <BookOpen className="h-6 w-6" />
-              <span className="absolute left-[calc(100%+0.5rem)] bg-popover text-popover-foreground px-2 py-1 rounded-md text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 shadow-md z-50">
+              <span className="hidden md:hidden">
                 Wikipedia
               </span>
             </TabsTrigger>
             <TabsTrigger value="housing" className="w-10 h-10 p-0 relative group">
               <Home className="h-6 w-6" />
-              <span className="absolute left-[calc(100%+0.5rem)] bg-popover text-popover-foreground px-2 py-1 rounded-md text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 shadow-md z-50">
-                Housing Feasibility
+              <span className="hidden md:hidden">
+                Housing
               </span>
             </TabsTrigger>
             <TabsTrigger value="reporter" className="w-10 h-10 p-0 relative group">
@@ -182,7 +181,7 @@ export function AnalyticsPanel() {
                   WIP
                 </span>
               </div>
-              <span className="absolute left-[calc(100%+0.5rem)] bg-popover text-popover-foreground px-2 py-1 rounded-md text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 shadow-md z-50">
+              <span className="hidden md:hidden">
                 Reporter
               </span>
             </TabsTrigger>

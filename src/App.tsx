@@ -72,20 +72,16 @@ function App() {
                 <>
                   <MobileHeader />
                   <main className="flex-1 flex flex-col h-full overflow-hidden">
-                    <ResizablePanelGroup direction="vertical" className="h-full">
-                      <ResizablePanel defaultSize={60} minSize={40}>
+                    <ResizablePanelGroup direction="vertical">
+                      <ResizablePanel defaultSize={100}>
                         <MapLayout />
                       </ResizablePanel>
-                      <ResizeHandle withHandle>
-                        <div>
-                          <GripVertical className="h-4 w-4" />
-                        </div>
-                      </ResizeHandle>
-                      <ResizablePanel defaultSize={40} minSize={0} collapsible>
+                      <ResizablePanel defaultSize={0} minSize={0} maxSize={0}>
                         <AnalyticsPanel />
                       </ResizablePanel>
                     </ResizablePanelGroup>
                   </main>
+                  <FloatingChat />
                 </>
               ) : (
                 <>
@@ -99,21 +95,18 @@ function App() {
                   </header>
                   <main className="flex-1 flex flex-col h-full overflow-hidden">
                     <ResizablePanelGroup direction="vertical" className="h-full">
-                      <ResizablePanel defaultSize={6} minSize={6} maxSize={6} className="border-b">
+                      <ResizablePanel defaultSize={8} minSize={6} maxSize={10} className="border-b">
                         <SearchPanel />
                       </ResizablePanel>
                       <ResizablePanel defaultSize={92}>
-                        <ResizablePanelGroup 
-                          direction={isVerticalDisplay ? 'vertical' : 'horizontal'} 
-                          className="h-full"
-                        >
+                        <ResizablePanelGroup direction="horizontal" className="h-full">
                           <ResizablePanel 
-                            defaultSize={isVerticalDisplay ? 30 : 20} 
-                            minSize={isVerticalDisplay ? 20 : 10} 
-                            maxSize={isVerticalDisplay ? 50 : 30}
+                            defaultSize={20} 
+                            minSize={10} 
+                            maxSize={30}
                           >
                             <ResizablePanelGroup direction="vertical">
-                              <ResizablePanel defaultSize={isVerticalDisplay ? 60 : 75}>
+                              <ResizablePanel defaultSize={75}>
                                 <LayerControl />
                               </ResizablePanel>
                               <ResizeHandle withHandle>
@@ -121,7 +114,7 @@ function App() {
                                   <GripVertical className="h-4 w-4" />
                                 </div>
                               </ResizeHandle>
-                              <ResizablePanel defaultSize={isVerticalDisplay ? 40 : 25}>
+                              <ResizablePanel defaultSize={25}>
                                 <SavedPropertiesPane />
                               </ResizablePanel>
                             </ResizablePanelGroup>
@@ -132,8 +125,8 @@ function App() {
                             </div>
                           </ResizeHandle>
                           <ResizablePanel 
-                            defaultSize={isVerticalDisplay ? 40 : 50} 
-                            minSize={isVerticalDisplay ? 30 : 40}
+                            defaultSize={50} 
+                            minSize={40}
                           >
                             <MapLayout />
                           </ResizablePanel>
@@ -143,8 +136,8 @@ function App() {
                             </div>
                           </ResizeHandle>
                           <ResizablePanel 
-                            defaultSize={isVerticalDisplay ? 30 : 30}
-                            minSize={isVerticalDisplay ? 20 : 25}
+                            defaultSize={30}
+                            minSize={25}
                             className={cn(
                               "transition-all duration-300",
                               isReporterActive ? "!w-screen" : ""

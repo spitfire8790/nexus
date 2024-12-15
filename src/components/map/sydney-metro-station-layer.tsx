@@ -142,7 +142,10 @@ export function MetroStationsLayer() {
         // Group stations by name (excluding platform info)
         const stationGroups = stations.reduce((acc: { [key: string]: StationGroup }, station) => {
           // Extract base station name without platform info
-          const baseName = station.stop_name.split(',')[0].trim();
+          const baseName = station.stop_name
+            .split(',')[0]
+            .trim()
+            .replace(/ Station$/, '');  // Remove "Station" suffix
           const lat = parseFloat(station.stop_lat);
           const lon = parseFloat(station.stop_lon);
           

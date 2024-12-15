@@ -95,7 +95,7 @@ export function MapMeasureControl() {
     if (!rootRef.current) return;
     
     rootRef.current.render(
-      <div className="flex items-center gap-2 p-0">
+      <div className="measure-control-container flex items-center gap-2 p-2">
         {hasMeasurements && (
           <Button
             variant="outline"
@@ -412,10 +412,11 @@ export function MapMeasureControl() {
       
       // Create vertex marker
       const marker = L.marker(latlng, {
-        icon: new L.DivIcon({
+        icon: L.divIcon({
           className: 'measure-vertex-icon',
           html: '<div class="measure-vertex"></div>',
-          iconSize: [10, 10],
+          iconSize: [12, 12],
+          iconAnchor: [6, 6]
         })
       }).addTo(map);
       
@@ -448,8 +449,20 @@ export function MapMeasureControl() {
       if (!isDrawingRef.current || pointsRef.current.length < 2) return;
 
       if (measureMode === 'area' && pointsRef.current.length >= 3) {
-        // Close the polygon
-        const closedPoints = [...pointsRef.current, pointsRef.current[0]];
+        // Add the first point again to close the polygon
+        const firstPoint = pointsRef.current[0];
+        pointsRef.current.push(firstPoint);
+        
+        // Create closing vertex marker
+        const marker = L.marker(firstPoint, {
+          icon: L.divIcon({
+            className: 'measure-vertex-icon',
+            html: '<div class="measure-vertex"></div>',
+            iconSize: [12, 12],
+            iconAnchor: [6, 6]
+          })
+        }).addTo(map);
+        vertexMarkersRef.current.push(marker);
         
         // Remove the line and create a filled polygon
         if (drawingLineRef.current) {
@@ -457,7 +470,7 @@ export function MapMeasureControl() {
           drawingLineRef.current = null;
         }
 
-        areaPolygonRef.current = L.polygon(closedPoints, {
+        areaPolygonRef.current = L.polygon(pointsRef.current, {
           color: '#3b82f6',
           weight: 3,
           opacity: 0.8,
@@ -467,7 +480,7 @@ export function MapMeasureControl() {
         featuresRef.current?.addLayer(areaPolygonRef.current);
 
         const polygon = turf.polygon([[
-          ...closedPoints.map(p => [p.lng, p.lat])
+          ...pointsRef.current.map(p => [p.lng, p.lat])
         ]]);
         const area = turf.area(polygon);
         
@@ -479,11 +492,11 @@ export function MapMeasureControl() {
         const currentTooltips: L.Tooltip[] = [];
         
         // Add segment labels
-        for (let i = 1; i < closedPoints.length; i++) {
-          const distance = closedPoints[i-1].distanceTo(closedPoints[i]);
+        for (let i = 1; i < pointsRef.current.length; i++) {
+          const distance = pointsRef.current[i-1].distanceTo(pointsRef.current[i]);
           const midPoint = L.latLng(
-            (closedPoints[i-1].lat + closedPoints[i].lat) / 2,
-            (closedPoints[i-1].lng + closedPoints[i].lng) / 2
+            (pointsRef.current[i-1].lat + pointsRef.current[i].lat) / 2,
+            (pointsRef.current[i-1].lng + pointsRef.current[i].lng) / 2
           );
           const tooltip = createTooltip(formatNumber(distance), midPoint);
           currentTooltips.push(tooltip);
@@ -553,7 +566,7 @@ export function MapMeasureControl() {
 
     // Handle mousemove for temp line preview
     const handleMouseMove = (e: L.LeafletMouseEvent) => {
-      if (pointsRef.current.length === 0) return;
+      if (!isDrawingRef.current || pointsRef.current.length === 0) return;
       
       const latlng = e.latlng;
       currentLatLngRef.current = latlng;
@@ -573,6 +586,27 @@ export function MapMeasureControl() {
         }).addTo(map);
         featuresRef.current?.addLayer(tempLineRef.current);
       }
+
+      // Update drawing tooltips
+      updateSegmentLabels(measureMode === 'area' && pointsRef.current.length >= 2);
+    };
+
+    // Add touch handlers
+    const handleTouchStart = (e: L.LeafletMouseEvent) => {
+      e.originalEvent.preventDefault();
+      handleMapClick(e);
+    };
+
+    const handleTouchMove = (e: L.LeafletMouseEvent) => {
+      e.originalEvent.preventDefault();
+      handleMouseMove(e);
+    };
+
+    const handleTouchEnd = (e: L.LeafletMouseEvent) => {
+      e.originalEvent.preventDefault();
+      if (e.originalEvent.touches?.length === 0) {
+        handleDoubleClick(null);
+      }
     };
 
     map.on('click', handleMapClick);
@@ -580,11 +614,19 @@ export function MapMeasureControl() {
     map.on('contextmenu', handleRightClick);
     map.on('dblclick', handleDoubleClick);
 
+    // Add touch event handlers
+    map.on('touchstart', handleTouchStart);
+    map.on('touchmove', handleTouchMove);
+    map.on('touchend', handleTouchEnd);
+
     return () => {
       map.off('click', handleMapClick);
       map.off('mousemove', handleMouseMove);
       map.off('contextmenu', handleRightClick);
       map.off('dblclick', handleDoubleClick);
+      map.off('touchstart', handleTouchStart);
+      map.off('touchmove', handleTouchMove);
+      map.off('touchend', handleTouchEnd);
       
       if (tempLineRef.current) {
         map.removeLayer(tempLineRef.current);
@@ -603,6 +645,35 @@ export function MapMeasureControl() {
       }
     };
   }, [map, measureMode]);
+
+  useEffect(() => {
+    // Add mobile-specific styles
+    const style = document.createElement('style');
+    style.textContent = `
+      @media (max-width: 768px) {
+        .measure-control-container {
+          position: fixed !important;
+          top: 82px !important;
+          left: 10px !important;
+          transform: none !important;
+          z-index: 1000 !important;
+          background: white !important;
+          padding: 8px !important;
+          border-radius: 8px !important;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.15) !important;
+          display: flex !important;
+          flex-direction: row !important;
+          gap: 8px !important;
+          max-width: calc(100vw - 20px) !important;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
 
   return null;
 }

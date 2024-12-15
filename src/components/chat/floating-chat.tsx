@@ -9,7 +9,13 @@ export function FloatingChat() {
   const isChatOpen = useMapStore((state) => state.isChatOpen);
   const toggleChat = useMapStore((state) => state.toggleChat);
   const dragRef = useRef<HTMLDivElement>(null);
-  const [position, setPosition] = useState({ x: window.innerWidth - 420, y: window.innerHeight - 620 });
+  const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
+  const [position, setPosition] = useState(() => {
+    if (isMobile) {
+      return { x: 0, y: 0 };
+    }
+    return { x: window.innerWidth - 420, y: window.innerHeight - 620 };
+  });
   const [isDragging, setIsDragging] = useState(false);
 
   useEffect(() => {

@@ -40,17 +40,53 @@ let DefaultIcon = L.Icon.extend({
 
 L.Marker.prototype.options.icon = new DefaultIcon();
 
+// Add type declarations for Geoman
+declare module 'leaflet' {
+  interface Map {
+    pm: PMMap;
+  }
+  
+  interface PMMap {
+    addControls: (options: PMControlOptions) => void;
+    removeControls: () => void;
+    initialize: (options: { optIn: boolean }) => void;
+    Toolbar?: any;
+    Keyboard?: any;
+  }
+
+  interface PMControlOptions {
+    position: 'topleft' | 'topright' | 'bottomleft' | 'bottomright';
+    drawCircle?: boolean;
+    drawCircleMarker?: boolean;
+    drawPolyline?: boolean;
+    drawRectangle?: boolean;
+    drawPolygon?: boolean;
+    drawMarker?: boolean;
+    cutPolygon?: boolean;
+    rotateMode?: boolean;
+  }
+}
+
 // Initialize Leaflet-Geoman
 const initGeoman = async (map: L.Map) => {
   try {
-    // Dynamically import Geoman
-    await import('@geoman-io/leaflet-geoman-free');
-    await import('@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css');
-    
+    // Import both the plugin and its CSS
+    await Promise.all([
+      import('@geoman-io/leaflet-geoman-free'),
+      import('@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css')
+    ]);
+
     // Wait for next tick to ensure plugin is loaded
     await new Promise(resolve => setTimeout(resolve, 100));
-    
-    if (map.pm) {
+
+    // Initialize the plugin if not already initialized
+    if (!map.pm) {
+      // Initialize with options
+      map.pm.initialize({
+        optIn: true
+      });
+
+      // Add controls
       map.pm.addControls({
         position: 'topleft',
         drawCircle: false,
@@ -62,10 +98,9 @@ const initGeoman = async (map: L.Map) => {
         cutPolygon: false,
         rotateMode: false,
       });
-      return true;
-    } else {
-      throw new Error('Geoman not initialized properly');
     }
+    
+    return true;
   } catch (error) {
     console.error('Error initializing Geoman:', error);
     return false;

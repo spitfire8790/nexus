@@ -1,7 +1,7 @@
 import { Card } from '@/components/ui/card';
 import { useMapStore } from '@/lib/map-store';
 import { useMap } from 'react-leaflet';
-import { useEffect, useState, useMemo, useCallback } from 'react';
+import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { ZONE_OPTIONS } from '@/lib/map-store';
 import { cn } from "@/lib/utils";
 import { X } from 'lucide-react';
@@ -161,6 +161,7 @@ export function ZoningLegend() {
   const layerGroups = useMapStore((state) => state.layerGroups);
   const updateSelectedZones = useMapStore((state) => state.updateSelectedZones);
   const [visibleItems, setVisibleItems] = useState<LegendItem[]>([]);
+  const updateTimeoutRef = useRef<NodeJS.Timeout>();
   
   const { zoningLayer, selectedZones } = useMemo(() => {
     const layer = layerGroups
@@ -172,19 +173,7 @@ export function ZoningLegend() {
     return { zoningLayer: layer, selectedZones: zones };
   }, [layerGroups]);
 
-  const handleZoneClick = useCallback((zoneCode: string) => {
-    const newSelectedZones = selectedZones.includes(zoneCode)
-      ? selectedZones.filter(z => z !== zoneCode)
-      : [...selectedZones, zoneCode];
-    
-    updateSelectedZones('zoning', newSelectedZones);
-  }, [selectedZones, updateSelectedZones]);
-
-  const clearFilters = useCallback(() => {
-    updateSelectedZones('zoning', []);
-  }, [updateSelectedZones]);
-
-  const legendItems = useMemo(() => 
+  const legendItems = useMemo(() =>
     ZONE_OPTIONS
       .slice()
       .sort((a, b) => a.code.localeCompare(b.code))
@@ -285,23 +274,48 @@ export function ZoningLegend() {
       // If there's an error, show all items
       setVisibleItems(legendItems);
     }
-  }, [map, zoningLayer, selectedZones, legendItems]);
+  }, [zoningLayer, map, legendItems, selectedZones]);
+
+  const debouncedUpdateVisibleItems = useCallback(() => {
+    if (updateTimeoutRef.current) {
+      clearTimeout(updateTimeoutRef.current);
+    }
+    
+    updateTimeoutRef.current = setTimeout(() => {
+      updateVisibleItems();
+    }, 500); // 500ms debounce
+  }, [updateVisibleItems]);
+
+  const handleZoneClick = useCallback((zoneCode: string) => {
+    const newSelectedZones = selectedZones.includes(zoneCode)
+      ? selectedZones.filter(z => z !== zoneCode)
+      : [...selectedZones, zoneCode];
+    
+    updateSelectedZones('zoning', newSelectedZones);
+  }, [selectedZones, updateSelectedZones]);
+
+  const clearFilters = useCallback(() => {
+    updateSelectedZones('zoning', []);
+  }, [updateSelectedZones]);
 
   useEffect(() => {
-    console.log('Effect running, layer enabled:', zoningLayer?.enabled);
-    if (zoningLayer?.enabled) {
-      updateVisibleItems();
-      map.on('moveend', updateVisibleItems);
-      map.on('zoomend', updateVisibleItems);
-    } else {
+    if (!zoningLayer?.enabled) {
+      // Only log once when the layer is first disabled
+      if (visibleItems.length > 0) {
+        console.log('Legend not showing: layer not enabled');
+      }
       setVisibleItems([]);
+      return;
     }
 
+    debouncedUpdateVisibleItems();
+
     return () => {
-      map.off('moveend', updateVisibleItems);
-      map.off('zoomend', updateVisibleItems);
+      if (updateTimeoutRef.current) {
+        clearTimeout(updateTimeoutRef.current);
+      }
     };
-  }, [map, zoningLayer?.enabled, updateVisibleItems]);
+  }, [zoningLayer?.enabled, map, debouncedUpdateVisibleItems]);
 
   if (!zoningLayer?.enabled) {
     console.log('Legend not showing: layer not enabled');

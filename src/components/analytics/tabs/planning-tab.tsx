@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useMapStore } from '@/lib/map-store';
 import { Alert, AlertTitle} from '@/components/ui/alert';
 import { Loader2, CheckCircle2, XCircle, InfoIcon } from 'lucide-react';
@@ -10,7 +10,11 @@ import {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
+  Portal,
 } from "@/components/ui/tooltip";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { planningDefinitions } from '@/lib/planning-definitions';
+import { loadDefinitions, parseCSVLine } from '@/lib/planning-definitions';
 
 interface PermittedUses {
   withConsent: string[] | null;
@@ -173,30 +177,123 @@ export function PlanningTab() {
     fetchZoningAndPermittedUses();
   }, [selectedProperty?.propId, selectedProperty?.geometry, setZoneInfo, setPermittedUses]);
 
+  interface LandUseDefinition {
+    Term: string;
+    LandUse: string;
+    Definition: string;
+  }
+
   const LandUseItem = ({ use }: { use: string }) => {
-    const definition = getPlanningDefinition(use);
-    const hasDefinition = !!definition;
+    const [isOpen, setIsOpen] = useState(false);
+    const [definitions, setDefinitions] = useState<Record<string, { LandUse: string; Definition: string }>>({});
     
+    // Helper function to normalize terms
+    const normalizeTerm = (term: string): string => {
+      // Convert to lowercase for case-insensitive comparison
+      const lowerTerm = term.toLowerCase();
+      
+      // Define normalizations with lowercase keys
+      const normalizations: Record<string, string> = {
+        'crematoria': 'Crematorium',
+        'crematorium': 'Crematorium',
+        // Add other variations here as needed
+      };
+      
+      return normalizations[lowerTerm] || term;
+    };
+    
+    // Get definition with normalization
+    const definition = getPlanningDefinition(normalizeTerm(use));
+    
+    // Load definitions when component mounts
+    useEffect(() => {
+      const loadDefs = async () => {
+        const csvText = await loadDefinitions();
+        const lines = csvText.split('\n');
+        const defs: Record<string, { LandUse: string; Definition: string }> = {};
+        
+        // Skip header row
+        for (let i = 1; i < lines.length; i++) {
+          const [term, landUse, definition] = parseCSVLine(lines[i]);
+          if (term) {
+            defs[term] = { LandUse: landUse, Definition: definition };
+            
+            // Also add normalized variations
+            if (term === 'Crematorium') {
+              defs['Crematoria'] = defs[term];
+            }
+            // Add other variations here as needed
+          }
+        }
+        
+        setDefinitions(defs);
+      };
+      
+      loadDefs();
+    }, []);
+    
+    // Check if it's an "Any Other Development" entry
+    const otherDevMatch = use.match(/Any Other Development Not Specified In Item\s+([0-9\s,Or]+)/i);
+    
+    let hasDefinition = false;
+    let definitionText = '';
+    
+    if (otherDevMatch) {
+      // Get referenced item numbers
+      const itemNumbers = otherDevMatch[1].split(/\s+Or\s+|\s*,\s*/).map(Number);
+      
+      // Get all valid land uses where LandUse is not "No"
+      const validLandUses = Object.entries(planningDefinitions)
+        .filter(([_, def]) => def.LandUse !== "No")
+        .map(([term, _]) => term)
+        .sort()
+        .join(", ");
+      
+      hasDefinition = true;
+      definitionText = validLandUses;
+    } else {
+      hasDefinition = definition !== undefined && definition !== "Nil";
+      definitionText = definition || '';
+    }
+
     return (
-      <TooltipProvider>
-        <Tooltip>
-          <li className="flex items-center gap-2 list-none">
-            <span>{use}</span>
-            <TooltipTrigger asChild>
-              <InfoIcon 
-                className={`h-4 w-4 cursor-help ${
-                  hasDefinition 
-                    ? 'text-muted-foreground' 
-                    : 'text-red-500'
-                }`} 
-              />
-            </TooltipTrigger>
-            <TooltipContent className="max-w-[300px]">
-              <p>{definition || 'No definition available'}</p>
-            </TooltipContent>
-          </li>
-        </Tooltip>
-      </TooltipProvider>
+      <>
+        <li className="flex items-center gap-2 list-none">
+          <span className="truncate flex-1">{use}</span>
+          {hasDefinition && (
+            <button onClick={() => setIsOpen(true)} className="shrink-0">
+              <InfoIcon className="h-4 w-4 cursor-help text-muted-foreground hover:text-foreground transition-colors" />
+            </button>
+          )}
+        </li>
+
+        {hasDefinition && (
+          <Dialog open={isOpen} onOpenChange={setIsOpen}>
+            <DialogContent 
+              className="max-w-[400px] p-6 fixed right-4 top-1/2 -translate-y-1/2 translate-x-0 left-auto"
+              style={{ transform: 'translate(0, -50%)' }}
+            >
+              <div className="space-y-4">
+                <h4 className="font-medium text-lg">{use}</h4>
+                <p className="text-sm text-muted-foreground">
+                  {definitionText}
+                </p>
+                <div className="text-xs text-muted-foreground border-t pt-4">
+                  <p>Source: <a 
+                    href="https://legislation.nsw.gov.au/view/html/inforce/current/epi-2006-155a"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-400 hover:text-blue-500 underline"
+                  >
+                    Standard Instrument
+                  </a></p>
+                  <p>Date accessed: 15 December 2024</p>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
+      </>
     );
   };
 
@@ -248,7 +345,7 @@ export function PlanningTab() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="border-2 border-green-500">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             Permitted Uses <CheckCircle2 className="h-6 w-6 text-green-500" />
@@ -257,7 +354,7 @@ export function PlanningTab() {
         <CardContent className="space-y-4">
           <div className="border rounded-lg p-4">
             <h4 className="font-medium mb-2 flex items-center justify-between">
-              <span>Permitted without consent</span>
+              <span><strong>Permitted without consent (2)</strong></span>
               <span className="text-sm text-muted-foreground">
                 {permittedUses.withoutConsent?.length || 0} uses
               </span>
@@ -275,7 +372,7 @@ export function PlanningTab() {
 
           <div className="border rounded-lg p-4">
             <h4 className="font-medium mb-2 flex items-center justify-between">
-              <span>Permitted with consent</span>
+              <span><strong>Permitted with consent (3)</strong></span>
               <span className="text-sm text-muted-foreground">
                 {permittedUses.withConsent?.length || 0} uses
               </span>
@@ -293,7 +390,7 @@ export function PlanningTab() {
         </CardContent>
       </Card>
 
-      <Card className="border-red-200">
+      <Card className="border-2 border-red-500">
         <CardHeader className="pb-0">
           <CardTitle className="flex items-center justify-between">
             <div className="flex items-center gap-2">

@@ -67,7 +67,17 @@ function SortableLayerItem({
   const [maxFSR, setMaxFSR] = useState('');
   
   // Add this line to allow toggling for custom layers
-  const canToggle = layer.type === 'dynamic' || layer.type === 'tile' || layer.type === 'geojson' || layer.type === 'custom' || layer.type === 'wms';
+  const canToggle = layer.type === 'dynamic' || 
+                    layer.type === 'tile' || 
+                    layer.type === 'geojson' || 
+                    layer.type === 'custom' || 
+                    layer.type === 'wms' ||
+                    layer.type === 'feature' ||
+                    layer.type === 'layerGroup' ||
+                    layer.id === 'train-stations' ||
+                    layer.id === 'metro-stations' ||
+                    layer.id === 'light-rail-stops' ||
+                    layer.id === 'roads';
   
   const {
     attributes,
@@ -113,7 +123,8 @@ function SortableLayerItem({
   };
 
   useEffect(() => {
-    console.log('Layer selected zones:', layer.selectedZones);
+    const selectedZones = layer.selectedZones || [];
+    console.log('Layer selected zones:', selectedZones);
   }, [layer.selectedZones]);
 
   const hasActiveFilter = layer.selectedZones?.length > 0;
@@ -157,7 +168,7 @@ function SortableLayerItem({
           id={layer.id}
           checked={layer.enabled}
           onCheckedChange={() => handleLayerToggle(layer.id)}
-          disabled={!canToggle || (layer.id !== 'metromap' && layer.id !== 'nearmap' && !layer.url)}
+          disabled={!canToggle}
         />
         <Label htmlFor={layer.id} className="text-left flex items-center gap-2">
           {layer.name}
@@ -454,20 +465,12 @@ function CollapsibleGroup({
   onUpdateLayerUrl, 
   onUpdateFSRRange 
 }: CollapsibleGroupProps) {
-  const [isGroupEnabled, setIsGroupEnabled] = useState(false);
+  const groupEnabled = useMapStore((state) => state.groupEnabledStates[group.id] ?? false);
+  const updateGroupEnabled = useMapStore((state) => state.updateGroupEnabled);
 
-  // Update map store when group enabled state changes
-  useEffect(() => {
-    const { updateGroupEnabled } = useMapStore.getState();
-    updateGroupEnabled(group.id, isGroupEnabled);
-
-    // Toggle all child layers based on group state
-    group.layers.forEach(layer => {
-      if (layer.enabled && !isGroupEnabled) {
-        onLayerToggle(layer.id);
-      }
-    });
-  }, [isGroupEnabled, group.id]);
+  const handleGroupToggle = (checked: boolean) => {
+    updateGroupEnabled(group.id, checked);
+  };
 
   return (
     <div className="space-y-2">
@@ -480,8 +483,8 @@ function CollapsibleGroup({
         </div>
         <div className="flex items-center gap-2">
           <Switch
-            checked={isGroupEnabled}
-            onCheckedChange={setIsGroupEnabled}
+            checked={groupEnabled}
+            onCheckedChange={handleGroupToggle}
             className="ml-2"
           />
           <button 
@@ -503,12 +506,8 @@ function CollapsibleGroup({
               <SortableLayerItem
                 key={layer.id}
                 layer={layer}
-                onToggle={(id) => {
-                  if (isGroupEnabled) {
-                    onLayerToggle(id);
-                  }
-                }}
-                groupEnabled={isGroupEnabled}
+                onToggle={onLayerToggle}
+                groupEnabled={groupEnabled}
                 onUpdateZones={onUpdateZones}
                 onUpdateOpacity={onUpdateOpacity}
                 onUpdateLayerUrl={onUpdateLayerUrl}

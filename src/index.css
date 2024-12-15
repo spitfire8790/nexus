@@ -504,6 +504,108 @@ html, body {
   .search-panel-container .search-actions button {
     flex: 1;
   }
+
+  /* Only apply these styles when in vertical/mobile mode */
+  .analytics-tabs[data-orientation="vertical"] {
+    flex-direction: column !important;
+  }
+
+  .analytics-tabs[data-orientation="vertical"] > div:first-child {
+    width: 100% !important;
+    height: auto !important;
+    border-right: 0 !important;
+    border-bottom: 1px solid hsl(var(--border));
+  }
+
+  .analytics-tabs[data-orientation="vertical"] [role="tablist"] {
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    padding: 0.75rem !important;
+    gap: 0 !important;
+    overflow-x: auto;
+    touch-action: pan-x;
+    -webkit-overflow-scrolling: touch;
+    min-height: 80px;
+  }
+
+  /* Make tabs more compact but taller */
+  .analytics-tabs[data-orientation="vertical"] [role="tab"] {
+    width: auto !important;
+    height: auto !important;
+    padding: 0.5rem !important;
+    display: flex !important;
+    align-items: center;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.375rem;
+    flex: 1;
+    min-width: min-content;
+    min-height: 64px;
+  }
+
+  /* Adjust icon and text size */
+  .analytics-tabs[data-orientation="vertical"] [role="tab"] svg {
+    width: 1.5rem !important;
+    height: 1.5rem !important;
+  }
+
+  .analytics-tabs[data-orientation="vertical"] [role="tab"] span:not([class*="absolute"]) {
+    font-size: 0.75rem;
+    display: block !important;
+    text-align: center;
+    line-height: 1.2;
+  }
+
+  /* Hide the empty space above tabs */
+  .analytics-tabs[data-orientation="vertical"] > div:first-child > div:first-child {
+    display: none;
+  }
+
+  /* Hide tooltips */
+  .analytics-tabs[data-orientation="vertical"] .group span[class*="absolute"] {
+    display: none;
+  }
+
+  /* Header icons with labels */
+  .header-icons {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+  }
+
+  .header-icons button {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 0.25rem;
+    min-height: unset !important;
+    padding: 0.5rem !important;
+  }
+
+  .header-icons button svg {
+    display: block !important;
+    width: 1.5rem !important;
+    height: 1.5rem !important;
+  }
+
+  .header-icons button span {
+    display: block !important;
+    font-size: 0.75rem;
+    text-align: center;
+    line-height: 1.2;
+    color: hsl(var(--muted-foreground));
+  }
+
+  /* Increase header height for mobile */
+  header.border-b {
+    height: auto;
+  }
+
+  header.border-b > div {
+    min-height: 72px !important; /* Increased from h-14 (56px) */
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
 }
 
 /* Improve scrolling on mobile */
@@ -587,5 +689,138 @@ html, body {
   
   .labels-control.leaflet-control-layers {
     margin-left: 8px;
+  }
+}
+
+/* Mobile measure control styles */
+@media (max-width: 768px) {
+  .measure-control-container {
+    width: auto !important;
+    flex-wrap: nowrap !important;
+    top: 82px !important;
+  }
+
+  .measure-control-container button {
+    padding: 8px !important;
+    height: auto !important;
+    min-height: 36px !important;
+    white-space: nowrap !important;
+  }
+
+  .measure-vertex-icon {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .measure-vertex {
+    width: 12px !important;
+    height: 12px !important;
+    margin: -6px 0 0 -6px !important;
+    border: 2px solid #3b82f6 !important;
+    background: white !important;
+    border-radius: 50% !important;
+    box-shadow: 0 0 4px rgba(0,0,0,0.2) !important;
+  }
+
+  .measure-tooltip {
+    font-size: 14px !important;
+    padding: 6px 10px !important;
+    background: rgba(0, 0, 0, 0.8) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 4px !important;
+  }
+}
+
+/* Mobile chat button styles */
+@media (max-width: 768px) {
+  .header-icons button {
+    padding: 0.5rem !important;
+  }
+
+  .header-icons button svg {
+    width: 1.5rem !important;
+    height: 1.5rem !important;
+  }
+
+  .header-icons button span {
+    display: none !important;
+  }
+}
+
+/* Mobile sheet styles */
+@media (max-width: 768px) {
+  .mobile-header {
+    position: relative;
+    z-index: 1100 !important;
+  }
+
+  [data-sheet-overlay] {
+    z-index: 1200 !important;
+  }
+
+  [data-sheet-content] {
+    z-index: 1300 !important;
+    background-color: white !important;
+    color: black !important;
+  }
+
+  /* Sheet content styles */
+  [data-sheet-content] * {
+    color: inherit !important;
+  }
+
+  [data-sheet-content] input,
+  [data-sheet-content] button {
+    background-color: white !important;
+    border-color: #e5e7eb !important;
+  }
+
+  [data-sheet-content] input:focus {
+    border-color: #3b82f6 !important;
+  }
+
+  /* Ensure buttons are clickable */
+  .header-icons button {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Sheet header styles */
+  [data-sheet-content] h2,
+  [data-sheet-content] h3 {
+    color: black !important;
+  }
+
+  /* Sheet background and overlay */
+  [data-sheet-overlay] {
+    background-color: rgba(0, 0, 0, 0.4) !important;
+  }
+}
+
+/* Mobile floating chat styles */
+@media (max-width: 768px) {
+  .fixed.z-50.flex.flex-col {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    transform: none !important;
+    border-radius: 0 !important;
+    background-color: white !important;
+    z-index: 1400 !important; /* Ensure it's above sheets */
+  }
+
+  /* Ensure chat panel takes full height */
+  .fixed.z-50.flex.flex-col .flex-1 {
+    height: calc(100vh - 56px) !important;
+  }
+
+  /* Disable dragging on mobile */
+  .fixed.z-50.flex.flex-col [class*="cursor-move"] {
+    cursor: default !important;
   }
 }

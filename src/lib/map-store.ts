@@ -636,7 +636,7 @@ export const useMapStore = create<MapState>((set, get) => ({
   },
 
   groupEnabledStates: {},
-  updateGroupEnabled: (groupId, enabled) =>
+  updateGroupEnabled: (groupId: string, enabled: boolean) =>
     set((state) => ({
       groupEnabledStates: {
         ...state.groupEnabledStates,

@@ -4,3 +4,23 @@
   left: 0;
   pointer-events: none;
 } 
+
+.leaflet-container {
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  perspective: 1000;
+  -webkit-transform: translate3d(0, 0, 0);
+  -webkit-backface-visibility: hidden;
+  -webkit-perspective: 1000;
+}
+
+.leaflet-marker-icon {
+  will-change: transform;
+}
+
+.leaflet-marker-icon,
+.leaflet-marker-shadow,
+.leaflet-image-layer,
+.leaflet-pane > svg path {
+  transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+} 

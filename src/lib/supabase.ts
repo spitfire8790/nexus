@@ -14,9 +14,16 @@ if (!supabaseAnonKey) {
   throw new Error('Missing VITE_SUPABASE_ANON_KEY');
 }
 
-console.log('Initializing Supabase client with:', { 
-  url: supabaseUrl.substring(0, 20) + '...', 
-  keyLength: supabaseAnonKey.length 
+// Create a single instance of the Supabase client
+const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    persistSession: true,
+    storageKey: 'nexus-auth-token'
+  }
 });
 
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey); 
+// Export the singleton instance
+export { supabase };
+
+// Prevent multiple instances by not exporting createClient
+export type { Database }; 

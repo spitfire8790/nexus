@@ -1,10 +1,5 @@
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from './supabase';
 import { Template, Slide } from '@/types/reporter';
-
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL!,
-  import.meta.env.VITE_SUPABASE_ANON_KEY!
-);
 
 export async function saveTemplate(name: string, slides: Slide[]) {
   const { data: { user } } = await supabase.auth.getUser();

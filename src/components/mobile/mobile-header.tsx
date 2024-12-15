@@ -1,5 +1,5 @@
 import { Logo } from "@/components/ui/logo";
-import { Search, Layers, BookmarkPlus, MousePointerClick } from "lucide-react";
+import { Search, Layers, BookmarkPlus, MousePointerClick, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { SearchPanel } from "@/components/search-panel";
@@ -9,16 +9,26 @@ import { useMapStore } from "@/lib/map-store";
 
 export function MobileHeader() {
   const { mapSelectMode, setMapSelectMode } = useMapStore();
+  const toggleChat = useMapStore((state) => state.toggleChat);
 
   return (
-    <header className="border-b bg-card shadow-sm">
+    <header className="mobile-header border-b bg-card shadow-sm">
       <div className="px-4 flex h-14 items-center justify-between">
         <Logo />
-        <div className="flex items-center gap-2">
+        <div className="header-icons flex items-center gap-2">
+          <Button 
+            variant="ghost" 
+            className="h-auto w-auto p-2"
+            onClick={toggleChat}
+          >
+            <MessageSquare className="h-6 w-6" />
+            <span>Chat</span>
+          </Button>
           <Sheet>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <Search className="h-5 w-5" />
+              <Button variant="ghost" className="h-auto w-auto p-2">
+                <Search className="h-6 w-6" />
+                <span>Search</span>
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="w-[90%] sm:w-[540px]">
@@ -26,19 +36,21 @@ export function MobileHeader() {
             </SheetContent>
           </Sheet>
 
-          <Button 
+          <Button
             variant={mapSelectMode ? "default" : "ghost"}
-            size="icon"
+            className="h-auto w-auto p-2"
             onClick={() => setMapSelectMode(!mapSelectMode)}
-            title="Search on map"
+            data-state={mapSelectMode ? "active" : "inactive"}
           >
-            <MousePointerClick className="h-5 w-5" />
+            <MousePointerClick className="h-6 w-6" />
+            <span>Select</span>
           </Button>
 
           <Sheet>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <Layers className="h-5 w-5" />
+              <Button variant="ghost" className="h-auto w-auto p-2">
+                <Layers className="h-6 w-6" />
+                <span>Layers</span>
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="w-[90%] sm:w-[540px]">
@@ -48,8 +60,9 @@ export function MobileHeader() {
 
           <Sheet>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <BookmarkPlus className="h-5 w-5" />
+              <Button variant="ghost" className="h-auto w-auto p-2">
+                <BookmarkPlus className="h-6 w-6" />
+                <span>Saved</span>
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="w-[90%] sm:w-[540px]">
