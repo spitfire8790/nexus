@@ -33,7 +33,7 @@ import {
   
             <section className="space-y-2">
               <h3 className="font-semibold">3. Data Privacy</h3>
-              <p>We collect and process personal data as described in our Privacy Policy. By using Nexus, you consent to such processing and warrant that all data provided by you is accurate.</p>
+              <p>We only collect personal data if provided by you as part of account creation or through the chat functionality. No personal data is shared with any users. By using Nexus, you consent to this and warrant that all data provided by you is accurate.</p>
             </section>
   
             <section className="space-y-2">

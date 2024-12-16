@@ -8,7 +8,7 @@ import { MapLayout } from "@/components/map-layout";
 import { SearchPanel } from "@/components/search-panel";
 import { LayerControl } from "@/components/layer-control";
 import { AnalyticsPanel } from "@/components/analytics/analytics-panel";
-import { GripVertical, MessageCircle } from "lucide-react";
+import { GripVertical, MessageCircle, LogOut } from "lucide-react";
 import { useState, useEffect } from 'react';
 import { ChatPanel } from "@/components/chat/chat-panel";
 import { useAuth } from './lib/auth';
@@ -24,6 +24,8 @@ import { useSavedProperties } from '@/hooks/use-saved-properties';
 import { UserCursors } from "@/components/admin/user-cursors";
 import { MobileHeader } from "@/components/mobile/mobile-header";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Button } from "@/components/ui/button";
+import { signOut } from '@/lib/auth';
 
 const queryClient = new QueryClient();
 
@@ -73,10 +75,15 @@ function App() {
                   <MobileHeader />
                   <main className="flex-1 flex flex-col h-full overflow-hidden">
                     <ResizablePanelGroup direction="vertical">
-                      <ResizablePanel defaultSize={100}>
+                      <ResizablePanel defaultSize={70} minSize={30}>
                         <MapLayout />
                       </ResizablePanel>
-                      <ResizablePanel defaultSize={0} minSize={0} maxSize={0}>
+                      <ResizeHandle withHandle>
+                        <div className="rotate-90">
+                          <GripVertical className="h-4 w-4" />
+                        </div>
+                      </ResizeHandle>
+                      <ResizablePanel defaultSize={30} minSize={20}>
                         <AnalyticsPanel />
                       </ResizablePanel>
                     </ResizablePanelGroup>
@@ -86,11 +93,22 @@ function App() {
               ) : (
                 <>
                   <header className="border-b bg-card shadow-sm">
-                    <div className="px-4 flex h-14 items-center">
-                      <Logo />
-                      <span className="text-sm text-muted-foreground ml-2">
-                        Property and Planning Analytics
-                      </span>
+                    <div className="px-4 flex h-14 items-center justify-between">
+                      <div className="flex items-center">
+                        <Logo />
+                        <span className="text-sm text-muted-foreground ml-2">
+                          Property and Planning Analytics
+                        </span>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={signOut}
+                        className="gap-2"
+                      >
+                        <LogOut className="h-4 w-4" />
+                        Sign out
+                      </Button>
                     </div>
                   </header>
                   <main className="flex-1 flex flex-col h-full overflow-hidden">

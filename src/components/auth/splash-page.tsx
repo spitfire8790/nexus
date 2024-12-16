@@ -11,6 +11,7 @@ import { TermsOfService } from './terms-of-service';
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/ui/logo";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export function SplashPage() {
   const [loading, setLoading] = useState(false);
@@ -21,6 +22,7 @@ export function SplashPage() {
   const [showTerms, setShowTerms] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordsMatch, setPasswordsMatch] = useState(false);
+  const [showResetPassword, setShowResetPassword] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -166,9 +168,8 @@ export function SplashPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex flex-col items-center justify-center p-4">
-      <div className="text-center mb-8">
+      <div className="flex flex-col items-center mb-4">
         <Logo className="scale-150 mb-4" />
-        <h1 className="text-4xl font-bold tracking-tight mb-2">Nexus</h1>
         <p className="text-muted-foreground">Property and Planning Analytics</p>
       </div>
 
@@ -202,9 +203,19 @@ export function SplashPage() {
                   autoComplete="current-password"
                 />
               </div>
-              <Button type="submit" className="w-full h-11" disabled={loading}>
-                {loading ? "Signing in..." : "Sign In"}
-              </Button>
+              <div className="flex flex-col gap-2">
+                <Button type="submit" className="w-full h-11" disabled={loading}>
+                  {loading ? "Signing in..." : "Sign In"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="link"
+                  className="text-sm text-muted-foreground"
+                  onClick={() => setShowResetPassword(true)}
+                >
+                  Forgot password?
+                </Button>
+              </div>
             </form>
           </TabsContent>
 
@@ -300,6 +311,69 @@ export function SplashPage() {
         </Tabs>
       </Card>
       <TermsOfService open={showTerms} onClose={() => setShowTerms(false)} />
+      <PasswordResetDialog 
+        open={showResetPassword} 
+        onClose={() => setShowResetPassword(false)} 
+      />
     </div>
+  );
+}
+
+function PasswordResetDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Check your email",
+        description: "We've sent you a password reset link",
+      });
+      onClose();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to send reset email",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Reset Password</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleResetPassword} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="Enter your email address"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
+          <Button type="submit" className="w-full" disabled={loading}>
+            {loading ? "Sending..." : "Send Reset Link"}
+          </Button>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }

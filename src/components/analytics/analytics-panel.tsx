@@ -100,7 +100,7 @@ export function AnalyticsPanel() {
   }, [selectedProperty]);
 
   return (
-    <div className="h-full bg-card shadow-lg">
+    <div className="h-full bg-card shadow-lg overflow-hidden">
       <Tabs 
         value={currentTab}
         defaultValue="overview" 

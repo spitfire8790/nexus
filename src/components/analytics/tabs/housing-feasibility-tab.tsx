@@ -8,26 +8,14 @@ import { calculateStreetFrontage } from "@/components/analytics/tabs/overview-ta
 import { Ruler } from "lucide-react";
 import { supabase } from '@/lib/supabase';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { loadSaleData } from '@/lib/csv-parser';
-import { useQuery } from '@tanstack/react-query';
-import { csv } from 'd3-fetch';
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { ResponsiveBar } from '@nivo/bar';
 import { mobileStyles as m } from '@/styles/mobile-responsive';
 
@@ -1220,7 +1208,7 @@ export function HousingFeasibilityTab() {
         // Fallback to coordinates lookup with better error handling
         const coordinates = selectedProperty.geometry.rings[0][0];
         const lon = (coordinates[0] * 180) / 20037508.34;
-        const lat = (Math.atan(Math.exp((coordinates[1] * Math.PI) / 20037508.34)) * 360) / Math.PI - 90;
+        const lat = (Math.atan(Math.exp((coordinates[1] * Math.PI) / 20037508.34)) * 360 / Math.PI - 90)
 
         console.log('Querying coordinates:', { lat, lon });
 

@@ -1,14 +1,11 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { MapContainer, TileLayer, useMap, LayersControl, useMapEvents, ZoomControl } from 'react-leaflet';
 import * as L from 'leaflet';
 import * as EL from 'esri-leaflet';
 import * as ELG from 'esri-leaflet-geocoder';
 import 'leaflet/dist/leaflet.css';
-import 'leaflet-draw/dist/leaflet.draw.css';
 import 'esri-leaflet-geocoder/dist/esri-leaflet-geocoder.css';
 import { useMapStore } from '@/lib/map-store';
-import { Deck } from '@deck.gl/core';
-import { GeoJsonLayer } from '@deck.gl/layers';
 import { MapLegends } from '@/components/map/map-legends';
 import { AmenitiesLegend } from './analytics/tabs/amenities-tab';
 import { TemperatureControls } from './map/temperature-controls';
@@ -22,6 +19,7 @@ import { ImageryDateOverlay } from './map/imagery-date-overlay';
 import { RoadsLayer } from './map/roads-layer';
 import { Layers, Tag } from 'lucide-react';
 import { RoadLabelsLayer } from './map/road-labels-layer';
+import { throttle } from 'lodash';
 
 // Fix for default marker icons in Leaflet with Vite
 import icon from 'leaflet/dist/images/marker-icon.png';
@@ -66,46 +64,6 @@ declare module 'leaflet' {
     rotateMode?: boolean;
   }
 }
-
-// Initialize Leaflet-Geoman
-const initGeoman = async (map: L.Map) => {
-  try {
-    // Import both the plugin and its CSS
-    await Promise.all([
-      import('@geoman-io/leaflet-geoman-free'),
-      import('@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css')
-    ]);
-
-    // Wait for next tick to ensure plugin is loaded
-    await new Promise(resolve => setTimeout(resolve, 100));
-
-    // Initialize the plugin if not already initialized
-    if (!map.pm) {
-      // Initialize with options
-      map.pm.initialize({
-        optIn: true
-      });
-
-      // Add controls
-      map.pm.addControls({
-        position: 'topleft',
-        drawCircle: false,
-        drawCircleMarker: false,
-        drawPolyline: false,
-        drawRectangle: false,
-        drawPolygon: false,
-        drawMarker: false,
-        cutPolygon: false,
-        rotateMode: false,
-      });
-    }
-    
-    return true;
-  } catch (error) {
-    console.error('Error initializing Geoman:', error);
-    return false;
-  }
-};
 
 // Constants for pane management
 const BASE_PANE = 'base-pane';
@@ -589,116 +547,40 @@ export function MapView() {
   const savedProperties = useMapStore((state) => state.savedProperties);
   const measureMode = useMapStore((state) => state.measureMode);
   const showSavedProperties = useMapStore((state) => state.showSavedPropertyMarkers);
-  
+
+  // Move the throttled update inside the component
+  const throttledUpdate = useCallback(
+    throttle(() => {
+      if (!mapRef.current) return;
+      const map = mapRef.current;
+      const currentZoom = map.getZoom();
+
+      // Update existing layers instead of removing/re-adding
+      Object.entries(savedLayersRef.current).forEach(([id, layer]) => {
+        const shouldBeVisible = showSavedProperties && currentZoom <= 16;
+        if (shouldBeVisible && !map.hasLayer(layer)) {
+          map.addLayer(layer);
+        } else if (!shouldBeVisible && map.hasLayer(layer)) {
+          map.removeLayer(layer);
+        }
+      });
+    }, 250),
+    [showSavedProperties]
+  );
+
   useEffect(() => {
     if (!mapRef.current) return;
     const map = mapRef.current;
-    const currentZoom = map.getZoom();
-
-    // Remove all existing layers
-    Object.values(savedLayersRef.current).forEach(layer => {
-      if (map.hasLayer(layer)) {
-        map.removeLayer(layer);
-      }
-    });
-    Object.values(markerLayersRef.current).forEach(marker => {
-      if (map.hasLayer(marker)) {
-        map.removeLayer(marker);
-      }
-    });
     
-    savedLayersRef.current = {};
-    markerLayersRef.current = {};
-
-    // Only add layers if showSavedProperties is true
-    if (showSavedProperties) {
-      savedProperties.forEach(property => {
-        const layerId = `saved-property-${property.id}`;
-        
-        // Always add polygon layer when showing saved properties
-        const layer = L.geoJSON(property.geometry, {
-          style: {
-            color: '#ef4444',
-            weight: 3,
-            opacity: 0.7,
-            fillOpacity: 0.1
-          }
-        })
-        .bindPopup(property.address);
-        
-        layer.addTo(map);
-        savedLayersRef.current[layerId] = layer;
-
-        // Calculate centroid for marker
-        const coords = property.geometry.type === 'Feature' 
-          ? property.geometry.geometry.coordinates[0] 
-          : property.geometry.coordinates[0];
-        
-        const centroid = coords.reduce(
-          (acc: [number, number], curr: number[]) => [acc[0] + curr[0], acc[1] + curr[1]],
-          [0, 0]
-        ).map((sum: number) => sum / coords.length);
-
-        // Create marker
-        const marker = L.marker([centroid[1], centroid[0]], {
-          icon: L.divIcon({
-            html: `
-              <div class="flex flex-col items-center">
-                <div class="w-6 h-6 rounded-full bg-blue-500 border-2 border-white shadow-lg flex items-center justify-center">
-                  <i class="fas fa-map-marker text-white text-xs"></i>
-                </div>
-                <div class="bg-white/90 px-1.5 py-0.5 rounded-md shadow-sm mt-1 whitespace-nowrap">
-                  <span class="text-[10px] font-bold text-blue-500">
-                    ${property.address.replace(/\s\d{4}$/, '')}
-                  </span>
-                </div>
-              </div>
-            `,
-            className: 'saved-property-marker',
-            iconSize: [120, 45],    // Increased height to accommodate label
-            iconAnchor: [60, 22],   // Centered horizontally, slightly above vertical center
-            popupAnchor: [0, -30]   // Adjusted popup position
-          })
-        }).bindPopup(property.address);
-
-        // Only show markers at zoom threshold
-        if (currentZoom <= 16) {
-          marker.addTo(map);
-          markerLayersRef.current[layerId] = marker;
-        }
-      });
-    }
-
-    // Add zoom handler
-    const handleZoomEnd = () => {
-      if (!showSavedProperties) return;
-      
-      const newZoom = map.getZoom();
-      
-      savedProperties.forEach(property => {
-        const layerId = `saved-property-${property.id}`;
-        const marker = markerLayersRef.current[layerId];
-
-        if (newZoom <= 16) {
-          if (marker && !map.hasLayer(marker)) {
-            marker.addTo(map);
-          }
-        } else {
-          if (marker && map.hasLayer(marker)) {
-            map.removeLayer(marker);
-          }
-        }
-      });
-    };
-
-    map.on('zoomend', handleZoomEnd);
+    map.on('moveend', throttledUpdate);
+    map.on('zoomend', throttledUpdate);
     
     return () => {
-      map.off('zoomend', handleZoomEnd);
-      Object.values(savedLayersRef.current).forEach(layer => layer.remove());
-      Object.values(markerLayersRef.current).forEach(marker => marker.remove());
+      map.off('moveend', throttledUpdate);
+      map.off('zoomend', throttledUpdate);
+      throttledUpdate.cancel(); // Clean up the throttled function
     };
-  }, [mapRef, savedProperties, showSavedProperties]);
+  }, [throttledUpdate]);
 
   return (
     <div className="relative w-full h-full">
@@ -722,9 +604,12 @@ export function MapView() {
         <MapLayerController />
         <MapMeasureControl />
         <ImageryDateOverlay />
-        {/* Move zoom control to bottom right for better thumb access */}
-        <div className="absolute bottom-4 right-4 z-[1000] flex flex-col gap-2">
-          <ZoomControl position="bottomright" />
+        <div className="absolute bottom-4 right-4 z-[1000]">
+          <div className="leaflet-control-container">
+            <div className="leaflet-control-zoom leaflet-bar leaflet-control">
+              <ZoomControl position="bottomright" />
+            </div>
+          </div>
         </div>
         <div className="absolute top-4 right-4 z-[1000] flex items-center">
           <LayersControl 

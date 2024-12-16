@@ -1,11 +1,12 @@
 import { Logo } from "@/components/ui/logo";
-import { Search, Layers, BookmarkPlus, MousePointerClick, MessageSquare } from "lucide-react";
+import { Search, Layers, BookmarkPlus, MousePointerClick, MessageSquare, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { SearchPanel } from "@/components/search-panel";
 import { LayerControl } from "@/components/layer-control";
 import { SavedPropertiesPane } from "@/components/saved-properties-pane";
 import { useMapStore } from "@/lib/map-store";
+import { signOut } from '@/lib/auth';
 
 export function MobileHeader() {
   const { mapSelectMode, setMapSelectMode } = useMapStore();
@@ -69,6 +70,15 @@ export function MobileHeader() {
               <SavedPropertiesPane />
             </SheetContent>
           </Sheet>
+
+          <Button 
+            variant="ghost" 
+            className="h-auto w-auto p-2"
+            onClick={signOut}
+          >
+            <LogOut className="h-6 w-6" />
+            <span>Sign out</span>
+          </Button>
         </div>
       </div>
     </header>
