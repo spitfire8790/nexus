@@ -176,7 +176,7 @@ export function SearchPanel() {
                 variant="outline" 
                 role="combobox" 
                 aria-expanded={searchOpen} 
-                className="w-[400px] justify-between text-left"
+                className="w-full md:w-[400px] justify-between text-left"
               >
                 {displayValue}
               </Button>

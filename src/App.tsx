@@ -26,6 +26,7 @@ import { MobileHeader } from "@/components/mobile/mobile-header";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Button } from "@/components/ui/button";
 import { signOut } from '@/lib/auth';
+import { ErrorBoundary } from 'react-error-boundary';
 
 const queryClient = new QueryClient();
 
@@ -74,16 +75,28 @@ function App() {
                 <>
                   <MobileHeader />
                   <main className="flex-1 flex flex-col h-full overflow-hidden">
-                    <ResizablePanelGroup direction="vertical">
-                      <ResizablePanel defaultSize={70} minSize={30}>
+                    <ResizablePanelGroup 
+                      direction="vertical" 
+                      id="mobile-layout"
+                      autoSaveId="mobile-layout"
+                    >
+                      <ResizablePanel 
+                        defaultSize={70} 
+                        minSize={30}
+                        id="map-panel"
+                      >
                         <MapLayout />
                       </ResizablePanel>
-                      <ResizeHandle withHandle>
+                      <ResizeHandle withHandle id="mobile-resize-handle">
                         <div className="rotate-90">
                           <GripVertical className="h-4 w-4" />
                         </div>
                       </ResizeHandle>
-                      <ResizablePanel defaultSize={30} minSize={20}>
+                      <ResizablePanel 
+                        defaultSize={30} 
+                        minSize={20}
+                        id="analytics-panel"
+                      >
                         <AnalyticsPanel />
                       </ResizablePanel>
                     </ResizablePanelGroup>
@@ -178,4 +191,29 @@ function App() {
   );
 }
 
-export default App;
+// Add error boundary
+function ErrorFallback({ error, resetErrorBoundary }) {
+  return (
+    <div className="flex items-center justify-center h-screen p-4">
+      <div className="text-center">
+        <h2 className="text-lg font-semibold mb-2">Something went wrong</h2>
+        <pre className="text-sm text-red-500 mb-4">{error.message}</pre>
+        <button
+          onClick={resetErrorBoundary}
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+        >
+          Try again
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// Wrap the app with error boundary
+export default function AppWithErrorBoundary() {
+  return (
+    <ErrorBoundary FallbackComponent={ErrorFallback}>
+      <App />
+    </ErrorBoundary>
+  );
+}

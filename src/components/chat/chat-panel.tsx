@@ -5,8 +5,9 @@ import { useMapStore } from "@/lib/map-store";
 import { GeneralChat } from "./general-chat";
 import { PropertyChat } from "./property-chat";
 import { FeatureRequests } from "./feature-requests";
-import { MessageCircle, MessageSquare, Lightbulb } from "lucide-react";
+import { MessageCircle, MessageSquare, Lightbulb, X } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
 
 export function ChatPanel() {
   const selectedProperty = useMapStore((state) => state.selectedProperty);

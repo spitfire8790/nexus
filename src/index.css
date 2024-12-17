@@ -696,57 +696,13 @@ html, body {
 
 /* Mobile measure control styles */
 @media (max-width: 768px) {
-  .measure-control-container {
-    width: auto !important;
-    flex-wrap: nowrap !important;
-    top: 82px !important;
-  }
-
-  .measure-control-container button {
-    padding: 8px !important;
-    height: auto !important;
-    min-height: 36px !important;
-    white-space: nowrap !important;
-  }
-
-  .measure-vertex-icon {
-    margin: 0 !important;
-    padding: 0 !important;
-  }
-
-  .measure-vertex {
-    width: 12px !important;
-    height: 12px !important;
-    margin: -6px 0 0 -6px !important;
-    border: 2px solid #3b82f6 !important;
-    background: white !important;
-    border-radius: 50% !important;
-    box-shadow: 0 0 4px rgba(0,0,0,0.2) !important;
-  }
-
-  .measure-tooltip {
-    font-size: 14px !important;
-    padding: 6px 10px !important;
-    background: rgba(0, 0, 0, 0.8) !important;
-    color: white !important;
-    border: none !important;
-    border-radius: 4px !important;
-  }
-}
-
-/* Mobile chat button styles */
-@media (max-width: 768px) {
-  .header-icons button {
-    padding: 0.5rem !important;
-  }
-
-  .header-icons button svg {
-    width: 1.5rem !important;
-    height: 1.5rem !important;
-  }
-
-  .header-icons button span {
+  .measure-control-container,
+  .measure-control-container.flex,
+  .leaflet-control .measure-control-container {
     display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
   }
 }
 
@@ -813,17 +769,26 @@ html, body {
     transform: none !important;
     border-radius: 0 !important;
     background-color: white !important;
-    z-index: 1400 !important; /* Ensure it's above sheets */
+    z-index: 1400 !important;
   }
 
-  /* Ensure chat panel takes full height */
-  .fixed.z-50.flex.flex-col .flex-1 {
-    height: calc(100vh - 56px) !important;
+  /* Ensure chat content is visible */
+  .fixed.z-50.flex.flex-col > div {
+    background-color: white !important;
+    color: black !important;
   }
 
-  /* Disable dragging on mobile */
-  .fixed.z-50.flex.flex-col [class*="cursor-move"] {
-    cursor: default !important;
+  /* Adjust chat header */
+  .fixed.z-50.flex.flex-col [class*="border-b"] {
+    background-color: white !important;
+    padding: 1rem !important;
+  }
+
+  /* Ensure proper spacing for chat input */
+  .fixed.z-50.flex.flex-col form {
+    padding: 1rem !important;
+    background-color: white !important;
+    border-top: 1px solid hsl(var(--border)) !important;
   }
 }
 
@@ -846,5 +811,38 @@ html, body {
   [data-panel-group-direction="vertical"] [data-resize-handle-line] {
     width: 32px;
     height: 2px;
+  }
+}
+
+/* Mobile search panel styles */
+@media (max-width: 768px) {
+  .search-panel-container {
+    padding: 1rem;
+  }
+
+  .search-panel-container > div {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .search-panel-container [role="combobox"] {
+    width: 100% !important;
+    max-width: none !important;
+  }
+
+  .search-panel-container .popover-content {
+    width: calc(100vw - 2rem) !important;
+    max-width: none !important;
+    margin: 0 1rem;
+  }
+
+  /* Hide desktop-only elements */
+  .search-panel-container .hidden {
+    display: none !important;
+  }
+
+  /* Adjust toggle group size */
+  .search-panel-container [role="group"] {
+    width: auto;
   }
 }
