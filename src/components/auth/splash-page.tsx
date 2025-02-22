@@ -170,7 +170,14 @@ export function SplashPage() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex flex-col items-center justify-center p-4">
       <div className="flex flex-col items-center mb-4">
         <Logo className="scale-150 mb-4" />
-        <p className="text-muted-foreground">Property and Planning Analytics</p>
+        <div className="text-center space-y-2 max-w-lg">
+          <h1 className="text-2xl font-semibold text-primary">NSW Property Development & Analytics Platform</h1>
+          <p className="text-muted-foreground">Access comprehensive property analytics, interactive zoning maps, and real-time development application tracking. Make data-driven property decisions with our advanced planning tools.</p>
+          <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground mt-2">
+            <Globe2 className="h-4 w-4" />
+            <span>Real-time NSW property insights and planning analytics</span>
+          </div>
+        </div>
       </div>
 
       <Card className="w-full max-w-md p-6 shadow-xl">

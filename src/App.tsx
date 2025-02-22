@@ -110,7 +110,7 @@ function App() {
                       <div className="flex items-center">
                         <Logo />
                         <span className="text-sm text-muted-foreground ml-2">
-                          Property and Planning Analytics
+                          NSW Property Development & Planning Analytics | Interactive Maps & Real-Time Insights
                         </span>
                       </div>
                       <Button
@@ -192,7 +192,12 @@ function App() {
 }
 
 // Add error boundary
-function ErrorFallback({ error, resetErrorBoundary }) {
+interface ErrorFallbackProps {
+  error: Error;
+  resetErrorBoundary: () => void;
+}
+
+function ErrorFallback({ error, resetErrorBoundary }: ErrorFallbackProps) {
   return (
     <div className="flex items-center justify-center h-screen p-4">
       <div className="text-center">
