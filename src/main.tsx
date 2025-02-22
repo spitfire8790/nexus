@@ -6,6 +6,10 @@ import App from './App.tsx';
 import './index.css';
 import { Toaster } from "@/components/ui/toaster";
 import { AuthCallback } from '@/components/auth/callback';
+import { initPostHog } from '@/lib/posthog';
+
+// Initialize PostHog
+initPostHog();
 
 const routerOptions: RouterOptions = {
   future: {

@@ -3,4 +3,18 @@ Allow: /
 Disallow: /auth/*
 Disallow: /api/*
 
-Sitemap: https://your-domain.com/sitemap.xml 
+# Block search engines from specific sensitive routes
+Disallow: /admin/*
+Disallow: /private/*
+
+# Allow search engines to access static assets
+Allow: /*.js
+Allow: /*.css
+Allow: /*.svg
+Allow: /*.png
+Allow: /*.jpg
+Allow: /*.jpeg
+Allow: /*.gif
+
+# Sitemap location
+Sitemap: https://www.nexusapi.xyz/sitemap.xml

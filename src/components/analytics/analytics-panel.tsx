@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useMapStore } from '@/lib/map-store';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { MapPin, Building2, FileText, AlertTriangle, DollarSign, Coffee, Users, FileDown, Cloud, Clock, BookOpen, Home } from 'lucide-react';
+import { MapPin, Building2, FileText, AlertTriangle, DollarSign, Coffee, Users, Cloud, Clock, BookOpen } from 'lucide-react';
 import { OverviewTab } from './tabs/overview-tab';
 import { DevelopmentTab } from './tabs/development-tab';
 import { PlanningTab } from './tabs/planning-tab';
@@ -9,11 +9,9 @@ import { ConstraintsTab } from './tabs/constraints-tab';
 import { SalesTab } from './tabs/sales-tab';
 import { AmenitiesTab } from './tabs/amenities-tab';
 import { DemographicsTab } from './tabs/demographics-tab';
-import { ReporterTab } from './tabs/reporter-tab';
 import { ClimateTab } from './tabs/climate-tab';
 import { ImageryTab } from './tabs/imagery-tab';
 import { WikiTab } from './tabs/wiki-tab';
-import { HousingFeasibilityTab } from './tabs/housing-feasibility-tab';
 import { cn } from '@/lib/utils';
 
 export function AnalyticsPanel() {
@@ -21,7 +19,6 @@ export function AnalyticsPanel() {
   const headerAddress = useMapStore((state) => state.headerAddress);
   const setHeaderAddress = useMapStore((state) => state.setHeaderAddress);
   const currentTab = useMapStore((state) => state.currentTab);
-  const [isReporterActive, setIsReporterActive] = useState(false);
 
   const getHeaderText = (tab: string) => {
     const headerMap: { [key: string]: string } = {
@@ -32,11 +29,9 @@ export function AnalyticsPanel() {
       sales: "Sales History",
       amenities: "Nearby Amenities",
       demographics: "Local Demographics",
-      reporter: "Generate Report (WIP)",
       climate: "Climate",
       imagery: "Historical Imagery",
-      wiki: "Nearby Wikipedia Articles",
-      housing: "Housing Feasibility",
+      wiki: "Nearby Wikipedia Articles"
     };
     return headerMap[tab] || "Property Details";
   };
@@ -107,17 +102,10 @@ export function AnalyticsPanel() {
         orientation="vertical" 
         onValueChange={(value) => {
           useMapStore.getState().setCurrentTab(value);
-          setIsReporterActive(value === "reporter");
         }}
-        className={cn(
-          "h-full flex analytics-tabs",
-          isReporterActive && "!fixed inset-0 z-50 bg-background"
-        )}
+        className="h-full flex analytics-tabs"
       >
-        <div className={cn(
-          "border-r w-[60px] flex flex-col",
-          isReporterActive && "border-r-0"
-        )}>
+        <div className="border-r w-[60px] flex flex-col">
           <div className="h-[225px] border-b"></div>
           <TabsList className="flex flex-col gap-6 p-4">
             <TabsTrigger value="overview" className="w-10 h-10 p-0 relative group">
@@ -168,30 +156,10 @@ export function AnalyticsPanel() {
                 Wikipedia
               </span>
             </TabsTrigger>
-            <TabsTrigger value="housing" className="w-10 h-10 p-0 relative group">
-              <Home className="h-6 w-6" />
-              <span className="hidden md:hidden">
-                Housing
-              </span>
-            </TabsTrigger>
-            <TabsTrigger value="reporter" className="w-10 h-10 p-0 relative group">
-              <div className="relative">
-                <FileDown className="h-6 w-6" />
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] px-1 rounded-md font-bold">
-                  WIP
-                </span>
-              </div>
-              <span className="hidden md:hidden">
-                Reporter
-              </span>
-            </TabsTrigger>
           </TabsList>
         </div>
 
-        <div className={cn(
-          "flex-1 flex flex-col overflow-hidden",
-          isReporterActive && "w-[calc(100vw-60px)]"
-        )}>
+        <div className="flex-1 flex flex-col overflow-hidden">
           <div className="p-4 border-b">
             <h2 className="font-semibold">{getHeaderText(currentTab)}</h2>
             {headerAddress && (
@@ -207,8 +175,6 @@ export function AnalyticsPanel() {
             <TabsContent value="demographics"><DemographicsTab /></TabsContent>
             <TabsContent value="climate"><ClimateTab /></TabsContent>
             <TabsContent value="wiki"><WikiTab /></TabsContent>
-            <TabsContent value="housing"><HousingFeasibilityTab /></TabsContent>
-            <TabsContent value="reporter"><ReporterTab /></TabsContent>
           </div>
         </div>
       </Tabs>

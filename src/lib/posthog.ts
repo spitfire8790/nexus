@@ -1,17 +1,30 @@
 import posthog from 'posthog-js';
 
-// Initialize PostHog with your project API key
-// Replace 'your-project-api-key' with your actual PostHog API key
+// Initialize PostHog with project API key from environment variables
 export const initPostHog = () => {
-  posthog.init('phc_YOUR_PROJECT_API_KEY', {
-    api_host: 'https://app.posthog.com',
+  const apiKey = import.meta.env.VITE_POSTHOG_KEY;
+  const apiHost = import.meta.env.VITE_POSTHOG_HOST;
+
+  if (!apiKey || !apiHost) {
+    console.error('PostHog configuration missing. Please check environment variables.');
+    return;
+  }
+
+  posthog.init(apiKey, {
+    api_host: apiHost,
     // Enable debug mode in development
     loaded: (posthog) => {
-      if (process.env.NODE_ENV === 'development') posthog.debug();
+      if (import.meta.env.DEV) posthog.debug();
     },
-    // Disable capturing by default in development
-    autocapture: process.env.NODE_ENV === 'production',
+    // Enable capturing only in production
+    autocapture: import.meta.env.PROD,
+    // Create profiles only for identified users
+    person_profiles: 'identified_only',
+    // Capture pageviews
+    capture_pageview: true,
+    // Capture performance metrics
+    capture_performance: true
   });
 };
 
-export { posthog }; 
+export { posthog };
