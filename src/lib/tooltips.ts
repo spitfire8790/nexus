@@ -232,6 +232,27 @@ export const TOOLTIPS: { [key: string]: TooltipConfig } = {
     link: "https://maps.six.nsw.gov.au/arcgis/rest/services/sixmaps/LPI_RasterLabels_1/MapServer"
   },
 
+  "lmr-housing": {
+    name: "Low Medium Rise Housing Area",
+    description: "Indicative Low Medium Rise (LMR) Housing Area. Please refer to the Low and Mid Rise Housing Policy for further information.",
+    source: "NSW Department of Planning, Housing and Infrastructure",
+    link: "https://www.planning.nsw.gov.au/policy-and-legislation/housing/low-and-mid-rise-housing-policy"
+  },
+
+  "tod-accelerated": {
+    name: "TOD Accelerated Rezoning Area",
+    description: "Areas identified for accelerated rezoning under the Transit-Oriented Development (TOD) program to support housing delivery near transport.",
+    source: "NSW Department of Planning, Housing and Infrastructure",
+    link: "https://spatialportalarcgis.dpie.nsw.gov.au/sarcgis/rest/services/LMR/LMR/MapServer/2"
+  },
+
+  "tod-area": {
+    name: "TOD Area",
+    description: "Transit-Oriented Development (TOD) areas identified for increased housing density and mixed-use development near transport hubs.",
+    source: "NSW Department of Planning, Housing and Infrastructure",
+    link: "https://spatialportalarcgis.dpie.nsw.gov.au/sarcgis/rest/services/LMR/LMR/MapServer/3"
+  },
+
   streetFrontage: {
     title: "Street Frontage",
     description: "The length of property boundaries that directly face a public road. Multiple frontages may be detected if the property is on a corner or has access to multiple streets."

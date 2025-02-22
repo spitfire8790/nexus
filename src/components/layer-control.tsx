@@ -24,7 +24,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Layers, Tag, Filter, X, SlidersHorizontal, ChevronDown, MapPin, Train, AlertTriangle, FileText, Image, ThermometerSun, Building2, Trees, Map, Grid } from "lucide-react";
+import { Layers, Tag, Filter, X, SlidersHorizontal, ChevronDown, MapPin, Train, AlertTriangle, FileText, Image, ThermometerSun, Building2, Trees, Map, Grid, Home } from "lucide-react";
 import { useState } from 'react';
 import { MapLayer, ZoneOption, ZONE_OPTIONS } from "@/lib/map-store";
 import {
@@ -420,6 +420,12 @@ function getLayerDescription(layerId: string): { name: string; description: stri
       description: 'Text labels for roads and streets across NSW, including road names and types',
       source: 'NSW Department of Customer Service (Spatial Services)',
       link: 'https://maps.six.nsw.gov.au/arcgis/rest/services/sixmaps/LPI_RasterLabels_1/MapServer'
+    },
+    'lmr-housing': {
+      name: 'Low Medium Rise Housing Area',
+      description: 'Indicative Low Medium Rise (LMR) Housing Area. Please refer to https://www.planning.nsw.gov.au/policy-and-legislation/housing/low-and-mid-rise-housing-policy for further information.',
+      source: 'NSW Department of Planning, Housing and Infrastructure',
+      link: 'https://spatialportalarcgis.dpie.nsw.gov.au/sarcgis/rest/services/LMR/LMR/MapServer/4'
     }
   };
   
@@ -452,7 +458,8 @@ const GROUP_ICONS: Record<string, React.ReactNode> = {
   'planning': <FileText className="h-4 w-4" />,
   'constraints': <AlertTriangle className="h-4 w-4" />,
   'development': <Building2 className="h-4 w-4" />,
-  'environment': <Trees className="h-4 w-4" />
+  'environment': <Trees className="h-4 w-4" />,
+  'housing': <Home className="h-4 w-4" />
 };
 
 function CollapsibleGroup({ 

@@ -20,6 +20,7 @@ import { RoadsLayer } from './map/roads-layer';
 import { Layers, Tag } from 'lucide-react';
 import { RoadLabelsLayer } from './map/road-labels-layer';
 import { throttle } from 'lodash';
+import { initGeoman } from '@/lib/geoman';
 
 // Fix for default marker icons in Leaflet with Vite
 import icon from 'leaflet/dist/images/marker-icon.png';
@@ -277,9 +278,9 @@ function OverlayLayers() {
 
             layerRefs.current[layer.id] = EL.dynamicMapLayer(layerOptions).addTo(map);
           } else if (layer.type === 'wms') {
-            layerRefs.current[layer.id] = L.tileLayer.wms(layer.url || '', {
+            const wmsOptions: L.WMSOptions = {
               layers: layer.wmsLayers,
-              format: 'image/png',
+              format: layer.wmsParams?.format || 'image/jpeg',
               transparent: layer.wmsParams?.transparent || true,
               version: layer.wmsParams?.version || '1.1.1',
               opacity: layer.opacity,
@@ -287,15 +288,25 @@ function OverlayLayers() {
               pane: OVERLAY_PANE,
               maxZoom: 21,
               maxNativeZoom: 21,
-              tileSize: 512,
-              className: 'seamless-tiles',
-              buffer: 0,
-              updateWhenIdle: false,
-              updateWhenZooming: false,
-              dpi: 192,
-              width: 512,
-              height: 512
-            }).addTo(map);
+              tileSize: 256,
+              className: layer.className || 'seamless-tiles',
+              updateInterval: 150,
+              keepBuffer: 4,
+              updateWhenZooming: true,
+              updateWhenIdle: true,
+              zIndex: 410,
+              noWrap: true
+            };
+
+            if (layer.id === 'nearmap') {
+              // Additional optimizations for Nearmap layer
+              Object.assign(wmsOptions, {
+                dpi: 96,
+                bounds: map.getBounds().pad(1)
+              });
+            }
+
+            layerRefs.current[layer.id] = L.tileLayer.wms(layer.url || '', wmsOptions).addTo(map);
           } else if (layer.type === 'tile') {
             layerRefs.current[layer.id] = L.tileLayer(layer.url || '', {
               opacity: layer.opacity,
@@ -324,8 +335,8 @@ function OverlayLayers() {
           }
         }
         
-        // Only try to set opacity for non-custom layers
-        if (layerRefs.current[layer.id] && layer.type && layer.type !== 'custom') {
+        // Only try to set opacity for layers with setOpacity method
+        if (layerRefs.current[layer.id] && 'setOpacity' in layerRefs.current[layer.id]) {
           layerRefs.current[layer.id].setOpacity(layer.opacity || 1);
         }
       } else {
@@ -594,7 +605,6 @@ export function MapView() {
         style={{ background: '#f8f9fa' }}
         touchZoom={true}
         dragging={true}
-        tap={true}
         zoomControl={false}
       >
         <MapController />

@@ -11,6 +11,12 @@ export interface MapLayer {
   attribution?: string;
   type?: 'tile' | 'wms' | 'geojson' | 'custom' | 'dynamic' | 'feature';
   wmsLayers?: string;
+  wmsParams?: {
+    transparent?: boolean;
+    version?: string;
+    format?: string;
+    dpi?: number;
+  };
   layerId?: number;
   showLabels?: boolean;
   filter?: string;
@@ -429,6 +435,45 @@ export const useMapStore = create<MapState>((set, get) => ({
           layerId: 0,
           opacity: 1,
           attribution: '© Department of Customer Service (Spatial Services)'
+        }
+      ]
+    },
+    {
+      id: 'housing',
+      name: 'Housing',
+      layers: [
+        {
+          id: 'lmr-housing',
+          name: 'Low Medium Rise Housing Area',
+          url: 'https://spatialportalarcgis.dpie.nsw.gov.au/sarcgis/rest/services/LMR/LMR/MapServer',
+          enabled: false,
+          type: 'dynamic',
+          layerId: 4,
+          opacity: 0.7,
+          attribution: ' NSW Government - Department of Planning, Housing and Infrastructure',
+          tooltipKey: 'lmr-housing'
+        },
+        {
+          id: 'tod-accelerated',
+          name: 'TOD Accelerated Rezoning Area',
+          url: 'https://spatialportalarcgis.dpie.nsw.gov.au/sarcgis/rest/services/LMR/LMR/MapServer',
+          enabled: false,
+          type: 'dynamic',
+          layerId: 2,
+          opacity: 0.7,
+          attribution: ' NSW Government - Department of Planning, Housing and Infrastructure',
+          tooltipKey: 'tod-accelerated'
+        },
+        {
+          id: 'tod-area',
+          name: 'TOD Area',
+          url: 'https://spatialportalarcgis.dpie.nsw.gov.au/sarcgis/rest/services/LMR/LMR/MapServer',
+          enabled: false,
+          type: 'dynamic',
+          layerId: 3,
+          opacity: 0.7,
+          attribution: ' NSW Government - Department of Planning, Housing and Infrastructure',
+          tooltipKey: 'tod-area'
         }
       ]
     }
