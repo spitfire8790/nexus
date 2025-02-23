@@ -4,9 +4,10 @@ import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { MapPin, FileText, MousePointerClick, X, MessageCircle, BookmarkPlus } from "lucide-react";
+import { MapPin, FileText, MousePointerClick, X, MessageCircle, BookmarkPlus, Search } from "lucide-react";
 import { loggedFetch } from '@/lib/api-logger';
 import { convertToGeoJSON } from '@/lib/geometry-utils';
+import type { Feature, Geometry } from 'geojson';
 
 interface AddressSuggestion {
   address: string;
@@ -19,7 +20,18 @@ interface LotSuggestion {
   cadId: string;
 }
 
-export function SearchPanel() {
+interface QueryParams extends Record<string, string> {
+  where: string;
+  outFields: string;
+  returnGeometry: string;
+  f: string;
+}
+
+interface SearchPanelProps {
+  onOpenSiteSearch?: () => void;
+}
+
+export function SearchPanel({ onOpenSiteSearch }: SearchPanelProps) {
   const [searchMode, setSearchMode] = useState<string>("address");
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
@@ -29,10 +41,7 @@ export function SearchPanel() {
   const mapSelectMode = useMapStore((state) => state.mapSelectMode);
   const setMapSelectMode = useMapStore((state) => state.setMapSelectMode);
   const setHeaderAddress = useMapStore((state) => state.setHeaderAddress);
-  const [isChatOpen, setIsChatOpen] = useState(false);
   const toggleChat = useMapStore((state) => state.toggleChat);
-
-  const displayValue = selectedProperty?.address || searchValue || `Search by ${searchMode}...`;
 
   const fetchAddressSuggestions = async (query: string) => {
     if (query.length < 3) return;
@@ -66,10 +75,10 @@ export function SearchPanel() {
     try {
       const formattedLotId = lotId.replace(/-/g, '/');
       
-      const query = {
+      const query: QueryParams = {
         where: `lotidstring='${formattedLotId}'`,
         outFields: '*',
-        returnGeometry: true,
+        returnGeometry: 'true',
         f: 'json'
       };
 
@@ -170,53 +179,72 @@ export function SearchPanel() {
             </ToggleGroupItem>
           </ToggleGroup>
 
-          <Popover open={searchOpen} onOpenChange={setSearchOpen} className="flex-grow">
-            <PopoverTrigger asChild>
-              <Button 
-                variant="outline" 
-                role="combobox" 
-                aria-expanded={searchOpen} 
-                className="w-full md:w-[400px] justify-between text-left"
-              >
-                {displayValue}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-[400px] p-0">
-              <Command>
-                <CommandInput
-                  placeholder={`Search by ${searchMode}...`}
-                  value={searchValue}
-                  onValueChange={handleSearchChange}
-                />
-                <CommandList>
-                  <CommandEmpty>No results found.</CommandEmpty>
-                  <CommandGroup>
-                    {searchMode === "address" ? (
-                      suggestions.map((suggestion) => (
-                        <CommandItem
-                          key={`${suggestion.propId}-${suggestion.GURASID}`}
-                          value={suggestion.address}
-                          onSelect={handleSelect}
-                        >
-                          {suggestion.address}
-                        </CommandItem>
-                      ))
-                    ) : (
-                      lotSuggestions.map((lot) => (
-                        <CommandItem
-                          key={lot.cadId}
-                          value={lot.lot}
-                          onSelect={handleSelect}
-                        >
-                          {lot.lot}
-                        </CommandItem>
-                      ))
-                    )}
-                  </CommandGroup>
-                </CommandList>
-              </Command>
-            </PopoverContent>
-          </Popover>
+          <div className="flex-grow">
+            <Popover open={searchOpen} onOpenChange={setSearchOpen}>
+              <PopoverTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  role="combobox" 
+                  aria-expanded={searchOpen} 
+                  className="w-full md:w-[400px] justify-between text-left"
+                >
+                  {selectedProperty?.address || searchValue || `Search by ${searchMode}...`}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[400px] p-0">
+                <Command>
+                  <CommandInput
+                    placeholder={`Search by ${searchMode}...`}
+                    value={searchValue}
+                    onValueChange={handleSearchChange}
+                  />
+                  <CommandList>
+                    <CommandEmpty>No results found.</CommandEmpty>
+                    <CommandGroup>
+                      {searchMode === "address" ? (
+                        suggestions.map((suggestion) => (
+                          <CommandItem
+                            key={`${suggestion.propId}-${suggestion.GURASID}`}
+                            value={suggestion.address}
+                            onSelect={handleSelect}
+                          >
+                            {suggestion.address}
+                          </CommandItem>
+                        ))
+                      ) : (
+                        lotSuggestions.map((lot) => (
+                          <CommandItem
+                            key={lot.cadId}
+                            value={lot.lot}
+                            onSelect={handleSelect}
+                          >
+                            {lot.lot}
+                          </CommandItem>
+                        ))
+                      )}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2 whitespace-nowrap"
+            onClick={() => {
+              console.log('Site search button clicked');
+              if (onOpenSiteSearch) {
+                onOpenSiteSearch();
+              } else {
+                console.log('onOpenSiteSearch is not defined');
+              }
+            }}
+          >
+            <Search className="h-4 w-4" />
+            Site Search
+          </Button>
 
           <Button
             variant={mapSelectMode ? "default" : "outline"}
@@ -253,9 +281,13 @@ export function SearchPanel() {
                 if (!geojson) return;
                 
                 const savedProperty = {
-                  id: selectedProperty.propId || crypto.randomUUID(),
+                  id: selectedProperty.propId?.toString() || crypto.randomUUID(),
                   address: selectedProperty.address || 'Unknown Address',
-                  geometry: geojson
+                  geometry: {
+                    type: 'Feature' as const,
+                    geometry: geojson.geometry as Geometry,
+                    properties: {}
+                  } as Feature
                 };
                 
                 addSavedProperty(savedProperty);

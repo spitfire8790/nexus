@@ -8,7 +8,7 @@ import { MapLayout } from "@/components/map-layout";
 import { SearchPanel } from "@/components/search-panel";
 import { LayerControl } from "@/components/layer-control";
 import { AnalyticsPanel } from "@/components/analytics/analytics-panel";
-import { GripVertical, MessageCircle, LogOut } from "lucide-react";
+import { GripVertical, MessageCircle, LogOut, X } from "lucide-react";
 import { useState, useEffect } from 'react';
 import { ChatPanel } from "@/components/chat/chat-panel";
 import { useAuth } from './lib/auth';
@@ -27,6 +27,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Button } from "@/components/ui/button";
 import { signOut } from '@/lib/auth';
 import { ErrorBoundary } from 'react-error-boundary';
+import { SiteSearchPanel } from "@/components/site-search-panel";
 
 const queryClient = new QueryClient();
 
@@ -35,6 +36,12 @@ function App() {
   const [isVerticalDisplay, setIsVerticalDisplay] = useState(false);
   const { user, loading } = useAuth();
   const [isReporterActive] = useState(false);
+  const [isSiteSearchOpen, setIsSiteSearchOpen] = useState(false);
+
+  const handleOpenSiteSearch = () => {
+    console.log('Opening site search from App...');
+    setIsSiteSearchOpen(true);
+  };
 
   useEffect(() => {
     const checkOrientation = () => {
@@ -127,7 +134,7 @@ function App() {
                   <main className="flex-1 flex flex-col h-full overflow-hidden">
                     <ResizablePanelGroup direction="vertical" className="h-full">
                       <ResizablePanel defaultSize={8} minSize={6} maxSize={10} className="border-b">
-                        <SearchPanel />
+                        <SearchPanel onOpenSiteSearch={handleOpenSiteSearch} />
                       </ResizablePanel>
                       <ResizablePanel defaultSize={92}>
                         <ResizablePanelGroup direction="horizontal" className="h-full">
@@ -182,6 +189,30 @@ function App() {
                   </main>
                   <FloatingChat />
                 </>
+              )}
+              {isSiteSearchOpen && (
+                <div className="fixed top-[calc(7.4rem+2.5rem)] bottom-0 right-0 z-50 w-[400px] sm:w-[540px] bg-background border-l shadow-lg">
+                  <div className="h-full flex flex-col">
+                    <div className="p-4 border-b flex justify-between items-center">
+                      <div>
+                        <h2 className="font-semibold">Site Search</h2>
+                        <p className="text-sm text-muted-foreground">
+                          Search properties by location and criteria
+                        </p>
+                      </div>
+                      <button 
+                        onClick={() => setIsSiteSearchOpen(false)}
+                        className="text-muted-foreground hover:text-foreground"
+                      >
+                        <X className="h-4 w-4" />
+                        <span className="sr-only">Close</span>
+                      </button>
+                    </div>
+                    <div className="flex-1 overflow-y-auto">
+                      <SiteSearchPanel />
+                    </div>
+                  </div>
+                </div>
               )}
             </div>
           }

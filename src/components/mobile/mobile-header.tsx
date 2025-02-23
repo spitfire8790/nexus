@@ -8,14 +8,18 @@ import { useMapStore } from "@/lib/map-store";
 import { signOut } from '@/lib/auth';
 import { useState } from 'react';
 
-export function MobileHeader() {
+interface MobileHeaderProps {
+  onOpenSiteSearch?: () => void;
+}
+
+export function MobileHeader({ onOpenSiteSearch }: MobileHeaderProps) {
   const { mapSelectMode, setMapSelectMode } = useMapStore();
   const toggleChat = useMapStore((state) => state.toggleChat);
   const [searchOpen, setSearchOpen] = useState(false);
 
   return (
     <header className="mobile-header border-b bg-card shadow-sm">
-      <div className="px-4 flex h-14 items-center justify-between">
+      <div className="flex items-center justify-between p-2">
         <Logo />
         <div className="header-icons flex items-center gap-0.5">
           <Sheet open={searchOpen} onOpenChange={setSearchOpen}>
@@ -36,6 +40,15 @@ export function MobileHeader() {
               </div>
             </SheetContent>
           </Sheet>
+
+          <Button
+            variant="ghost"
+            className="h-auto w-auto p-1.5 flex flex-col items-center gap-1"
+            onClick={onOpenSiteSearch}
+          >
+            <Search className="h-5 w-5" />
+            <span className="text-[10px]">Site</span>
+          </Button>
 
           <Button
             variant={mapSelectMode ? "default" : "ghost"}
@@ -59,22 +72,22 @@ export function MobileHeader() {
             </SheetContent>
           </Sheet>
 
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             className="h-auto w-auto p-1.5 flex flex-col items-center gap-1"
-            onClick={toggleChat}
+            onClick={() => toggleChat()}
           >
             <MessageSquare className="h-5 w-5" />
             <span className="text-[10px]">Chat</span>
           </Button>
 
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             className="h-auto w-auto p-1.5 flex flex-col items-center gap-1"
-            onClick={signOut}
+            onClick={() => signOut()}
           >
             <LogOut className="h-5 w-5" />
-            <span className="text-[10px]">Sign out</span>
+            <span className="text-[10px]">Logout</span>
           </Button>
         </div>
       </div>

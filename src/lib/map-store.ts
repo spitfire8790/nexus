@@ -113,6 +113,16 @@ interface MapState {
     error: string | null;
   }) => void;
   updateSelectedRoadTypes: (layerId: string, selectedTypes: number[]) => void;
+  setMapBounds: (geometries: any[]) => void;
+  mapView?: {
+    extent?: {
+      xmin: number;
+      ymin: number;
+      xmax: number;
+      ymax: number;
+      spatialReference: { wkid: number };
+    };
+  };
 }
 
 export interface ZoneOption {
@@ -707,6 +717,48 @@ export const useMapStore = create<MapState>((set, get) => ({
             : layer
         )
       }))
+    }));
+  },
+  setMapBounds: (geometries) => {
+    if (!geometries.length) return;
+
+    // Calculate the bounds from all geometries
+    let xMin = Infinity;
+    let yMin = Infinity;
+    let xMax = -Infinity;
+    let yMax = -Infinity;
+
+    geometries.forEach(geometry => {
+      if (geometry.rings) {
+        geometry.rings.forEach((ring: number[][]) => {
+          ring.forEach(([x, y]) => {
+            xMin = Math.min(xMin, x);
+            yMin = Math.min(yMin, y);
+            xMax = Math.max(xMax, x);
+            yMax = Math.max(yMax, y);
+          });
+        });
+      }
+    });
+
+    // Add some padding to the bounds
+    const padding = 0.1; // 10% padding
+    const dx = (xMax - xMin) * padding;
+    const dy = (yMax - yMin) * padding;
+
+    // Update the map view
+    set(state => ({
+      ...state,
+      mapView: {
+        ...state.mapView,
+        extent: {
+          xmin: xMin - dx,
+          ymin: yMin - dy,
+          xmax: xMax + dx,
+          ymax: yMax + dy,
+          spatialReference: { wkid: 3857 }
+        }
+      }
     }));
   }
 }));
