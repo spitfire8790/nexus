@@ -101,7 +101,11 @@ function ContaminationRisk() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<{
-    contaminatedSites: Array<{ siteName: string }>;
+    contaminatedSites: Array<{
+      siteName: string;
+      activityType: string;
+      managementClass: string;
+    }>;
     epaLicenses: Array<{
       organisation: string;
       site: string;
@@ -121,11 +125,11 @@ function ContaminationRisk() {
     try {
       // Fetch contaminated sites
       const contaminatedResponse = await fetch(
-        `https://maptest2.environment.nsw.gov.au/arcgis/rest/services/EPA/EPACS/MapServer/1/query?` +
+        `https://mapprod2.environment.nsw.gov.au/arcgis/rest/services/EPA/Contaminated_land_notified_sites/MapServer/0/query?` +
         `geometry=${encodeURIComponent(JSON.stringify(selectedProperty.geometry))}` +
         `&geometryType=esriGeometryPolygon` +
-        `&spatialRel=esriSpatialRelIntersects` +
-        `&outFields=SiteName` +
+        `&spatialRel=esriSpatialRelContains` +
+        `&outFields=SiteName,ContaminationActivityType,ManagementClass` +
         `&returnGeometry=false` +
         `&f=json`
       );
@@ -150,7 +154,9 @@ function ContaminationRisk() {
 
       setData({
         contaminatedSites: contaminatedData.features?.map((f: any) => ({
-          siteName: f.attributes.SiteName
+          siteName: f.attributes.SiteName,
+          activityType: f.attributes.ContaminationActivityType,
+          managementClass: f.attributes.ManagementClass
         })) || [],
         epaLicenses: licensesData.features?.map((f: any) => ({
           organisation: f.attributes.APName,
@@ -203,12 +209,14 @@ function ContaminationRisk() {
                     <AlertTriangle className="h-4 w-4" />
                     <AlertTitle>Contamination Notice</AlertTitle>
                     <AlertDescription>
-                      This property has been identified as contaminated land under the Contaminated Land Management Act 1997.
+                      This property is an identified site as part of the NSW EPA's Contaminated Land Register (Public).
                     </AlertDescription>
                   </Alert>
                   {data.contaminatedSites.map((site, index) => (
-                    <div key={index} className="text-sm">
-                      <strong>Site {index + 1} Name:</strong> {site.siteName}
+                    <div key={index} className="text-sm space-y-1">
+                      <div><strong>Site Name:</strong> {site.siteName}</div>
+                      <div><strong>Activity Type:</strong> {site.activityType}</div>
+                      <div><strong>Management Class:</strong> {site.managementClass}</div>
                     </div>
                   ))}
                 </div>
@@ -216,7 +224,7 @@ function ContaminationRisk() {
                 <Alert>
                   <AlertTitle>No Contamination Notices</AlertTitle>
                   <AlertDescription className="text-muted-foreground italic">
-                    No contamination notices have been identified for this property.
+                    No contaminated sites have been identified within this property.
                   </AlertDescription>
                 </Alert>
               )}

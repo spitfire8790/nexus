@@ -286,77 +286,81 @@ export function SearchResultsPanel() {
           Found {results.length.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} result{results.length !== 1 ? 's' : ''}
         </div>
       </div>
-      <div className="overflow-y-auto border-b">
-        <Table className="text-xs">
-          <TableHeader className="sticky top-0 bg-black z-10">
-            <TableRow className="hover:bg-black/90">
-              <TableHead className="py-2 h-7">
-                <button 
-                  onClick={() => handleSort('address')}
-                  className="flex items-center gap-2 text-white hover:text-white/90"
-                >
-                  Address
-                  <ArrowUpDown className="h-3 w-3" />
-                </button>
-              </TableHead>
-              <TableHead className="py-2 h-7">
-                <button 
-                  onClick={() => handleSort('suburb')}
-                  className="flex items-center gap-2 text-white hover:text-white/90"
-                >
-                  Suburb
-                  <ArrowUpDown className="h-3 w-3" />
-                </button>
-              </TableHead>
-              <TableHead className="py-2 h-7">
-                <button 
-                  onClick={() => handleSort('council')}
-                  className="flex items-center gap-2 text-white hover:text-white/90"
-                >
-                  Council
-                  <ArrowUpDown className="h-3 w-3" />
-                </button>
-              </TableHead>
-              <TableHead className="py-2 h-7">
-                <button 
-                  onClick={() => handleSort('area')}
-                  className="flex items-center gap-2 text-white hover:text-white/90"
-                >
-                  Area (m²)
-                  <ArrowUpDown className="h-3 w-3" />
-                </button>
-              </TableHead>
-              <TableHead className="py-2 h-7">
-                <span className="text-white">Lots</span>
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {paginatedResults.map((result) => (
-              <TableRow 
-                key={result.id}
-                className="cursor-pointer transition-colors hover:bg-muted/50"
-                onClick={() => handleResultClick(result)}
-                onMouseEnter={() => setHoveredResult(result.id)}
-                onMouseLeave={() => setHoveredResult(null)}
-              >
-                <TableCell className="py-1 h-7">{result.address}</TableCell>
-                <TableCell className="py-1 h-7">{result.suburb}</TableCell>
-                <TableCell className="py-1 h-7">{result.council}</TableCell>
-                <TableCell className="py-1 h-7">{result.area.toLocaleString()}</TableCell>
-                <TableCell className="py-1 h-7">
-                  {isLoadingLots[result.id] ? (
-                    <span className="text-muted-foreground">Loading...</span>
-                  ) : result.lots?.length ? (
-                    <LotsList lots={result.lots} />
-                  ) : (
-                    <span className="text-muted-foreground">No lots found</span>
-                  )}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+      <div className="overflow-x-auto">
+        <div className="min-w-[800px]">
+          <div className="overflow-y-auto border-b">
+            <Table className="text-xs w-full">
+              <TableHeader className="sticky top-0 bg-black z-10">
+                <TableRow className="hover:bg-black/90">
+                  <TableHead className="py-2 h-7 w-[30%]">
+                    <button 
+                      onClick={() => handleSort('address')}
+                      className="flex items-center gap-2 text-white hover:text-white/90"
+                    >
+                      Address
+                      <ArrowUpDown className="h-3 w-3" />
+                    </button>
+                  </TableHead>
+                  <TableHead className="py-2 h-7 w-[15%]">
+                    <button 
+                      onClick={() => handleSort('suburb')}
+                      className="flex items-center gap-2 text-white hover:text-white/90"
+                    >
+                      Suburb
+                      <ArrowUpDown className="h-3 w-3" />
+                    </button>
+                  </TableHead>
+                  <TableHead className="py-2 h-7 w-[20%]">
+                    <button 
+                      onClick={() => handleSort('council')}
+                      className="flex items-center gap-2 text-white hover:text-white/90"
+                    >
+                      Council
+                      <ArrowUpDown className="h-3 w-3" />
+                    </button>
+                  </TableHead>
+                  <TableHead className="py-2 h-7 w-[15%]">
+                    <button 
+                      onClick={() => handleSort('area')}
+                      className="flex items-center gap-2 text-white hover:text-white/90"
+                    >
+                      Area (m²)
+                      <ArrowUpDown className="h-3 w-3" />
+                    </button>
+                  </TableHead>
+                  <TableHead className="py-2 h-7 w-[20%]">
+                    <span className="text-white">Lots</span>
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {paginatedResults.map((result) => (
+                  <TableRow 
+                    key={result.id}
+                    className="cursor-pointer transition-colors hover:bg-muted/50"
+                    onClick={() => handleResultClick(result)}
+                    onMouseEnter={() => setHoveredResult(result.id)}
+                    onMouseLeave={() => setHoveredResult(null)}
+                  >
+                    <TableCell className="py-1 h-7">{result.address}</TableCell>
+                    <TableCell className="py-1 h-7">{result.suburb}</TableCell>
+                    <TableCell className="py-1 h-7">{result.council}</TableCell>
+                    <TableCell className="py-1 h-7">{result.area.toLocaleString()}</TableCell>
+                    <TableCell className="py-1 h-7">
+                      {isLoadingLots[result.id] ? (
+                        <span className="text-muted-foreground">Loading...</span>
+                      ) : result.lots?.length ? (
+                        <LotsList lots={result.lots} />
+                      ) : (
+                        <span className="text-muted-foreground">No lots found</span>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </div>
       </div>
       <div className="p-2 flex justify-between items-center bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/75">
         <Button
@@ -367,7 +371,7 @@ export function SearchResultsPanel() {
           className="shadow-sm hover:shadow-md transition-shadow text-xs h-7"
         >
           <ArrowLeft className="h-3 w-3 mr-2" />
-          Previous
+          <span className="hidden sm:inline">Previous</span>
         </Button>
         <span className="text-xs text-muted-foreground">
           Page {currentPage} of {totalPages}
@@ -379,7 +383,7 @@ export function SearchResultsPanel() {
           disabled={currentPage === totalPages}
           className="shadow-sm hover:shadow-md transition-shadow text-xs h-7"
         >
-          Next
+          <span className="hidden sm:inline">Next</span>
           <ArrowRight className="h-3 w-3 ml-2" />
         </Button>
       </div>

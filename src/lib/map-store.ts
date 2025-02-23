@@ -356,11 +356,11 @@ export const useMapStore = create<MapState>((set, get) => ({
         {
           id: 'contamination',
           name: 'Contaminated Land',
-          url: 'https://maptest2.environment.nsw.gov.au/arcgis/rest/services/EPA/EPACS/MapServer',
+          url: 'https://mapprod2.environment.nsw.gov.au/arcgis/rest/services/EPA/Contaminated_land_notified_sites/MapServer',
           enabled: false,
           type: 'dynamic',
-          layerId: 1,
-          opacity: 0.7,
+          layerId: 0,
+          opacity: 1,
           attribution: ' NSW Government - EPA'
         },
         {
