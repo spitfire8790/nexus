@@ -181,7 +181,30 @@ function App() {
                               isReporterActive ? "!w-screen" : ""
                             )}
                           >
-                            <AnalyticsPanel />
+                            {!isSiteSearchOpen ? (
+                              <AnalyticsPanel />
+                            ) : (
+                              <div className="h-full flex flex-col bg-background">
+                                <div className="p-4 border-b flex justify-between items-center">
+                                  <div>
+                                    <h2 className="font-semibold">Site Search</h2>
+                                    <p className="text-sm text-muted-foreground">
+                                      Search properties by location and criteria
+                                    </p>
+                                  </div>
+                                  <button 
+                                    onClick={() => setIsSiteSearchOpen(false)}
+                                    className="text-muted-foreground hover:text-foreground"
+                                  >
+                                    <X className="h-4 w-4" />
+                                    <span className="sr-only">Close</span>
+                                  </button>
+                                </div>
+                                <div className="flex-1 overflow-y-auto">
+                                  <SiteSearchPanel />
+                                </div>
+                              </div>
+                            )}
                           </ResizablePanel>
                         </ResizablePanelGroup>
                       </ResizablePanel>
@@ -189,30 +212,6 @@ function App() {
                   </main>
                   <FloatingChat />
                 </>
-              )}
-              {isSiteSearchOpen && (
-                <div className="fixed top-[calc(7.4rem+2.5rem)] bottom-0 right-0 z-50 w-[400px] sm:w-[540px] bg-background border-l shadow-lg">
-                  <div className="h-full flex flex-col">
-                    <div className="p-4 border-b flex justify-between items-center">
-                      <div>
-                        <h2 className="font-semibold">Site Search</h2>
-                        <p className="text-sm text-muted-foreground">
-                          Search properties by location and criteria
-                        </p>
-                      </div>
-                      <button 
-                        onClick={() => setIsSiteSearchOpen(false)}
-                        className="text-muted-foreground hover:text-foreground"
-                      >
-                        <X className="h-4 w-4" />
-                        <span className="sr-only">Close</span>
-                      </button>
-                    </div>
-                    <div className="flex-1 overflow-y-auto">
-                      <SiteSearchPanel />
-                    </div>
-                  </div>
-                </div>
               )}
             </div>
           }

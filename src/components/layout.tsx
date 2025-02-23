@@ -11,9 +11,12 @@ import { X } from 'lucide-react';
 export function Layout({ children }: { children: React.ReactNode }) {
   const [isSiteSearchOpen, setIsSiteSearchOpen] = useState(false);
   const isChatOpen = useMapStore((state) => state.isChatOpen);
+  const toggleChat = useMapStore((state) => state.toggleChat);
 
   const handleOpenSiteSearch = () => {
-    console.log('Opening site search...'); // Debug log
+    if (isChatOpen) {
+      toggleChat(); // Close chat when opening site search
+    }
     setIsSiteSearchOpen(true);
   };
 
@@ -31,13 +34,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </main>
         <div className="relative">
           <PropertyPanel />
-          {isChatOpen && (
-            <div className="w-[400px] border-l bg-background">
+          {isChatOpen && !isSiteSearchOpen && (
+            <div className="w-[800px] border-l bg-background">
               <ChatPanel />
             </div>
           )}
-          {isSiteSearchOpen && (
-            <div className="fixed inset-y-0 right-0 z-50 w-[400px] sm:w-[540px] bg-background border-l shadow-lg">
+          {isSiteSearchOpen && !isChatOpen && (
+            <div className="w-[800px] border-l bg-background">
               <div className="h-full flex flex-col">
                 <div className="p-4 border-b flex justify-between items-center">
                   <div>
