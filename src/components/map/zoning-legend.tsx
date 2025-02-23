@@ -19,7 +19,7 @@ interface ZoneColor {
   outline: string;
 }
 
-const ZONE_COLORS: Record<string, ZoneColor> = {
+export const ZONE_COLORS: Record<string, ZoneColor> = {
   // Special zones
   '2(a)': { fill: 'rgb(255,166,163)', outline: 'rgb(0,0,0)' },
   

@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import * as L from 'leaflet';
 import { supabase } from '@/lib/supabase';
+import type { SearchResult } from '@/components/site-search-panel';
 
 export interface MapLayer {
   id: string;
@@ -123,6 +124,10 @@ interface MapState {
       spatialReference: { wkid: number };
     };
   };
+  isSiteSearchOpen: boolean;
+  toggleSiteSearch: () => void;
+  searchResults: SearchResult[] | null;
+  setSearchResults: (results: SearchResult[] | null) => void;
 }
 
 export interface ZoneOption {
@@ -760,5 +765,9 @@ export const useMapStore = create<MapState>((set, get) => ({
         }
       }
     }));
-  }
+  },
+  isSiteSearchOpen: false,
+  toggleSiteSearch: () => set((state) => ({ isSiteSearchOpen: !state.isSiteSearchOpen })),
+  searchResults: null,
+  setSearchResults: (results) => set({ searchResults: results }),
 }));

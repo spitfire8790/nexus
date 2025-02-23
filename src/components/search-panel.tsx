@@ -42,6 +42,7 @@ export function SearchPanel({ onOpenSiteSearch }: SearchPanelProps) {
   const setMapSelectMode = useMapStore((state) => state.setMapSelectMode);
   const setHeaderAddress = useMapStore((state) => state.setHeaderAddress);
   const toggleChat = useMapStore((state) => state.toggleChat);
+  const toggleSiteSearch = useMapStore((state) => state.toggleSiteSearch);
 
   const fetchAddressSuggestions = async (query: string) => {
     if (query.length < 3) return;
@@ -158,6 +159,11 @@ export function SearchPanel({ onOpenSiteSearch }: SearchPanelProps) {
     setSearchValue("");
   };
 
+  const handleOpenSiteSearch = () => {
+    toggleSiteSearch();
+    onOpenSiteSearch?.();
+  };
+
   return (
     <div className="w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/75">
       <div className="container p-2 search-panel-container">
@@ -233,14 +239,7 @@ export function SearchPanel({ onOpenSiteSearch }: SearchPanelProps) {
             variant="outline"
             size="sm"
             className="gap-2 whitespace-nowrap"
-            onClick={() => {
-              console.log('Site search button clicked');
-              if (onOpenSiteSearch) {
-                onOpenSiteSearch();
-              } else {
-                console.log('onOpenSiteSearch is not defined');
-              }
-            }}
+            onClick={handleOpenSiteSearch}
           >
             <Search className="h-4 w-4" />
             Site Search

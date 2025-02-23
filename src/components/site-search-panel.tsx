@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, memo } from 'react';
 import {
   Select,
   SelectContent,
@@ -7,14 +7,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -25,15 +17,11 @@ import {
   Search, 
   MapPin, 
   Building2, 
-  ArrowLeft, 
-  ArrowRight,
   Loader2,
   Map as MapIcon,
-  ArrowUpDown
 } from 'lucide-react';
 import L from 'leaflet';
 import { motion, AnimatePresence } from 'framer-motion';
-import { cn } from '@/lib/utils';
 
 interface SearchCriteria {
   suburbs: string[];
@@ -41,12 +29,13 @@ interface SearchCriteria {
   area?: { min?: number; max?: number };
 }
 
-interface SearchResult {
+export interface SearchResult {
   id: string;
   address: string;
   area: number;
   suburb: string;
   council: string;
+  lots?: string[];
   geometry: {
     rings?: number[][][];
     paths?: number[][][];
@@ -54,15 +43,56 @@ interface SearchResult {
   };
 }
 
-type SortField = 'address' | 'suburb' | 'council' | 'area';
-type SortDirection = 'asc' | 'desc';
-
 const ENDPOINTS = {
   suburbs: 'https://mapprod1.environment.nsw.gov.au/arcgis/rest/services/Common/AddressSearch/MapServer/1',
   lgas: 'https://mapprod1.environment.nsw.gov.au/arcgis/rest/services/Common/AddressSearch/MapServer/3',
   lgaToCouncil: 'https://mapprod1.environment.nsw.gov.au/arcgis/rest/services/Common/Admin_3857/MapServer/1',
   properties: 'https://mapprod1.environment.nsw.gov.au/arcgis/rest/services/Common/Admin_3857/MapServer/11'
 };
+
+const AreaRangeInputs = memo(({ onAreaChange }: { 
+  onAreaChange: (min: number | undefined, max: number | undefined) => void 
+}) => {
+  const [min, setMin] = useState<string>('');
+  const [max, setMax] = useState<string>('');
+
+  const handleMinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setMin(value);
+    onAreaChange(value ? Number(value) : undefined, max ? Number(max) : undefined);
+  };
+
+  const handleMaxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setMax(value);
+    onAreaChange(min ? Number(min) : undefined, value ? Number(value) : undefined);
+  };
+
+  return (
+    <div className="space-y-2">
+      <label className="text-sm font-medium flex items-center gap-2">
+        <MapIcon className="h-4 w-4" />
+        Area Range (m²)
+      </label>
+      <div className="flex gap-2">
+        <Input
+          type="number"
+          placeholder="Min"
+          value={min}
+          onChange={handleMinChange}
+        />
+        <Input
+          type="number"
+          placeholder="Max"
+          value={max}
+          onChange={handleMaxChange}
+        />
+      </div>
+    </div>
+  );
+});
+
+AreaRangeInputs.displayName = 'AreaRangeInputs';
 
 export function SiteSearchPanel() {
   const [availableSuburbs, setAvailableSuburbs] = useState<string[]>([]);
@@ -73,19 +103,18 @@ export function SiteSearchPanel() {
     lgas: [],
     area: { min: undefined, max: undefined }
   });
-  const [results, setResults] = useState<SearchResult[]>([]);
-  const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [councilNames, setCouncilNames] = useState<Record<string, string>>({});
-  const [hoveredResult, setHoveredResult] = useState<string | null>(null);
-  const resultsLayerRef = useRef<L.LayerGroup | null>(null);
-  const itemsPerPage = 10;
-  const [sortField, setSortField] = useState<SortField>('address');
-  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
-  const setSelectedProperty = useMapStore((state) => state.setSelectedProperty);
-  const setMapBounds = useMapStore((state) => state.setMapBounds);
-  const map = useMapStore((state) => state.mapInstance);
+  const toggleSiteSearch = useMapStore((state) => state.toggleSiteSearch);
+  const setSearchResults = useMapStore((state) => state.setSearchResults);
+
+  const handleAreaChange = (min: number | undefined, max: number | undefined) => {
+    setCriteria(prev => ({
+      ...prev,
+      area: { min, max }
+    }));
+  };
 
   // Fetch available suburbs and LGAs on mount
   useEffect(() => {
@@ -203,9 +232,6 @@ export function SiteSearchPanel() {
   const buildWhereClause = () => {
     const conditions: string[] = [];
 
-    console.log('Search criteria:', criteria); // Debug log for criteria
-    console.log('Council names:', councilNames); // Debug log for council names
-
     // Add suburb conditions
     if (criteria.suburbs.length > 0) {
       const suburbList = criteria.suburbs.map(s => `'${s}'`).join(',');
@@ -226,58 +252,13 @@ export function SiteSearchPanel() {
       conditions.push(`GURAS_DELIVERY.SDE.Property.AREA_H <= ${criteria.area.max / 10000}`);
     }
 
-    const whereClause = conditions.length > 0 ? conditions.join(' AND ') : '1=1';
-    console.log('Generated WHERE clause:', whereClause); // Debug log for final WHERE clause
-    return whereClause;
+    return conditions.length > 0 ? conditions.join(' AND ') : '1=1';
   };
 
-  // Sort results
-  const sortedResults = useMemo(() => {
-    return [...results].sort((a, b) => {
-      const direction = sortDirection === 'asc' ? 1 : -1;
-      
-      switch (sortField) {
-        case 'area':
-          return (a.area - b.area) * direction;
-        case 'address':
-          return a.address.localeCompare(b.address) * direction;
-        case 'suburb':
-          return a.suburb.localeCompare(b.suburb) * direction;
-        case 'council':
-          return a.council.localeCompare(b.council) * direction;
-        default:
-          return 0;
-      }
-    });
-  }, [results, sortField, sortDirection]);
-
-  const paginatedResults = useMemo(() => {
-    return sortedResults.slice(
-      (currentPage - 1) * itemsPerPage,
-      currentPage * itemsPerPage
-    );
-  }, [sortedResults, currentPage, itemsPerPage]);
-
-  const handleSort = (field: SortField) => {
-    if (sortField === field) {
-      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortField(field);
-      setSortDirection('asc');
-    }
-  };
-
-  // Remove the debounced search and searchTimeoutRef
   const handleSearch = async () => {
     try {
       setIsLoading(true);
       
-      // Clear existing results layer
-      if (resultsLayerRef.current && map) {
-        map.removeLayer(resultsLayerRef.current);
-      }
-      resultsLayerRef.current = L.layerGroup().addTo(map!);
-
       const whereClause = buildWhereClause();
       
       // Initialize results collection
@@ -301,13 +282,12 @@ export function SiteSearchPanel() {
       }
 
       if (allFeatures.length === 0) {
-        setResults([]);
+        setSearchResults([]);
         return;
       }
 
       // Process results
       const uniqueResults = new Map();
-      const bounds = L.latLngBounds([]);
       
       allFeatures.forEach((feature: any) => {
         const propId = feature.attributes['GURAS_DELIVERY.SDE.Property.PROPID'];
@@ -327,337 +307,179 @@ export function SiteSearchPanel() {
           };
 
           uniqueResults.set(propId, result);
-
-          if (map && feature.geometry?.rings?.[0]) {
-            const coords = feature.geometry.rings[0].map((coord: number[]) => {
-              const point = L.point(coord[0], coord[1]);
-              const latLng = L.CRS.EPSG3857.unproject(point);
-              bounds.extend(latLng);
-              return latLng;
-            });
-
-            const polygon = L.polygon(coords, {
-              color: '#3b82f6',
-              weight: 2,
-              opacity: 0.8,
-              fillColor: '#3b82f6',
-              fillOpacity: 0.1,
-              className: cn(
-                'transition-all duration-200 ease-in-out',
-                hoveredResult === propId ? 'fill-opacity-30' : 'fill-opacity-10'
-              )
-            });
-
-            resultsLayerRef.current?.addLayer(polygon);
-          }
         }
       });
 
       const transformedResults = Array.from(uniqueResults.values());
-      setResults(transformedResults);
-      setCurrentPage(1);
-
-      if (bounds.isValid()) {
-        map?.fitBounds(bounds, { padding: [50, 50] });
-      }
+      setSearchResults(transformedResults);
     } catch (error) {
       console.error('Error performing site search:', error);
-      setResults([]);
+      setSearchResults([]);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleResultClick = (result: SearchResult) => {
-    if (!result.geometry) return;
-
-    setSelectedProperty({
-      geometry: result.geometry,
-      address: result.address,
-      propId: result.id,
-      lots: [{
-        attributes: {
-          LotDescription: result.address
-        }
-      }]
-    });
-  };
-
-  const totalPages = Math.ceil(results.length / itemsPerPage);
-
   return (
-    <div className="h-full flex flex-col gap-4 p-4">
-      <div className="space-y-4">
-        <div className="space-y-2">
-          <label className="text-sm font-medium flex items-center gap-2">
-            <MapPin className="h-4 w-4" />
-            Suburbs
-          </label>
-          <Select
-            disabled={isLoadingLocations}
-            onValueChange={(value) => setCriteria(prev => ({
-              ...prev,
-              suburbs: [...prev.suburbs, value]
-            }))}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder={isLoadingLocations ? "Loading suburbs..." : "Select suburbs"} />
-            </SelectTrigger>
-            <SelectContent>
-              {isLoadingLocations ? (
-                <div className="flex items-center justify-center p-4">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                </div>
-              ) : (
-                <ScrollArea className="h-[200px]">
-                  {availableSuburbs.map(suburb => (
-                    <SelectItem 
-                      key={suburb} 
-                      value={suburb}
-                      disabled={criteria.suburbs.includes(suburb)}
+    <div className="h-full flex flex-col">
+      <div className="flex-1 overflow-y-auto">
+        <div className="p-4 space-y-4">
+          <div className="space-y-2">
+            <div className="space-y-2">
+              <label className="text-sm font-medium flex items-center gap-2">
+                <MapPin className="h-4 w-4" />
+                Suburbs
+              </label>
+              <Select
+                disabled={isLoadingLocations}
+                onValueChange={(value) => setCriteria(prev => ({
+                  ...prev,
+                  suburbs: [...prev.suburbs, value]
+                }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={isLoadingLocations ? "Loading suburbs..." : "Select suburbs"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {isLoadingLocations ? (
+                    <div className="flex items-center justify-center p-4">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    </div>
+                  ) : (
+                    <ScrollArea className="h-[200px]">
+                      {availableSuburbs.map(suburb => (
+                        <SelectItem 
+                          key={suburb} 
+                          value={suburb}
+                          disabled={criteria.suburbs.includes(suburb)}
+                        >
+                          {suburb}
+                        </SelectItem>
+                      ))}
+                    </ScrollArea>
+                  )}
+                </SelectContent>
+              </Select>
+              <AnimatePresence>
+                <div className="flex flex-wrap gap-2">
+                  {criteria.suburbs.map(suburb => (
+                    <motion.div
+                      key={suburb}
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.8 }}
+                      transition={{ duration: 0.2 }}
                     >
-                      {suburb}
-                    </SelectItem>
+                      <Badge variant="secondary" className="shadow-sm">
+                        {suburb}
+                        <button
+                          className="ml-1 hover:text-destructive transition-colors"
+                          onClick={() => setCriteria(prev => ({
+                            ...prev,
+                            suburbs: prev.suburbs.filter(s => s !== suburb)
+                          }))}
+                          aria-label={`Remove ${suburb}`}
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    </motion.div>
                   ))}
-                </ScrollArea>
-              )}
-            </SelectContent>
-          </Select>
-          <AnimatePresence>
-            <div className="flex flex-wrap gap-2">
-              {criteria.suburbs.map(suburb => (
-                <motion.div
-                  key={suburb}
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <Badge variant="secondary" className="shadow-sm">
-                    {suburb}
-                    <button
-                      className="ml-1 hover:text-destructive transition-colors"
-                      onClick={() => setCriteria(prev => ({
-                        ...prev,
-                        suburbs: prev.suburbs.filter(s => s !== suburb)
-                      }))}
-                      aria-label={`Remove ${suburb}`}
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </Badge>
-                </motion.div>
-              ))}
-            </div>
-          </AnimatePresence>
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-sm font-medium flex items-center gap-2">
-            <Building2 className="h-4 w-4" />
-            Local Government Areas
-          </label>
-          <Select
-            disabled={isLoadingLocations}
-            onValueChange={(value) => setCriteria(prev => ({
-              ...prev,
-              lgas: [...prev.lgas, value]
-            }))}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder={isLoadingLocations ? "Loading LGAs..." : "Select LGAs"} />
-            </SelectTrigger>
-            <SelectContent>
-              {isLoadingLocations ? (
-                <div className="flex items-center justify-center p-4">
-                  <Loader2 className="h-4 w-4 animate-spin" />
                 </div>
-              ) : (
-                <ScrollArea className="h-[200px]">
-                  {availableLGAs.map(lga => (
-                    <SelectItem 
-                      key={lga} 
-                      value={lga}
-                      disabled={criteria.lgas.includes(lga)}
-                    >
-                      {lga}
-                    </SelectItem>
-                  ))}
-                </ScrollArea>
-              )}
-            </SelectContent>
-          </Select>
-          <AnimatePresence>
-            <div className="flex flex-wrap gap-2">
-              {criteria.lgas.map(lga => (
-                <motion.div
-                  key={lga}
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <Badge variant="secondary" className="shadow-sm">
-                    {lga}
-                    <button
-                      className="ml-1 hover:text-destructive transition-colors"
-                      onClick={() => setCriteria(prev => ({
-                        ...prev,
-                        lgas: prev.lgas.filter(l => l !== lga)
-                      }))}
-                      aria-label={`Remove ${lga}`}
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </Badge>
-                </motion.div>
-              ))}
+              </AnimatePresence>
             </div>
-          </AnimatePresence>
-        </div>
 
-        <div className="space-y-2">
-          <label className="text-sm font-medium flex items-center gap-2">
-            <MapIcon className="h-4 w-4" />
-            Area Range (m²)
-          </label>
-          <div className="flex gap-2">
-            <Input
-              type="number"
-              placeholder="Min"
-              value={criteria.area?.min || ''}
-              onChange={(e) => setCriteria(prev => ({
-                ...prev,
-                area: { ...prev.area, min: e.target.value ? Number(e.target.value) : undefined }
-              }))}
-            />
-            <Input
-              type="number"
-              placeholder="Max"
-              value={criteria.area?.max || ''}
-              onChange={(e) => setCriteria(prev => ({
-                ...prev,
-                area: { ...prev.area, max: e.target.value ? Number(e.target.value) : undefined }
-              }))}
-            />
+            <div className="space-y-2">
+              <label className="text-sm font-medium flex items-center gap-2">
+                <Building2 className="h-4 w-4" />
+                Local Government Areas
+              </label>
+              <Select
+                disabled={isLoadingLocations}
+                onValueChange={(value) => setCriteria(prev => ({
+                  ...prev,
+                  lgas: [...prev.lgas, value]
+                }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={isLoadingLocations ? "Loading LGAs..." : "Select LGAs"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {isLoadingLocations ? (
+                    <div className="flex items-center justify-center p-4">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    </div>
+                  ) : (
+                    <ScrollArea className="h-[200px]">
+                      {availableLGAs.map(lga => (
+                        <SelectItem 
+                          key={lga} 
+                          value={lga}
+                          disabled={criteria.lgas.includes(lga)}
+                        >
+                          {lga}
+                        </SelectItem>
+                      ))}
+                    </ScrollArea>
+                  )}
+                </SelectContent>
+              </Select>
+              <AnimatePresence>
+                <div className="flex flex-wrap gap-2">
+                  {criteria.lgas.map(lga => (
+                    <motion.div
+                      key={lga}
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.8 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <Badge variant="secondary" className="shadow-sm">
+                        {lga}
+                        <button
+                          className="ml-1 hover:text-destructive transition-colors"
+                          onClick={() => setCriteria(prev => ({
+                            ...prev,
+                            lgas: prev.lgas.filter(l => l !== lga)
+                          }))}
+                          aria-label={`Remove ${lga}`}
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    </motion.div>
+                  ))}
+                </div>
+              </AnimatePresence>
+            </div>
+
+            <AreaRangeInputs onAreaChange={handleAreaChange} />
+
+            <Button 
+              onClick={handleSearch} 
+              className="w-full shadow-sm hover:shadow-md transition-shadow"
+              disabled={isLoading || isLoadingLocations || (
+                criteria.suburbs.length === 0 && 
+                criteria.lgas.length === 0 && 
+                !criteria.area?.min && 
+                !criteria.area?.max
+              )}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Searching...
+                </>
+              ) : (
+                <>
+                  <Search className="mr-2 h-4 w-4" />
+                  Search
+                </>
+              )}
+            </Button>
           </div>
         </div>
-
-        <Button 
-          onClick={handleSearch} 
-          className="w-full shadow-sm hover:shadow-md transition-shadow"
-          disabled={isLoading || isLoadingLocations || (
-            criteria.suburbs.length === 0 && 
-            criteria.lgas.length === 0 && 
-            !criteria.area?.min && 
-            !criteria.area?.max
-          )}
-        >
-          {isLoading ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Searching...
-            </>
-          ) : (
-            <>
-              <Search className="mr-2 h-4 w-4" />
-              Search
-            </>
-          )}
-        </Button>
       </div>
-
-      {results.length > 0 && (
-        <div className="flex-1 overflow-hidden flex flex-col">
-          <div className="mb-4 text-sm text-muted-foreground">
-            Found {results.length} result{results.length !== 1 ? 's' : ''}
-          </div>
-          <div className="flex-1 overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>
-                    <button 
-                      onClick={() => handleSort('address')}
-                      className="flex items-center gap-2 hover:text-accent-foreground"
-                    >
-                      Address
-                      <ArrowUpDown className="h-4 w-4" />
-                    </button>
-                  </TableHead>
-                  <TableHead>
-                    <button 
-                      onClick={() => handleSort('suburb')}
-                      className="flex items-center gap-2 hover:text-accent-foreground"
-                    >
-                      Suburb
-                      <ArrowUpDown className="h-4 w-4" />
-                    </button>
-                  </TableHead>
-                  <TableHead>
-                    <button 
-                      onClick={() => handleSort('council')}
-                      className="flex items-center gap-2 hover:text-accent-foreground"
-                    >
-                      Council
-                      <ArrowUpDown className="h-4 w-4" />
-                    </button>
-                  </TableHead>
-                  <TableHead>
-                    <button 
-                      onClick={() => handleSort('area')}
-                      className="flex items-center gap-2 hover:text-accent-foreground"
-                    >
-                      Area (m²)
-                      <ArrowUpDown className="h-4 w-4" />
-                    </button>
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {paginatedResults.map((result) => (
-                  <TableRow 
-                    key={result.id}
-                    className="cursor-pointer transition-colors hover:bg-muted/50"
-                    onClick={() => handleResultClick(result)}
-                    onMouseEnter={() => setHoveredResult(result.id)}
-                    onMouseLeave={() => setHoveredResult(null)}
-                  >
-                    <TableCell>{result.address}</TableCell>
-                    <TableCell>{result.suburb}</TableCell>
-                    <TableCell>{result.council}</TableCell>
-                    <TableCell>{result.area.toLocaleString()}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-
-          <div className="flex justify-between items-center mt-4 px-2">
-            <Button
-              variant="outline"
-              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-              disabled={currentPage === 1}
-              className="shadow-sm hover:shadow-md transition-shadow"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Previous
-            </Button>
-            <span className="text-sm text-muted-foreground">
-              Page {currentPage} of {totalPages}
-            </span>
-            <Button
-              variant="outline"
-              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-              disabled={currentPage === totalPages}
-              className="shadow-sm hover:shadow-md transition-shadow"
-            >
-              Next
-              <ArrowRight className="h-4 w-4 ml-2" />
-            </Button>
-          </div>
-        </div>
-      )}
     </div>
   );
 } 
