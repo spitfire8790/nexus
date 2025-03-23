@@ -133,7 +133,7 @@ function App() {
                   </header>
                   <main className="flex-1 flex flex-col h-full overflow-hidden">
                     <ResizablePanelGroup direction="vertical" className="h-full">
-                      <ResizablePanel defaultSize={8} minSize={6} maxSize={10} className="border-b">
+                      <ResizablePanel defaultSize={4} minSize={4} maxSize={10} className="border-b">
                         <SearchPanel onOpenSiteSearch={handleOpenSiteSearch} />
                       </ResizablePanel>
                       <ResizablePanel defaultSize={92}>

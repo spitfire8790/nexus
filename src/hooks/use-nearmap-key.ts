@@ -16,9 +16,39 @@ export function useNearmapKey() {
       styles: '',
       format: 'image/jpeg',
       transparent: 'true',
-      version: '1.1.1'
+      version: '1.1.1',
+      tiled: 'true',
+      exceptions: 'application/vnd.ogc.se_xml',
+      quality: '90'
     });
     return `https://api.nearmap.com/wms/v1/latest/apikey/${apiKey}?${params.toString()}`;
+  };
+
+  const updateApiKey = async (apiKey: string) => {
+    if (!user) return;
+    
+    setIsLoading(true);
+    try {
+      const { error } = await supabase
+        .from('user_api_keys')
+        .upsert({
+          user_id: user.id,
+          nearmap_key: apiKey,
+          updated_at: new Date().toISOString()
+        });
+        
+      if (error) throw error;
+      
+      const nearmapUrl = createNearmapUrl(apiKey);
+      updateLayerUrl('nearmap', nearmapUrl);
+      
+      return { success: true };
+    } catch (error) {
+      console.error('Error updating Nearmap API key:', error);
+      return { success: false, error };
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -47,43 +77,8 @@ export function useNearmapKey() {
     loadApiKey();
   }, [user, updateLayerUrl]);
 
-  const updateApiKey = async (newKey: string) => {
-    if (!user) {
-      console.error('No user found');
-      return false;
-    }
-    
-    setIsLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('user_api_keys')
-        .upsert({
-          user_id: user.id,
-          nearmap_key: newKey,
-          updated_at: new Date().toISOString()
-        })
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Supabase error:', error);
-        throw error;
-      }
-
-      const nearmapUrl = createNearmapUrl(newKey);
-      updateLayerUrl('nearmap', nearmapUrl);
-      
-      return true;
-    } catch (error) {
-      console.error('Detailed error updating Nearmap API key:', error);
-      return false;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return {
-    updateApiKey,
-    isLoading
+    isLoading,
+    updateApiKey
   };
 } 

@@ -175,7 +175,7 @@ app.options("/api/proxy/spatial", (req, res) => {
   res.sendStatus(200);
 });
 
-const PORT = 5174;
+const PORT = 5175;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 }); 

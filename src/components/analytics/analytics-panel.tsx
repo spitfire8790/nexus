@@ -106,7 +106,7 @@ export function AnalyticsPanel() {
         className="h-full flex analytics-tabs"
       >
         <div className="border-r w-[60px] flex flex-col">
-          <div className="h-[180px] border-b"></div>
+          <div className="h-[180px]"></div>
           <TabsList className="flex flex-col gap-6 p-4">
             <TabsTrigger value="overview" className="w-10 h-10 p-0 relative group">
               <MapPin className="h-6 w-6" />

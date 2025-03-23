@@ -24,3 +24,21 @@
 .leaflet-pane > svg path {
   transition: none;
 } 
+
+/* Optimize Nearmap layer rendering to prevent flickering */
+.leaflet-tile-container img {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  will-change: transform;
+  image-rendering: -webkit-optimize-contrast;
+}
+
+/* Specific optimization for the Nearmap tile layer */
+.seamless-tiles {
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  transition: opacity 0.2s ease-out !important;
+} 

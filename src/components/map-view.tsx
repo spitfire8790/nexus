@@ -244,6 +244,64 @@ function OverlayLayers() {
   const layerGroups = useMapStore((state) => state.layerGroups);
   const groupEnabledStates = useMapStore((state) => state.groupEnabledStates);
   const layerRefs = useRef<Record<string, any>>({});
+  // Add a ref to track the last bounds for Nearmap layer to prevent constant updates
+  const lastBoundsRef = useRef<L.LatLngBounds | null>(null);
+  // Add a flag to track if bounds change is significant enough to warrant an update
+  const shouldUpdateBoundsRef = useRef<boolean>(true);
+  // Define handleMoveEnd at component level so it's available to all useEffect hooks
+  const handleMoveEndRef = useRef<((e: L.LeafletEvent) => void) | null>(null);
+
+  // Function to determine if bounds change is significant enough to update the layer
+  const isSignificantBoundsChange = (oldBounds: L.LatLngBounds | null, newBounds: L.LatLngBounds): boolean => {
+    if (!oldBounds) return true;
+    
+    // Check if the center point has moved significantly (more than 10% of the viewport)
+    const oldCenter = oldBounds.getCenter();
+    const newCenter = newBounds.getCenter();
+    const distance = oldCenter.distanceTo(newCenter);
+    
+    // Calculate the approximate width of the viewport in meters
+    const oldEast = oldBounds.getEast();
+    const oldWest = oldBounds.getWest();
+    const viewportWidth = map.distance(
+      [oldCenter.lat, oldWest], 
+      [oldCenter.lat, oldEast]
+    );
+    
+    // If moved more than 10% of viewport width, it's significant
+    return distance > viewportWidth * 0.1;
+  };
+
+  // Handle map move events to update bounds for Nearmap layer only when needed
+  useEffect(() => {
+    if (!map) return;
+    
+    // Create the handler function and store in ref so it's accessible in cleanup
+    handleMoveEndRef.current = () => {
+      const newBounds = map.getBounds();
+      shouldUpdateBoundsRef.current = isSignificantBoundsChange(lastBoundsRef.current, newBounds);
+      if (shouldUpdateBoundsRef.current) {
+        lastBoundsRef.current = newBounds;
+        // If the Nearmap layer exists, update its bounds
+        if (layerRefs.current['nearmap'] && layerRefs.current['nearmap'].setParams) {
+          // Add a small timeout to prevent flicker on move
+          setTimeout(() => {
+            layerRefs.current['nearmap'].setParams({ bounds: newBounds.pad(0.5) });
+          }, 100);
+        }
+      }
+    };
+    
+    // Attach the event listener using the function from the ref
+    map.on('moveend', handleMoveEndRef.current);
+    
+    return () => {
+      // Clean up the event listener if it exists
+      if (handleMoveEndRef.current) {
+        map.off('moveend', handleMoveEndRef.current);
+      }
+    };
+  }, [map]);
 
   useEffect(() => {
     const allLayers = layerGroups.flatMap(group => ({
@@ -290,19 +348,23 @@ function OverlayLayers() {
               maxNativeZoom: 21,
               tileSize: 256,
               className: layer.className || 'seamless-tiles',
-              updateInterval: 150,
+              updateInterval: 200, // Increase update interval to reduce flickering
               keepBuffer: 4,
-              updateWhenZooming: true,
+              updateWhenZooming: false, // Disable updates while zooming
               updateWhenIdle: true,
               zIndex: 410,
               noWrap: true
             };
 
             if (layer.id === 'nearmap') {
+              // Store initial bounds for Nearmap layer
+              lastBoundsRef.current = map.getBounds();
+              
               // Additional optimizations for Nearmap layer
               Object.assign(wmsOptions, {
                 dpi: 96,
-                bounds: map.getBounds().pad(1)
+                bounds: lastBoundsRef.current.pad(0.5), // Use smaller padding
+                fadeAnimation: false // Disable fade animation
               });
             }
 
@@ -349,9 +411,32 @@ function OverlayLayers() {
 
     return () => {
       Object.values(layerRefs.current).forEach(layer => {
-        if (layer) map.removeLayer(layer);
+        if (layer) {
+          // Ensure proper cleanup for all layer types
+          if (layer._url && layer._url.includes('nearmap')) {
+            // Special handling for Nearmap layers - cancel all pending tile requests
+            if (layer._tiles) {
+              // Cancel any pending tile requests
+              Object.values(layer._tiles).forEach((tile: any) => {
+                if (tile.el && tile.el.parentNode) {
+                  tile.el.parentNode.removeChild(tile.el);
+                }
+                // Set tile as loaded to prevent further requests
+                tile.loaded = true;
+              });
+            }
+          }
+          
+          // Remove the layer from map
+          map.removeLayer(layer);
+        }
       });
       layerRefs.current = {};
+      
+      // Remove event listener using the ref
+      if (handleMoveEndRef.current) {
+        map.off('moveend', handleMoveEndRef.current);
+      }
     };
   }, [map, layerGroups, groupEnabledStates]);
 

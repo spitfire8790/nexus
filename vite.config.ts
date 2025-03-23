@@ -14,10 +14,10 @@ export default defineConfig({
     exclude: ['lucide-react'],
   },
   server: {
-    port: 5173,
+    port: 5174,
     proxy: {
       '/api/proxy': {
-        target: 'http://localhost:5174',
+        target: 'http://localhost:5175',
         changeOrigin: true,
         secure: false
       },

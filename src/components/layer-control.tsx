@@ -100,7 +100,15 @@ function SortableLayerItem({
     if (layerId === 'nearmap' && !layer.url) {
       const token = prompt('Please enter your Nearmap API key:');
       if (token) {
-        await updateApiKey(token);
+        // Wait for the API key update to complete before toggling
+        const result = await updateApiKey(token);
+        if (result?.success) {
+          // Add a slight delay before enabling the layer to make sure the URL is updated
+          setTimeout(() => {
+            onToggle(layerId);
+          }, 100);
+          return;
+        }
       }
     }
     onToggle(layerId);
