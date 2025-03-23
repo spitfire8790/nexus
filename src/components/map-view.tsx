@@ -459,6 +459,7 @@ function PropertyBoundary() {
   const map = useMap();
   const selectedProperty = useMapStore((state) => state.selectedProperty);
   const boundaryRef = useRef<L.GeoJSON | null>(null);
+  const lastBoundaryIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (selectedProperty?.geometry) {
@@ -496,9 +497,20 @@ function PropertyBoundary() {
         }).addTo(map);
 
         const bounds = boundaryRef.current.getBounds();
-        map.fitBounds(bounds, {
-          padding: [50, 50]
-        });
+        
+        // Only zoom to the property if it's not part of a search results navigation
+        // Use propId to identify if this is just a re-selection during search results browsing
+        const currentPropId = selectedProperty.propId || 'unknown';
+        const isNewProperty = currentPropId !== lastBoundaryIdRef.current;
+        
+        if (isNewProperty) {
+          map.fitBounds(bounds, {
+            padding: [50, 50]
+          });
+        }
+        
+        // Update the last boundary ID
+        lastBoundaryIdRef.current = currentPropId;
       } catch (error) {
         console.error('Error creating/adding boundary layer:', error);
       }
@@ -507,6 +519,8 @@ function PropertyBoundary() {
         map.removeLayer(boundaryRef.current);
         boundaryRef.current = null;
       }
+      // Reset the last boundary ID when property is cleared
+      lastBoundaryIdRef.current = null;
     }
 
     return () => {

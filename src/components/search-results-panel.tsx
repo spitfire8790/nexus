@@ -94,30 +94,39 @@ export function SearchResultsPanel() {
   const [isLoadingLots, setIsLoadingLots] = useState<Record<string, boolean>>({});
   const [fetchQueue, setFetchQueue] = useState<string[]>([]);
   const [isFetching, setIsFetching] = useState(false);
+  const boundsSetRef = useRef<string | null>(null);
   const itemsPerPage = 10;
 
   const results = useMapStore((state) => state.searchResults);
   const setSelectedProperty = useMapStore((state) => state.setSelectedProperty);
   const map = useMapStore((state) => state.mapInstance);
 
-  // Handle initial map bounds
+  // Handle initial map bounds - only when results first load
   useEffect(() => {
     if (!map || !results?.length) return;
+    
+    // Create a unique identifier for this set of results
+    const resultsKey = results.map(r => r.id).join('-');
+    
+    // Only fit bounds if this is a new set of results
+    if (boundsSetRef.current !== resultsKey) {
+      const bounds = L.latLngBounds([]);
+      results.forEach(result => {
+        if (result.geometry?.rings?.[0]) {
+          const coords = result.geometry.rings[0].map((coord: number[]) => {
+            const point = L.point(coord[0], coord[1]);
+            const latLng = L.CRS.EPSG3857.unproject(point);
+            bounds.extend(latLng);
+            return latLng;
+          });
+        }
+      });
 
-    const bounds = L.latLngBounds([]);
-    results.forEach(result => {
-      if (result.geometry?.rings?.[0]) {
-        const coords = result.geometry.rings[0].map((coord: number[]) => {
-          const point = L.point(coord[0], coord[1]);
-          const latLng = L.CRS.EPSG3857.unproject(point);
-          bounds.extend(latLng);
-          return latLng;
-        });
+      if (bounds.isValid()) {
+        map.fitBounds(bounds, { padding: [50, 50] });
+        // Mark that we've set bounds for this set of results
+        boundsSetRef.current = resultsKey;
       }
-    });
-
-    if (bounds.isValid()) {
-      map.fitBounds(bounds, { padding: [50, 50] });
     }
   }, [map, results]);
 
@@ -273,6 +282,21 @@ export function SearchResultsPanel() {
         }
       }]
     });
+
+    // Zoom to the selected property only
+    if (map && result.geometry.rings?.[0]) {
+      const bounds = L.latLngBounds([]);
+      const coords = result.geometry.rings[0].map((coord: number[]) => {
+        const point = L.point(coord[0], coord[1]);
+        const latLng = L.CRS.EPSG3857.unproject(point);
+        bounds.extend(latLng);
+        return latLng;
+      });
+
+      if (bounds.isValid()) {
+        map.fitBounds(bounds, { padding: [50, 50] });
+      }
+    }
   };
 
   const totalPages = Math.ceil((results?.length || 0) / itemsPerPage);
