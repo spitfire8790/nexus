@@ -22,6 +22,7 @@ interface Sale {
   price: number;
   distance: number;
   coordinates: [number, number];
+  zoning?: string;
 }
 
 interface SaleData {
@@ -51,6 +52,11 @@ function SaleCard({ sale, index }: { sale: Sale; index: number }) {
           <div className="text-xs text-muted-foreground truncate" title={locality}>
             {locality}
           </div>
+          {sale.zoning && (
+            <div className="text-xs text-blue-500 truncate" title={`Zone: ${sale.zoning}`}>
+              {sale.zoning}
+            </div>
+          )}
         </div>
         <div className="col-span-3 text-xs">
           {new Date(sale.sale_date).toLocaleDateString('en-AU', {
@@ -152,6 +158,7 @@ export function SalesTab() {
             <p class="text-sm font-semibold text-blue-600">
               ${formatPrice(sale.price)}
             </p>
+            ${sale.zoning ? `<p class="text-sm text-blue-500">${sale.zoning}</p>` : ''}
             <p class="text-sm text-gray-600">
               Distance: ${(sale.distance).toFixed(0)}m
             </p>
@@ -249,7 +256,7 @@ export function SalesTab() {
         const response = await fetch(
           `https://maps.six.nsw.gov.au/arcgis/rest/services/public/Valuation/MapServer/1/query?` +
           `where=1=1&geometry=${bbox}&geometryType=esriGeometryEnvelope&inSR=4326&` +
-          `spatialRel=esriSpatialRelIntersects&outFields=sale_date,price,bp_address&` +
+          `spatialRel=esriSpatialRelIntersects&outFields=sale_date,price,bp_address,propid&` +
           `returnGeometry=true&outSR=4326&f=json`,
           { signal: controller.signal }
         );
@@ -276,6 +283,7 @@ export function SalesTab() {
               sale_date: f.attributes.sale_date,
               price: f.attributes.price,
               bp_address: f.attributes.bp_address,
+              propid: f.attributes.propid,
               distance: turf.distance(
                 turf.point([centerX, centerY]),
                 turf.point([f.geometry.x, f.geometry.y]),
@@ -287,6 +295,34 @@ export function SalesTab() {
           .sort((a: any, b: any) => a.distance - b.distance)
           .slice(0, 10);
 
+        // Fetch zoning information for each property
+        const salesWithZoningPromises = nearbySalesFiltered.map(async (sale) => {
+          try {
+            const zoningResponse = await fetch(
+              `https://api.apps1.nsw.gov.au/planning/viewersf/V1/ePlanningApi/layerintersect?type=property&id=${sale.propid}&layers=epi`,
+              { signal: controller.signal }
+            );
+            
+            if (!zoningResponse.ok) {
+              return { ...sale, zoning: undefined };
+            }
+            
+            const zoningData = await zoningResponse.json();
+            const zoningLayer = zoningData.find((l: any) => l.layerName === "Land Zoning Map");
+            
+            if (zoningLayer?.results?.[0]) {
+              return { ...sale, zoning: zoningLayer.results[0].title };
+            } else {
+              return { ...sale, zoning: undefined };
+            }
+          } catch (error) {
+            console.error(`Error fetching zoning for property ${sale.propid}:`, error);
+            return { ...sale, zoning: undefined };
+          }
+        });
+        
+        const salesWithZoning = await Promise.all(salesWithZoningPromises);
+
         // Only update state if the component is still mounted
         if (isMounted) {
           setSalesData({
@@ -296,7 +332,7 @@ export function SalesTab() {
               lastSaleDate: propertyData.features?.[0]?.attributes?.sale_date || null,
               lastSalePrice: propertyData.features?.[0]?.attributes?.price || null
             },
-            nearbySales: nearbySalesFiltered
+            nearbySales: salesWithZoning
           });
         }
       } catch (error: any) {

@@ -248,7 +248,7 @@ export const useMapStore = create<MapState>((set, get) => ({
           enabled: false,
           type: 'wms',
           hidden: false,
-          opacity: 0.7,
+          opacity: 1,
           attribution: ' Nearmap',
           wmsLayers: 'Vert',
           wmsParams: {

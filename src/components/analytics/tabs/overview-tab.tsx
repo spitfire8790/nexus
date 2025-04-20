@@ -89,6 +89,8 @@ const calculateStreetFrontage = async (geometry: BufferGeometry): Promise<{ coun
     
     // Small buffer distance for edge-specific queries
     const BUFFER_DISTANCE = 5; // meters
+    // Maximum angle difference (in degrees) to consider road parallel to property edge
+    const MAX_ANGLE_DIFFERENCE = 20;
 
     for (let i = 0; i < coordinates.length - 1; i++) {
       const start = coordinates[i];
@@ -118,7 +120,7 @@ const calculateStreetFrontage = async (geometry: BufferGeometry): Promise<{ coun
       
       if (!roadsData?.features?.length) continue;
 
-      // Convert edge to GeoJSON format for length calculation
+      // Convert edge to GeoJSON format for calculations
       const edgeLine = turf.lineString([
         [start[0] * 180 / 20037508.34, Math.atan(Math.exp(start[1] * Math.PI / 20037508.34)) * 360 / Math.PI - 90],
         [end[0] * 180 / 20037508.34, Math.atan(Math.exp(end[1] * Math.PI / 20037508.34)) * 360 / Math.PI - 90]
@@ -127,26 +129,74 @@ const calculateStreetFrontage = async (geometry: BufferGeometry): Promise<{ coun
       const edgeLength = length(edgeLine, { units: 'meters' });
       if (edgeLength < 2) continue;
 
+      // Calculate the bearing of the property edge
+      const edgeBearing = bearing(
+        turf.point(edgeLine.geometry.coordinates[0]),
+        turf.point(edgeLine.geometry.coordinates[1])
+      );
+
       // Check if this edge is adjacent to any of the roads in its buffer
       for (const feature of roadsData.features) {
         const roadName = feature.attributes.ROADNAMELABEL?.trim() || 'Unnamed Road';
         
+        // Skip unnamed roads
+        if (roadName === 'Unnamed Road' || roadName === 'UNNAMED ROAD') {
+          continue;
+        }
+        
+        // Convert road to GeoJSON format
+        const roadCoordinates = feature.geometry.rings[0].map((coord: number[]) => [
+          coord[0] * 180 / 20037508.34,
+          Math.atan(Math.exp(coord[1] * Math.PI / 20037508.34)) * 360 / Math.PI - 90
+        ]);
+
         const roadPolygon = {
           type: 'Polygon',
-          coordinates: [feature.geometry.rings[0].map((coord: number[]) => [
-            coord[0] * 180 / 20037508.34,
-            Math.atan(Math.exp(coord[1] * Math.PI / 20037508.34)) * 360 / Math.PI - 90
-          ])]
+          coordinates: [roadCoordinates]
         };
 
-        // Check if edge midpoint is close to road
-        const midpoint = along(edgeLine, edgeLength / 2, { units: 'meters' });
-        const roadLine = turf.lineString(roadPolygon.coordinates[0]);
-        const distance = pointToLineDistance(midpoint, roadLine, { units: 'meters' });
-
-        if (distance <= BUFFER_DISTANCE) {
+        // Create a line from the road polygon for direction calculation
+        const roadLine = turf.lineString(roadCoordinates);
+        
+        // Find the closest points on the road to the property edge
+        let minDistance = Infinity;
+        let closestRoadSegment = null;
+        
+        // Check each segment of the road line
+        for (let j = 0; j < roadCoordinates.length - 1; j++) {
+          const roadSegment = turf.lineString([roadCoordinates[j], roadCoordinates[j + 1]]);
+          const distance = turf.distance(
+            along(edgeLine, edgeLength / 2, { units: 'meters' }), 
+            turf.nearestPointOnLine(roadSegment, along(edgeLine, edgeLength / 2, { units: 'meters' })), 
+            { units: 'meters' }
+          );
+          
+          if (distance < minDistance) {
+            minDistance = distance;
+            closestRoadSegment = roadSegment;
+          }
+        }
+        
+        // Skip if no close road segment was found
+        if (!closestRoadSegment || minDistance > BUFFER_DISTANCE) continue;
+        
+        // Calculate the bearing of the closest road segment
+        const roadBearing = bearing(
+          turf.point(closestRoadSegment.geometry.coordinates[0]),
+          turf.point(closestRoadSegment.geometry.coordinates[1])
+        );
+        
+        // Normalize bearings to 0-180 range (ignoring direction)
+        const normalizedEdgeBearing = Math.abs(edgeBearing) % 180;
+        const normalizedRoadBearing = Math.abs(roadBearing) % 180;
+        
+        // Calculate the angle difference between the road and property edge
+        let angleDiff = Math.abs(normalizedEdgeBearing - normalizedRoadBearing);
+        if (angleDiff > 90) angleDiff = 180 - angleDiff; // Get the acute angle
+        
+        // Only include road if it's roughly parallel to the property edge
+        if (angleDiff <= MAX_ANGLE_DIFFERENCE && minDistance <= BUFFER_DISTANCE) {
           frontageMap[roadName] = (frontageMap[roadName] || 0) + edgeLength;
-          break;
         }
       }
     }
@@ -588,9 +638,11 @@ export function OverviewTab() {
                 <div className="text-right text-muted-foreground">No street frontage detected</div>
               ) : (
                 <div className="text-right">
-                  {data.streetFrontage.roads.map((road, index) => (
-                    <div key={road.name}>{road.name}: {road.length}m</div>
-                  ))}
+                  {data.streetFrontage.roads
+                    .filter(road => road.name !== 'Unnamed Road' && road.name !== 'UNNAMED ROAD')
+                    .map((road, index) => (
+                      <div key={road.name}>{road.name}: {road.length}m</div>
+                    ))}
                   {data.streetFrontage.roads.length > 1 && (
                     <div className="mt-1 pt-1 border-t border-border">
                       Total: {data.streetFrontage.total}m

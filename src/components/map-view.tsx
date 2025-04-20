@@ -39,30 +39,33 @@ let DefaultIcon = L.Icon.extend({
 
 L.Marker.prototype.options.icon = new DefaultIcon();
 
-// Add type declarations for Geoman
-declare module 'leaflet' {
-  interface Map {
-    pm: PMMap;
-  }
-  
-  interface PMMap {
-    addControls: (options: PMControlOptions) => void;
-    removeControls: () => void;
-    initialize: (options: { optIn: boolean }) => void;
-    Toolbar?: any;
-    Keyboard?: any;
-  }
+// Define Geoman types without trying to modify existing L.Map
+interface PMControlOptions {
+  position: 'topleft' | 'topright' | 'bottomleft' | 'bottomright';
+  drawCircle?: boolean;
+  drawCircleMarker?: boolean;
+  drawPolyline?: boolean;
+  drawRectangle?: boolean;
+  drawPolygon?: boolean;
+  drawMarker?: boolean;
+  cutPolygon?: boolean;
+  rotateMode?: boolean;
+}
 
-  interface PMControlOptions {
-    position: 'topleft' | 'topright' | 'bottomleft' | 'bottomright';
-    drawCircle?: boolean;
-    drawCircleMarker?: boolean;
-    drawPolyline?: boolean;
-    drawRectangle?: boolean;
-    drawPolygon?: boolean;
-    drawMarker?: boolean;
-    cutPolygon?: boolean;
-    rotateMode?: boolean;
+interface PMMap {
+  addControls: (options: PMControlOptions) => void;
+  removeControls: () => void;
+  initialize: (options: { optIn: boolean }) => void;
+  Toolbar?: any;
+  Keyboard?: any;
+}
+
+// Augment the leaflet namespace without interface merging issues
+declare global {
+  namespace L {
+    interface Map {
+      pm: PMMap;
+    }
   }
 }
 
@@ -313,125 +316,159 @@ function OverlayLayers() {
     })).flatMap(group => group.layers);
 
     allLayers.forEach(layer => {
-      if (layer.effectivelyEnabled) {
-        // Skip custom layers as they're handled by their own components
-        if (layer.type === 'custom') {
-          return;
-        }
+      // Skip custom layers as they're handled by their own components
+      if (layer.type === 'custom') {
+        return;
+      }
 
-        if (!layerRefs.current[layer.id]) {
-          if (layer.type === 'dynamic') {
-            const layerOptions: any = {
-              url: layer.url,
-              layers: [layer.layerId],
-              opacity: layer.opacity,
-              pane: OVERLAY_PANE,
+      // Create the layer if it doesn't exist yet
+      if (!layerRefs.current[layer.id]) {
+        if (layer.type === 'dynamic') {
+          const layerOptions: any = {
+            url: layer.url,
+            layers: [layer.layerId],
+            opacity: 0, // Start with 0 opacity for smooth transitions
+            pane: OVERLAY_PANE,
+          };
+
+          if (layer.filter) {
+            layerOptions.layerDefs = {
+              [layer.layerId!]: layer.filter
             };
+          }
 
-            if (layer.filter) {
-              layerOptions.layerDefs = {
-                [layer.layerId!]: layer.filter
-              };
-            }
+          layerRefs.current[layer.id] = EL.dynamicMapLayer(layerOptions).addTo(map);
+        } else if (layer.type === 'wms') {
+          const wmsOptions: L.WMSOptions = {
+            layers: layer.wmsLayers,
+            format: layer.wmsParams?.format || 'image/jpeg',
+            transparent: layer.wmsParams?.transparent || true,
+            version: layer.wmsParams?.version || '1.1.1',
+            opacity: 0, // Start with 0 opacity for smooth transitions
+            attribution: layer.attribution,
+            pane: OVERLAY_PANE,
+            maxZoom: 21,
+            maxNativeZoom: 21,
+            tileSize: 256,
+            className: layer.className || 'seamless-tiles',
+            updateInterval: 200,
+            keepBuffer: 4,
+            updateWhenZooming: false,
+            updateWhenIdle: true,
+            zIndex: 410,
+            noWrap: true
+          };
 
-            layerRefs.current[layer.id] = EL.dynamicMapLayer(layerOptions).addTo(map);
-          } else if (layer.type === 'wms') {
-            const wmsOptions: L.WMSOptions = {
-              layers: layer.wmsLayers,
-              format: layer.wmsParams?.format || 'image/jpeg',
-              transparent: layer.wmsParams?.transparent || true,
-              version: layer.wmsParams?.version || '1.1.1',
-              opacity: layer.opacity,
-              attribution: layer.attribution,
-              pane: OVERLAY_PANE,
-              maxZoom: 21,
-              maxNativeZoom: 21,
-              tileSize: 256,
-              className: layer.className || 'seamless-tiles',
-              updateInterval: 200, // Increase update interval to reduce flickering
-              keepBuffer: 4,
-              updateWhenZooming: false, // Disable updates while zooming
-              updateWhenIdle: true,
-              zIndex: 410,
-              noWrap: true
-            };
+          if (layer.id === 'nearmap') {
+            // Store initial bounds for Nearmap layer
+            lastBoundsRef.current = map.getBounds();
+            
+            // Additional optimizations for Nearmap layer
+            Object.assign(wmsOptions, {
+              dpi: 96,
+              bounds: lastBoundsRef.current.pad(0.5),
+              fadeAnimation: false
+            });
+          }
 
-            if (layer.id === 'nearmap') {
-              // Store initial bounds for Nearmap layer
-              lastBoundsRef.current = map.getBounds();
-              
-              // Additional optimizations for Nearmap layer
-              Object.assign(wmsOptions, {
-                dpi: 96,
-                bounds: lastBoundsRef.current.pad(0.5), // Use smaller padding
-                fadeAnimation: false // Disable fade animation
+          layerRefs.current[layer.id] = L.tileLayer.wms(layer.url || '', wmsOptions).addTo(map);
+        } else if (layer.type === 'tile') {
+          layerRefs.current[layer.id] = L.tileLayer(layer.url || '', {
+            opacity: 0, // Start with 0 opacity for smooth transitions
+            attribution: layer.attribution,
+            className: layer.className,
+            pane: OVERLAY_PANE,
+            maxZoom: 21,
+            maxNativeZoom: 19,
+            tileSize: 256,
+            crossOrigin: true
+          }).addTo(map);
+        } else if (layer.type === 'geojson') {
+          layerRefs.current[layer.id] = L.geoJSON(layer.data, {
+            pane: OVERLAY_PANE,
+            pointToLayer: (_feature, latlng) => {
+              return L.circleMarker(latlng, {
+                radius: 8,
+                fillColor: "#2563eb",
+                color: "#fff",
+                weight: 1,
+                opacity: 0, // Start with 0 opacity for smooth transitions
+                fillOpacity: 0
               });
             }
-
-            layerRefs.current[layer.id] = L.tileLayer.wms(layer.url || '', wmsOptions).addTo(map);
-          } else if (layer.type === 'tile') {
-            layerRefs.current[layer.id] = L.tileLayer(layer.url || '', {
-              opacity: layer.opacity,
-              attribution: layer.attribution,
-              className: layer.className,
-              pane: OVERLAY_PANE,
-              maxZoom: 21,
-              maxNativeZoom: 19,
-              tileSize: 256,
-              crossOrigin: true
-            }).addTo(map);
-          } else if (layer.type === 'geojson') {
-            layerRefs.current[layer.id] = L.geoJSON(layer.data, {
-              pane: OVERLAY_PANE,
-              pointToLayer: (_feature, latlng) => {
-                return L.circleMarker(latlng, {
-                  radius: 8,
-                  fillColor: "#2563eb",
-                  color: "#fff",
-                  weight: 1,
-                  opacity: layer.opacity,
-                  fillOpacity: 0.8
-                });
-              }
-            }).addTo(map);
-          }
+          }).addTo(map);
         }
+      }
+      
+      // Smoothly transition opacity for all layer types
+      if (layerRefs.current[layer.id]) {
+        const targetOpacity = layer.effectivelyEnabled ? (layer.opacity || 1) : 0;
+        const currentLayer = layerRefs.current[layer.id];
         
-        // Only try to set opacity for layers with setOpacity method
-        if (layerRefs.current[layer.id] && 'setOpacity' in layerRefs.current[layer.id]) {
-          layerRefs.current[layer.id].setOpacity(layer.opacity || 1);
-        }
-      } else {
-        if (layerRefs.current[layer.id]) {
-          map.removeLayer(layerRefs.current[layer.id]);
-          delete layerRefs.current[layer.id];
+        // Smoothly transition the opacity
+        if ('setOpacity' in currentLayer) {
+          fadeLayerOpacity(currentLayer, targetOpacity);
+        } else if (layer.type === 'geojson' && currentLayer.setStyle) {
+          // For GeoJSON layers, update style for all features
+          currentLayer.setStyle({
+            opacity: targetOpacity,
+            fillOpacity: targetOpacity * 0.8
+          });
         }
       }
     });
 
-    return () => {
-      Object.values(layerRefs.current).forEach(layer => {
-        if (layer) {
-          // Ensure proper cleanup for all layer types
-          if (layer._url && layer._url.includes('nearmap')) {
-            // Special handling for Nearmap layers - cancel all pending tile requests
-            if (layer._tiles) {
-              // Cancel any pending tile requests
-              Object.values(layer._tiles).forEach((tile: any) => {
-                if (tile.el && tile.el.parentNode) {
-                  tile.el.parentNode.removeChild(tile.el);
-                }
-                // Set tile as loaded to prevent further requests
-                tile.loaded = true;
-              });
-            }
-          }
+    // Helper function to fade layer opacity
+    function fadeLayerOpacity(layer: any, targetOpacity: number) {
+      if (!layer || !('setOpacity' in layer)) return;
+      
+      const currentOpacity = layer.options?.opacity || 0;
+      const step = 0.05; // Smaller step for smoother transition
+      const fadeInterval = 16; // ~60 fps
+      
+      // Clear any existing interval
+      if (layer._fadeInterval) {
+        clearInterval(layer._fadeInterval);
+      }
+      
+      if (Math.abs(currentOpacity - targetOpacity) < 0.05) {
+        // If change is minimal, just set directly
+        layer.setOpacity(targetOpacity);
+        return;
+      }
+      
+      layer._fadeInterval = setInterval(() => {
+        const newOpacity = currentOpacity < targetOpacity
+          ? Math.min(layer.options.opacity + step, targetOpacity)
+          : Math.max(layer.options.opacity - step, targetOpacity);
           
-          // Remove the layer from map
-          map.removeLayer(layer);
+        layer.setOpacity(newOpacity);
+        
+        // If we've reached the target, clear the interval
+        if (Math.abs(newOpacity - targetOpacity) < 0.05) {
+          clearInterval(layer._fadeInterval);
+          layer.setOpacity(targetOpacity);
+          
+          // If opacity is 0, hide the layer to improve performance
+          if (targetOpacity === 0 && layer._container) {
+            layer._container.style.display = 'none';
+          } else if (layer._container) {
+            layer._container.style.display = 'block';
+          }
+        }
+      }, fadeInterval);
+    }
+
+    return () => {
+      // Clear all fade intervals
+      Object.values(layerRefs.current).forEach(layer => {
+        if (layer && layer._fadeInterval) {
+          clearInterval(layer._fadeInterval);
         }
       });
-      layerRefs.current = {};
+      
+      // We don't remove layers here anymore to prevent flickering
+      // Just keep them with 0 opacity when toggled off
       
       // Remove event listener using the ref
       if (handleMoveEndRef.current) {
