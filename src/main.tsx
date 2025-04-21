@@ -1,17 +1,29 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { createBrowserRouter, RouterProvider, type RouterOptions } from 'react-router-dom';
+// Removed RouterOptions import
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { AuthProvider } from './lib/auth';
 import App from './App.tsx';
 import './index.css';
 import { Toaster } from "@/components/ui/toaster";
 import { AuthCallback } from '@/components/auth/callback';
 import { initPostHog } from '@/lib/posthog';
+import { loadStripe } from '@stripe/stripe-js';
+import { Elements } from '@stripe/react-stripe-js';
 
 // Initialize PostHog
 initPostHog();
 
-const routerOptions: RouterOptions = {
+// Load Stripe
+const stripePublishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
+if (!stripePublishableKey) {
+  console.error("Missing VITE_STRIPE_PUBLISHABLE_KEY");
+  throw new Error("Missing VITE_STRIPE_PUBLISHABLE_KEY");
+}
+const stripePromise = loadStripe(stripePublishableKey);
+
+// Removed incorrect RouterOptions type annotation
+const routerOptions = {
   future: {
     v7_startTransition: true,
     v7_relativeSplatPath: true,
@@ -38,8 +50,10 @@ const router = createBrowserRouter([
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <AuthProvider>
-      <RouterProvider router={router} />
-      <Toaster />
+      <Elements stripe={stripePromise}>
+        <RouterProvider router={router} />
+        <Toaster />
+      </Elements>
     </AuthProvider>
   </StrictMode>
 );

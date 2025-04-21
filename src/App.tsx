@@ -1,3 +1,4 @@
+// src/App.tsx
 // Main layout component that structures the application into panels
 // Uses ResizablePanelGroup for flexible panel sizing
 
@@ -12,14 +13,15 @@ import { MapLayout } from "@/components/map-layout";
 import { SearchPanel } from "@/components/search-panel";
 import { LayerControl } from "@/components/layer-control";
 import { AnalyticsPanel } from "@/components/analytics/analytics-panel";
-import { GripVertical, MessageCircle, LogOut, X, LogIn } from "lucide-react";
+// Ensure User icon is imported
+import { GripVertical, MessageCircle, LogOut, X, LogIn, User } from "lucide-react";
 import { useState, useEffect } from "react";
-import { ChatPanel } from "@/components/chat/chat-panel";
+import { ChatPanel } from "@/components/chat/chat-panel"; // Assuming ChatPanel exists if needed by FloatingChat
 import { useAuth } from "./lib/auth";
-import { SplashPage } from "@/components/auth/splash-page";
+// import { SplashPage } from "@/components/auth/splash-page"; // SplashPage content seems integrated here now
 import { Routes, Route } from "react-router-dom";
 import { AuthCallback } from "@/components/auth/callback";
-import { Card } from "@/components/ui/card";
+// import { Card } from "@/components/ui/card"; // Card not directly used here
 import { Logo } from "@/components/ui/logo";
 import { cn } from "@/lib/utils";
 import { FloatingChat } from "@/components/chat/floating-chat";
@@ -32,6 +34,8 @@ import { Button } from "@/components/ui/button";
 import { signOut } from "@/lib/auth";
 import { ErrorBoundary } from "react-error-boundary";
 import { SiteSearchPanel } from "@/components/site-search-panel";
+// Import the new modal
+import { UserProfileModal } from "@/components/profile/user-profile-modal";
 
 const queryClient = new QueryClient();
 
@@ -39,9 +43,11 @@ function App() {
   useSavedProperties();
   const [isVerticalDisplay, setIsVerticalDisplay] = useState(false);
   const { user, loading } = useAuth();
-  const [isReporterActive] = useState(false);
+  const [isReporterActive] = useState(false); // Assuming this state is used elsewhere
   const [isSiteSearchOpen, setIsSiteSearchOpen] = useState(false);
   const [bypassAuth, setBypassAuth] = useState(false);
+  // State for profile modal
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
   const handleOpenSiteSearch = () => {
     console.log("Opening site search from App...");
@@ -51,6 +57,7 @@ function App() {
   useEffect(() => {
     const checkOrientation = () => {
       const isMobile = window.innerWidth <= 768;
+      // Adjust vertical check if needed, this seems aggressive
       const isVertical = window.innerHeight > window.innerWidth * 1.2;
       setIsVerticalDisplay(isMobile || isVertical);
     };
@@ -70,6 +77,7 @@ function App() {
     );
   }
 
+  // Splash / Login screen logic
   if (!user && !bypassAuth) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex flex-col items-center justify-center p-4">
@@ -105,6 +113,7 @@ function App() {
 
         <Button
           variant="outline"
+          // Assuming /auth/login is handled by your auth provider or backend
           onClick={() => (window.location.href = "/auth/login")}
           className="gap-2"
         >
@@ -115,6 +124,7 @@ function App() {
     );
   }
 
+  // Main Application Layout
   return (
     <QueryClientProvider client={queryClient}>
       <Routes>
@@ -123,7 +133,10 @@ function App() {
           path="/*"
           element={
             <div className="h-screen w-screen flex flex-col overflow-hidden m-0 p-0">
+              {/* Admin feature */}
               {user?.user_metadata?.isAdmin && <UserCursors />}
+
+              {/* Mobile Layout */}
               {isVerticalDisplay ? (
                 <>
                   <MobileHeader />
@@ -131,7 +144,8 @@ function App() {
                     <ResizablePanelGroup
                       direction="vertical"
                       id="mobile-layout"
-                      autoSaveId="mobile-layout"
+                      // Consider removing autoSaveId if layout issues persist
+                      // autoSaveId="mobile-layout"
                     >
                       <ResizablePanel
                         defaultSize={70}
@@ -157,142 +171,165 @@ function App() {
                   <FloatingChat />
                 </>
               ) : (
+                // Desktop Layout
                 <>
                   <header className="border-b bg-card shadow-sm">
                     <div className="px-4 flex h-14 items-center justify-between">
+                      {/* Left side: Logo and Title */}
                       <div className="flex items-center">
                         <Logo />
                         <span className="text-sm text-muted-foreground ml-2">
-                          NSW Property Development & Planning Analytics |
-                          Interactive Maps & Real-Time Insights
-                        </span>
-                      </div>
-                      {user ? (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={signOut}
-                          className="gap-2"
-                        >
-                          <LogOut className="h-4 w-4" />
-                          Sign out
-                        </Button>
-                      ) : (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => (window.location.href = "/auth/login")}
-                          className="gap-2"
-                        >
-                          <LogIn className="h-4 w-4" />
-                          Sign in
-                        </Button>
-                      )}
-                    </div>
-                  </header>
-                  <main className="flex-1 flex flex-col h-full overflow-hidden">
-                    <ResizablePanelGroup
-                      direction="vertical"
-                      className="h-full"
-                    >
-                      <ResizablePanel
-                        defaultSize={4}
-                        minSize={4}
-                        maxSize={10}
-                        className="border-b"
-                      >
-                        <SearchPanel onOpenSiteSearch={handleOpenSiteSearch} />
-                      </ResizablePanel>
-                      <ResizablePanel defaultSize={92}>
-                        <ResizablePanelGroup
-                          direction="horizontal"
-                          className="h-full"
-                        >
-                          <ResizablePanel
-                            defaultSize={20}
-                            minSize={10}
-                            maxSize={30}
-                          >
-                            <ResizablePanelGroup direction="vertical">
-                              <ResizablePanel defaultSize={75}>
-                                <LayerControl />
-                              </ResizablePanel>
-                              <ResizeHandle withHandle>
-                                <div>
-                                  <GripVertical className="h-4 w-4" />
-                                </div>
-                              </ResizeHandle>
-                              <ResizablePanel defaultSize={25}>
-                                <SavedPropertiesPane />
-                              </ResizablePanel>
-                            </ResizablePanelGroup>
-                          </ResizablePanel>
-                          <ResizeHandle withHandle>
-                            <div
-                              className={isVerticalDisplay ? "rotate-90" : ""}
-                            >
-                              <GripVertical className="h-4 w-4" />
-                            </div>
-                          </ResizeHandle>
-                          <ResizablePanel defaultSize={50} minSize={40}>
-                            <MapLayout />
-                          </ResizablePanel>
-                          <ResizeHandle withHandle>
-                            <div
-                              className={isVerticalDisplay ? "rotate-90" : ""}
-                            >
-                              <GripVertical className="h-4 w-4" />
-                            </div>
-                          </ResizeHandle>
-                          <ResizablePanel
-                            defaultSize={30}
-                            minSize={25}
-                            className={cn(
-                              "transition-all duration-300",
-                              isReporterActive ? "!w-screen" : ""
-                            )}
-                          >
-                            {!isSiteSearchOpen ? (
-                              <AnalyticsPanel />
-                            ) : (
-                              <div className="h-full flex flex-col bg-background">
-                                <div className="p-4 border-b flex justify-between items-center">
-                                  <div>
-                                    <h2 className="font-semibold">
-                                      Site Search
-                                    </h2>
-                                    <p className="text-sm text-muted-foreground">
-                                      Search properties by location and criteria
-                                    </p>
-                                  </div>
-                                  <button
-                                    onClick={() => setIsSiteSearchOpen(false)}
-                                    className="text-muted-foreground hover:text-foreground"
-                                  >
-                                    <X className="h-4 w-4" />
-                                    <span className="sr-only">Close</span>
-                                  </button>
-                                </div>
-                                <div className="flex-1 overflow-y-auto">
-                                  <SiteSearchPanel />
-                                </div>
-                              </div>
-                            )}
-                          </ResizablePanel>
-                        </ResizablePanelGroup>
-                      </ResizablePanel>
-                    </ResizablePanelGroup>
-                  </main>
-                  <FloatingChat />
-                </>
-              )}
-            </div>
-          }
-        />
-      </Routes>
-    </QueryClientProvider>
-  );
-}
+                           NSW Property Development & Planning Analytics |
+                           Interactive Maps & Real-Time Insights
+                         </span>
+                       </div>
+                       {/* Right side: User Controls */}
+                       <div className="flex items-center gap-2">
+                         {user ? (
+                           <>
+                             {/* Profile Button */}
+                             <Button
+                               variant="ghost"
+                               size="icon"
+                               onClick={() => setIsProfileModalOpen(true)}
+                               aria-label="Open user profile"
+                             >
+                               <User className="h-5 w-5" />
+                             </Button>
+                             {/* Sign Out Button */}
+                             <Button
+                               variant="ghost"
+                               size="sm"
+                               onClick={signOut}
+                               className="gap-2"
+                             >
+                               <LogOut className="h-4 w-4" />
+                               Sign out
+                             </Button>
+                           </>
+                         ) : (
+                           // Sign In Button (if bypassAuth is true but user is null)
+                           <Button
+                             variant="ghost"
+                             size="sm"
+                             onClick={() => (window.location.href = "/auth/login")}
+                             className="gap-2"
+                           >
+                             <LogIn className="h-4 w-4" />
+                             Sign in
+                           </Button>
+                         )}
+                       </div>
+                     </div>
+                   </header>
+                   <main className="flex-1 flex flex-col h-full overflow-hidden">
+                     <ResizablePanelGroup
+                       direction="vertical"
+                       className="h-full"
+                     >
+                       {/* Top Search Panel */}
+                       <ResizablePanel
+                         defaultSize={4}
+                         minSize={4}
+                         maxSize={10}
+                         className="border-b"
+                       >
+                         <SearchPanel onOpenSiteSearch={handleOpenSiteSearch} />
+                       </ResizablePanel>
+                       {/* Main Content Area */}
+                       <ResizablePanel defaultSize={92}>
+                         <ResizablePanelGroup
+                           direction="horizontal"
+                           className="h-full"
+                         >
+                           {/* Left Panel (Layers & Saved) */}
+                           <ResizablePanel
+                             defaultSize={20}
+                             minSize={10}
+                             maxSize={30}
+                           >
+                             <ResizablePanelGroup direction="vertical">
+                               <ResizablePanel defaultSize={75}>
+                                 <LayerControl />
+                               </ResizablePanel>
+                               <ResizeHandle withHandle>
+                                 <div>
+                                   <GripVertical className="h-4 w-4" />
+                                 </div>
+                               </ResizeHandle>
+                               <ResizablePanel defaultSize={25}>
+                                 <SavedPropertiesPane />
+                               </ResizablePanel>
+                             </ResizablePanelGroup>
+                           </ResizablePanel>
+                           <ResizeHandle withHandle>
+                             <div className={isVerticalDisplay ? "rotate-90" : ""}>
+                               <GripVertical className="h-4 w-4" />
+                             </div>
+                           </ResizeHandle>
+                           {/* Center Panel (Map) */}
+                           <ResizablePanel defaultSize={50} minSize={40}>
+                             <MapLayout />
+                           </ResizablePanel>
+                           <ResizeHandle withHandle>
+                             <div className={isVerticalDisplay ? "rotate-90" : ""}>
+                               <GripVertical className="h-4 w-4" />
+                             </div>
+                           </ResizeHandle>
+                           {/* Right Panel (Analytics or Site Search) */}
+                           <ResizablePanel
+                             defaultSize={30}
+                             minSize={25}
+                             className={cn(
+                               "transition-all duration-300",
+                               // isReporterActive might be for a different feature
+                               isReporterActive ? "!w-screen" : ""
+                             )}
+                           >
+                             {!isSiteSearchOpen ? (
+                               <AnalyticsPanel />
+                             ) : (
+                               <div className="h-full flex flex-col bg-background">
+                                 <div className="p-4 border-b flex justify-between items-center">
+                                   <div>
+                                     <h2 className="font-semibold">
+                                       Site Search
+                                     </h2>
+                                     <p className="text-sm text-muted-foreground">
+                                       Search properties by location and criteria
+                                     </p>
+                                   </div>
+                                   <button
+                                     onClick={() => setIsSiteSearchOpen(false)}
+                                     className="text-muted-foreground hover:text-foreground"
+                                     aria-label="Close site search"
+                                   >
+                                     <X className="h-4 w-4" />
+                                     <span className="sr-only">Close</span>
+                                   </button>
+                                 </div>
+                                 <div className="flex-1 overflow-y-auto">
+                                   <SiteSearchPanel />
+                                 </div>
+                               </div>
+                             )}
+                           </ResizablePanel>
+                         </ResizablePanelGroup>
+                       </ResizablePanel>
+                     </ResizablePanelGroup>
+                   </main>
+                   <FloatingChat />
+                 </>
+               )}
+             </div>
+           }
+         />
+       </Routes>
+       {/* Render the modal outside the Routes but inside QueryClientProvider */}
+       <UserProfileModal isOpen={isProfileModalOpen} onOpenChange={setIsProfileModalOpen} />
+     </QueryClientProvider>
+   );
+ }
 
 // Add error boundary
 interface ErrorFallbackProps {
@@ -301,17 +338,18 @@ interface ErrorFallbackProps {
 }
 
 function ErrorFallback({ error, resetErrorBoundary }: ErrorFallbackProps) {
+  // Basic error fallback UI
   return (
-    <div className="flex items-center justify-center h-screen p-4">
+    <div role="alert" className="flex items-center justify-center h-screen p-4">
       <div className="text-center">
-        <h2 className="text-lg font-semibold mb-2">Something went wrong</h2>
-        <pre className="text-sm text-red-500 mb-4">{error.message}</pre>
-        <button
+        <h2 className="text-lg font-semibold mb-2 text-destructive">Something went wrong</h2>
+        <pre className="text-sm text-red-600 mb-4 bg-red-50 p-2 rounded">{error.message}</pre>
+        <Button
           onClick={resetErrorBoundary}
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          variant="destructive"
         >
           Try again
-        </button>
+        </Button>
       </div>
     </div>
   );
