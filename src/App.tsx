@@ -13,18 +13,13 @@ import { MapLayout } from "@/components/map-layout";
 import { SearchPanel } from "@/components/search-panel";
 import { LayerControl } from "@/components/layer-control";
 import { AnalyticsPanel } from "@/components/analytics/analytics-panel";
-// Ensure User icon is imported
-import { GripVertical, MessageCircle, LogOut, X, LogIn, User } from "lucide-react";
+import { GripVertical, LogOut, X } from "lucide-react";
 import { useState, useEffect } from "react";
-import { ChatPanel } from "@/components/chat/chat-panel"; // Assuming ChatPanel exists if needed by FloatingChat
 import { useAuth } from "./lib/auth";
-// import { SplashPage } from "@/components/auth/splash-page"; // SplashPage content seems integrated here now
 import { Routes, Route } from "react-router-dom";
 import { AuthCallback } from "@/components/auth/callback";
-// import { Card } from "@/components/ui/card"; // Card not directly used here
 import { Logo } from "@/components/ui/logo";
 import { cn } from "@/lib/utils";
-import { FloatingChat } from "@/components/chat/floating-chat";
 import { SavedPropertiesPane } from "@/components/saved-properties-pane";
 import { useSavedProperties } from "@/hooks/use-saved-properties";
 import { UserCursors } from "@/components/admin/user-cursors";
@@ -34,8 +29,6 @@ import { Button } from "@/components/ui/button";
 import { signOut } from "@/lib/auth";
 import { ErrorBoundary } from "react-error-boundary";
 import { SiteSearchPanel } from "@/components/site-search-panel";
-// Import the new modal
-import { UserProfileModal } from "@/components/profile/user-profile-modal";
 
 const queryClient = new QueryClient();
 
@@ -45,9 +38,6 @@ function App() {
   const { user, loading } = useAuth();
   const [isReporterActive] = useState(false); // Assuming this state is used elsewhere
   const [isSiteSearchOpen, setIsSiteSearchOpen] = useState(false);
-  const [bypassAuth, setBypassAuth] = useState(false);
-  // State for profile modal
-  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
   const handleOpenSiteSearch = () => {
     console.log("Opening site search from App...");
@@ -73,53 +63,6 @@ function App() {
         <div className="animate-spin">
           <Logo className="h-8 w-8 text-primary" />
         </div>
-      </div>
-    );
-  }
-
-  // Splash / Login screen logic
-  if (!user && !bypassAuth) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex flex-col items-center justify-center p-4">
-        <div className="flex flex-col items-center mb-8">
-          <Logo className="scale-150 mb-4" />
-          <div className="text-center space-y-2 max-w-lg">
-            <h1 className="text-2xl font-semibold text-primary">
-              NSW Property Development & Analytics Platform
-            </h1>
-            <p className="text-muted-foreground">
-              Access comprehensive property analytics, interactive zoning maps,
-              and real-time development application tracking. Make data-driven
-              property decisions with our advanced planning tools.
-            </p>
-          </div>
-        </div>
-
-        <div className="flex flex-col gap-4 items-center mb-8">
-          <Button
-            className="px-8 py-6 text-lg"
-            onClick={() => setBypassAuth(true)}
-          >
-            Continue as Guest
-          </Button>
-
-          <div className="text-center text-sm text-muted-foreground">
-            <p>
-              You can explore the platform without logging in, but some features
-              may be limited.
-            </p>
-          </div>
-        </div>
-
-        <Button
-          variant="outline"
-          // Assuming /auth/login is handled by your auth provider or backend
-          onClick={() => (window.location.href = "/auth/login")}
-          className="gap-2"
-        >
-          <LogIn className="h-4 w-4" />
-          Sign in for full access
-        </Button>
       </div>
     );
   }
@@ -168,55 +111,28 @@ function App() {
                       </ResizablePanel>
                     </ResizablePanelGroup>
                   </main>
-                  <FloatingChat />
                 </>
               ) : (
                 // Desktop Layout
                 <>
                   <header className="border-b bg-card shadow-sm">
                     <div className="px-4 flex h-14 items-center justify-between">
-                      {/* Left side: Logo and Title */}
+                      {/* Left side: Logo */}
                       <div className="flex items-center">
                         <Logo />
-                        <span className="text-sm text-muted-foreground ml-2">
-                           NSW Property Development & Planning Analytics |
-                           Interactive Maps & Real-Time Insights
-                         </span>
                        </div>
                        {/* Right side: User Controls */}
                        <div className="flex items-center gap-2">
-                         {user ? (
-                           <>
-                             {/* Profile Button */}
-                             <Button
-                               variant="ghost"
-                               size="icon"
-                               onClick={() => setIsProfileModalOpen(true)}
-                               aria-label="Open user profile"
-                             >
-                               <User className="h-5 w-5" />
-                             </Button>
-                             {/* Sign Out Button */}
-                             <Button
-                               variant="ghost"
-                               size="sm"
-                               onClick={signOut}
-                               className="gap-2"
-                             >
-                               <LogOut className="h-4 w-4" />
-                               Sign out
-                             </Button>
-                           </>
-                         ) : (
-                           // Sign In Button (if bypassAuth is true but user is null)
+                         {/* Sign Out Button - only show if user is logged in */}
+                         {user && (
                            <Button
                              variant="ghost"
                              size="sm"
-                             onClick={() => (window.location.href = "/auth/login")}
+                             onClick={signOut}
                              className="gap-2"
                            >
-                             <LogIn className="h-4 w-4" />
-                             Sign in
+                             <LogOut className="h-4 w-4" />
+                             Sign out
                            </Button>
                          )}
                        </div>
@@ -318,15 +234,13 @@ function App() {
                        </ResizablePanel>
                      </ResizablePanelGroup>
                    </main>
-                   <FloatingChat />
-                 </>
+                  </>
                )}
              </div>
            }
          />
        </Routes>
        {/* Render the modal outside the Routes but inside QueryClientProvider */}
-       <UserProfileModal isOpen={isProfileModalOpen} onOpenChange={setIsProfileModalOpen} />
      </QueryClientProvider>
    );
  }

@@ -1,9 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useMapStore } from '@/lib/map-store';
 import { Alert, AlertTitle } from '@/components/ui/alert';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
-import { TooltipProvider } from '@/components/ui/tooltip';
 import { loadPopulationData } from '@/lib/population-data';
 import {
   BarChart,
@@ -19,51 +18,9 @@ import {
 } from 'recharts';
 import { usePropertyDataStore } from '@/lib/property-data-store';
 
-interface DemographicData {
-  totalPopulation: number;
-  medianAge: number;
-  medianIncome: number;
-  householdSize: number;
-  genderData: { name: string; value: number }[];
-  ageData: { name: string; value: number }[];
-  loading: boolean;
-  error: string | null;
-}
-
-interface PopulationData {
-  year: number;
-  population: number;
-}
 
 const COLORS = ['#C084FC', '#44B9FF'];
 
-function normalizeGeometry(geometry: any) {
-  // If the geometry is already in Web Mercator (wkid: 102100), return it
-  if (geometry.spatialReference?.wkid === 102100) {
-    return geometry;
-  }
-
-  // If it's in WGS84 (wkid: 4326), convert it
-  if (geometry.spatialReference?.wkid === 4326) {
-    const convertedRings = geometry.rings.map((ring: number[][]) =>
-      ring.map(([lon, lat]) => [
-        (lon * 20037508.34) / 180,
-        Math.log(Math.tan((90 + lat) * Math.PI / 360)) / (Math.PI / 180) * 20037508.34 / 180
-      ])
-    );
-
-    return {
-      rings: convertedRings,
-      spatialReference: { wkid: 102100 }
-    };
-  }
-
-  // If no spatial reference, assume Web Mercator and add it
-  return {
-    ...geometry,
-    spatialReference: { wkid: 102100 }
-  };
-}
 
 export function DemographicsTab() {
   const selectedProperty = useMapStore((state) => state.selectedProperty);
@@ -160,22 +117,54 @@ export function DemographicsTab() {
 
         // Fetch SA2 name for population projections
         const sa2Response = await fetch(
-          `https://services1.arcgis.com/v8Kimc579yljmjSP/ArcGIS/rest/services/ASGS_2021_SA2/FeatureServer/0/query?` +
+          `https://services1.arcgis.com/v8Kimc579yljmjSP/ArcGIS/rest/services/Aust_SA2_2021_Age_pop_16082023/FeatureServer/0/query?` +
           `geometry=${longitude},${latitude}&` +
           `geometryType=esriGeometryPoint&` +
           `inSR=4326&` +
           `spatialRel=esriSpatialRelIntersects&` +
-          `outFields=SA2_NAME_2021&` +
+          `outFields=SA2_NAME_2021,SA2_name&` +
           `returnGeometry=false&` +
           `f=json`
         );
 
         const sa2Data = await sa2Response.json();
-        const sa2Name = sa2Data.features?.[0]?.attributes?.SA2_NAME_2021;
+        const sa2Attributes = sa2Data.features?.[0]?.attributes;
+        const sa2Name2021 = sa2Attributes?.SA2_NAME_2021;
+        const sa2Name = sa2Attributes?.SA2_name;
 
-        if (sa2Name) {
+        console.log('SA2 API Response:', sa2Data);
+        console.log('SA2 Name 2021 from API:', sa2Name2021);
+        console.log('SA2 Name from API:', sa2Name);
+
+        if (sa2Name2021 || sa2Name) {
           const populationProjections = await loadPopulationData();
-          const yearlyData = populationProjections[sa2Name];
+          console.log('Available SA2 names in CSV:', Object.keys(populationProjections).slice(0, 10));
+          
+          // Try exact match first
+          let yearlyData = populationProjections[sa2Name2021] || populationProjections[sa2Name];
+          let matchedName = sa2Name2021 || sa2Name;
+          
+          // If no exact match, try fuzzy matching
+          if (!yearlyData) {
+            const csvNames = Object.keys(populationProjections);
+            const searchName = (sa2Name2021 || sa2Name || '').toLowerCase();
+            
+            // Try to find a close match
+            const fuzzyMatch = csvNames.find(csvName => {
+              const csvNameLower = csvName.toLowerCase();
+              return csvNameLower.includes(searchName) || searchName.includes(csvNameLower);
+            });
+            
+            if (fuzzyMatch) {
+              yearlyData = populationProjections[fuzzyMatch];
+              matchedName = fuzzyMatch;
+              console.log('Found fuzzy match:', fuzzyMatch);
+            }
+          }
+          
+          console.log('Looking for SA2 name:', sa2Name2021 || sa2Name);
+          console.log('Matched name:', matchedName);
+          console.log('Found yearly data:', yearlyData);
 
           if (yearlyData) {
             const populationData = Object.entries(yearlyData)
@@ -187,9 +176,11 @@ export function DemographicsTab() {
 
             setPropertyData('demographics', { ...demographicData, populationData });
           } else {
+            console.log('No population data found for SA2:', matchedName);
             setPropertyData('demographics', demographicData);
           }
         } else {
+          console.log('No SA2 name found in API response');
           setPropertyData('demographics', demographicData);
         }
       } catch (error: any) {
@@ -291,10 +282,14 @@ export function DemographicsTab() {
                   <XAxis 
                     dataKey="name"
                     tick={{ fontSize: 12 }}
+                    axisLine={true}
+                    tickLine={true}
                   />
                   <YAxis 
                     tickFormatter={(value) => `${value}%`}
                     tick={{ fontSize: 12 }}
+                    axisLine={true}
+                    tickLine={true}
                   />
                   <RechartsTooltip />
                   <Bar 
@@ -339,11 +334,15 @@ export function DemographicsTab() {
                     domain={['dataMin', 'dataMax']}
                     tickFormatter={(value) => value.toString()}
                     tick={{ fontSize: 11 }}
+                    axisLine={true}
+                    tickLine={true}
                   />
                   <YAxis 
                     domain={['auto', 'auto']} 
                     tickFormatter={(value) => value.toLocaleString()}
                     tick={{ fontSize: 11 }}
+                    axisLine={true}
+                    tickLine={true}
                   />
                   <RechartsTooltip 
                     content={({ active, payload, label }) => {
@@ -352,7 +351,7 @@ export function DemographicsTab() {
                           label <= 2024 ? p.name === "Historical" : p.name === "Projected"
                         );
                         
-                        if (!relevantData) return null;
+                        if (!relevantData || relevantData.value === undefined) return null;
 
                         return (
                           <div className="bg-popover text-popover-foreground rounded-md shadow-md p-2 text-sm">
@@ -370,7 +369,7 @@ export function DemographicsTab() {
                   <Line
                     name="Historical"
                     type="monotone"
-                    data={data.populationData.filter(d => d.year <= 2024)}
+                    data={data.populationData.filter((d: { year: number }) => d.year <= 2024)}
                     dataKey="population"
                     stroke="#1E4FD9"
                     strokeWidth={2}
@@ -379,7 +378,7 @@ export function DemographicsTab() {
                   <Line
                     name="Projected"
                     type="monotone"
-                    data={data.populationData.filter(d => d.year > 2024)}
+                    data={data.populationData.filter((d: { year: number }) => d.year > 2024)}
                     dataKey="population"
                     stroke="#9CA3AF"
                     strokeWidth={2}

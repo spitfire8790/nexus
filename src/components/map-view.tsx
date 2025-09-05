@@ -14,8 +14,8 @@ import { TrainStationsLayer } from './map/train-stations-layer';
 import { LightRailStopsLayer } from './map/light-rail-stops-layer';
 import { MetroStationsLayer } from './map/sydney-metro-station-layer';
 import { MapMeasureControl } from './map/map-measure-control';
-import { DevelopmentApplicationsLayer } from './map/development-applications-layer';
 import { ImageryDateOverlay } from './map/imagery-date-overlay';
+import { BasemapControl } from './map/basemap-control';
 import { RoadsLayer } from './map/roads-layer';
 import { Layers, Tag } from 'lucide-react';
 import { RoadLabelsLayer } from './map/road-labels-layer';
@@ -285,13 +285,6 @@ function OverlayLayers() {
       shouldUpdateBoundsRef.current = isSignificantBoundsChange(lastBoundsRef.current, newBounds);
       if (shouldUpdateBoundsRef.current) {
         lastBoundsRef.current = newBounds;
-        // If the Nearmap layer exists, update its bounds
-        if (layerRefs.current['nearmap'] && layerRefs.current['nearmap'].setParams) {
-          // Add a small timeout to prevent flicker on move
-          setTimeout(() => {
-            layerRefs.current['nearmap'].setParams({ bounds: newBounds.pad(0.5) });
-          }, 100);
-        }
       }
     };
     
@@ -358,18 +351,6 @@ function OverlayLayers() {
             zIndex: 410,
             noWrap: true
           };
-
-          if (layer.id === 'nearmap') {
-            // Store initial bounds for Nearmap layer
-            lastBoundsRef.current = map.getBounds();
-            
-            // Additional optimizations for Nearmap layer
-            Object.assign(wmsOptions, {
-              dpi: 96,
-              bounds: lastBoundsRef.current.pad(0.5),
-              fadeAnimation: false
-            });
-          }
 
           layerRefs.current[layer.id] = L.tileLayer.wms(layer.url || '', wmsOptions).addTo(map);
         } else if (layer.type === 'tile') {
@@ -479,9 +460,6 @@ function OverlayLayers() {
 
   return (
     <>
-      <LayersControl.Overlay name="Development Applications" checked>
-        <DevelopmentApplicationsLayer />
-      </LayersControl.Overlay>
       <LayersControl.Overlay name="Roads" checked>
         <RoadsLayer />
       </LayersControl.Overlay>
@@ -758,42 +736,7 @@ export function MapView() {
           </div>
         </div>
         <div className="absolute top-4 right-4 z-[1000] flex items-center">
-          <LayersControl 
-            position="topright"
-            collapsed={true}
-          >
-            <LayersControl.BaseLayer checked name="Carto">
-              <TileLayer
-                url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png"
-                maxZoom={21}
-                attribution='&copy; OpenStreetMap contributors, &copy; CARTO'
-                maxNativeZoom={19}
-                crossOrigin={true}
-                className="seamless-tiles"
-                pane={BASE_PANE}
-              />
-            </LayersControl.BaseLayer>
-            <LayersControl.BaseLayer name="NSW Imagery">
-              <TileLayer
-                url="https://maps.six.nsw.gov.au/arcgis/rest/services/public/NSW_Imagery/MapServer/tile/{z}/{y}/{x}"
-                maxZoom={21}
-                maxNativeZoom={19}
-                attribution='&copy; NSW Government - Maps NSW'
-                tileSize={256}
-                crossOrigin={true}
-                className="seamless-tiles"
-                pane={BASE_PANE}
-              />
-            </LayersControl.BaseLayer>
-            <LayersControl.BaseLayer name="OpenStreetMap">
-              <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                maxZoom={21}
-                pane={BASE_PANE}
-              />
-            </LayersControl.BaseLayer>
-          </LayersControl>
+          <BasemapControl />
         </div>
         <TrainStationsLayer />
         <LightRailStopsLayer />

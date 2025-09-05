@@ -6,25 +6,11 @@ import * as L from 'leaflet';
 export function ImageryDateOverlay() {
   const map = useMap();
   const [dateText, setDateText] = useState<string | null>(null);
-  const layerGroups = useMapStore((state) => state.layerGroups);
+  const selectedBasemap = useMapStore((state) => state.selectedBasemap);
 
-  // Check if NSW Imagery is enabled either as base layer or overlay
+  // Check if NSW Imagery basemap is selected
   const isNSWImageryEnabled = () => {
-    // Check overlay layer
-    const overlayEnabled = layerGroups
-      .flatMap(group => group.layers)
-      .some(layer => 
-        (layer.id === 'nsw-imagery' || layer.url?.includes('NSW_Imagery')) && 
-        layer.enabled
-      );
-
-    // Check base layer by looking at all tiles
-    const tiles = document.getElementsByClassName('leaflet-tile');
-    const baseLayerEnabled = Array.from(tiles).some(
-      tile => (tile as HTMLImageElement).src?.includes('NSW_Imagery')
-    );
-
-    return overlayEnabled || baseLayerEnabled;
+    return selectedBasemap === 'NSW Imagery';
   };
 
   useEffect(() => {
@@ -70,7 +56,7 @@ export function ImageryDateOverlay() {
       clearInterval(interval);
       map.off('moveend', fetchImageryDate);
     };
-  }, [map, layerGroups]);
+  }, [map, selectedBasemap]);
 
   if (!dateText || !isNSWImageryEnabled()) return null;
 

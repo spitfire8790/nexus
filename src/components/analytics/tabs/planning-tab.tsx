@@ -99,7 +99,7 @@ export function PlanningTab() {
         });
 
         const API_BASE_URL = process.env.NODE_ENV === 'development' 
-          ? 'http://localhost:5174'
+          ? 'http://localhost:5176'
           : 'https://www.nexusapi.xyz';
 
         console.log('Zone Data from first API:', {

@@ -1,5 +1,5 @@
 import { Logo } from "@/components/ui/logo";
-import { Search, Layers, MousePointerClick, MessageSquare, LogOut } from "lucide-react";
+import { Search, Layers, MousePointerClick, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { MobileSearchPanel } from "./mobile-search-panel";
@@ -14,7 +14,6 @@ interface MobileHeaderProps {
 
 export function MobileHeader({ onOpenSiteSearch }: MobileHeaderProps) {
   const { mapSelectMode, setMapSelectMode } = useMapStore();
-  const toggleChat = useMapStore((state) => state.toggleChat);
   const [searchOpen, setSearchOpen] = useState(false);
 
   return (
@@ -72,14 +71,6 @@ export function MobileHeader({ onOpenSiteSearch }: MobileHeaderProps) {
             </SheetContent>
           </Sheet>
 
-          <Button
-            variant="ghost"
-            className="h-auto w-auto p-1.5 flex flex-col items-center gap-1"
-            onClick={() => toggleChat()}
-          >
-            <MessageSquare className="h-5 w-5" />
-            <span className="text-[10px]">Chat</span>
-          </Button>
 
           <Button
             variant="ghost"

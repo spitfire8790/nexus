@@ -37,8 +37,7 @@ import { Info as InfoIcon } from "lucide-react";
 import { create } from 'zustand';
 import { cn } from "@/lib/utils";
 import { TooltipWrapper } from "@/components/ui/tooltip-wrapper";
-import { NearmapKeyDialog } from '@/components/map/nearmap-key-dialog';
-import { useNearmapKey } from '@/hooks/use-nearmap-key';
+import { useNearmapKey } from "@/hooks/use-nearmap-key";
 
 
 interface SortableLayerItemProps {
@@ -416,12 +415,6 @@ function getLayerDescription(layerId: string): { name: string; description: stri
       description: 'The NSW Bush Fire Prone Land dataset is a map prepared in accordance with the Guide for Bush Fire Prone Land Mapping (BFPL Mapping Guide) and certified by the Commissioner of NSW RFS under section 146(2) of the Environmental Planning and Assessment Act 1979. Over time there has been various releases of the BFPL Mapping Guide, in which the categories and types of vegetation included in the BFPL map have changed. The version of the guide under which, each polygon or LGA was certified is contained in the data. An area of land that can support a bush fire or is likely to be subject to bush fire attack, as designated on a bush fire prone land map. The definition of bushfire vegetation categories under guideline version 5b: Vegetation Category 1 consists of: > Areas of forest, woodlands, heaths (tall and short), forested wetlands and timber plantations. Vegetation Category 2 consists of: >Rainforests. >Lower risk vegetation parcels. These vegetation parcels represent a lower bush fire risk to surrounding development and consist of: - Remnant vegetation; - Land with ongoing land management practices that actively reduces bush fire risk. Vegetation Category 3 consists of: > Grasslands, freshwater wetlands, semi-arid woodlands, alpine complex and arid shrublands. Buffers are created based on the bushfire vegetation, with buffering distance being 100 metres for vegetation category 1 and 30 metres for vegetation category 2 and 3. Vegetation excluded from the bushfire vegetation categories include isolated areas of vegetation less than one hectare, managed lands and some agricultural lands. Please refer to BFPL Mapping Guide for a full list of exclusions.The legislative context of this dataset is as follows: On 1 August 2002, the Rural Fires and Environmental Assessment Legislation Amendment Act 2002 (Amendment Act) came into effect.The Act amended both the Environmental Planning and Assessment Act 1979 and the Rural Fire Services Act 1997 to ensure that people, property and the environment are more fully protected against the dangers that may arise from bushfires. Councils are required to map bushfire prone land within their local government area, which becomes the trigger for the consideration of bushfire protection measures when developing land. BFPL Mapping Guidelines are available from www.rfs.nsw.gov.au. The NSW BFPL Map is collated and merged together from individual NSW local council maps which are submitted by the local council for certification. The maps are often a product of or derived from local and state vegetation mapping with input from Local Council and RFS staff. In some cases the maps are produced under contract for local council by various companies. Please refer to the individual metadata statements for each LGA BFPL Map.',
       source: 'NSW Department of Planning, Housing and Infrastructure',
       link: 'https://mapprod3.environment.nsw.gov.au/arcgis/rest/services/ePlanning/Planning_Portal_Hazard/MapServer/229'
-    },
-    'contamination': {
-      name: 'Contaminated Land',
-      description: 'This dataset includes contaminated land notified under section 60 of the Contaminated Land Management Act 1997 (CLM Act). These have been assessed by the EPA as being contaminated, but may not always require regulation under the CLM Act.',
-      source: 'NSW Environment Protection Authority',
-      link: 'https://maptest2.environment.nsw.gov.au/arcgis/rest/services/EPA/EPACS/MapServer/1'
     },
     'road-labels': {
       name: 'Road Labels',

@@ -6,6 +6,7 @@ import { TooltipWrapper } from '@/components/ui/tooltip-wrapper';
 import * as turf from '@turf/turf';
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { usePropertyDataStore } from '@/lib/property-data-store';
+import { ImpressiveLoading } from '@/components/ui/impressive-loading';
 import * as L from 'leaflet';
 import pointToLineDistance from '@turf/point-to-line-distance';
 import length from '@turf/length';
@@ -318,11 +319,17 @@ export function OverviewTab() {
 
         const fetchAddress = async () => {
           try {
-            const response = await fetchWithRetry(
-              `https://api.apps1.nsw.gov.au/planning/viewersf/V1/ePlanningApi/address?id=${propId}&Type=property`
-            );
-            const address = await response.text();
-            data.propertyAddress = address.replace(/^"|"$/g, '');
+            if (propId) {
+              const response = await fetchWithRetry(
+                `https://api.apps1.nsw.gov.au/planning/viewersf/V1/ePlanningApi/address?id=${propId}&Type=property`
+              );
+              const address = await response.text();
+              data.propertyAddress = address.replace(/^"|"$/g, '');
+            } else {
+              // Fallback for lot selections without propId
+              data.propertyAddress = selectedProperty.address || 'Lot selected';
+              console.log('Using fallback address for lot selection:', data.propertyAddress);
+            }
           } catch (error) {
             console.error('Address fetch error:', error);
             data.propertyAddress = 'Error loading address';
@@ -370,23 +377,33 @@ export function OverviewTab() {
           const setZoneInfo = useMapStore.getState().setZoneInfo;
 
           try {
-            const response = await fetch(
-              `https://api.apps1.nsw.gov.au/planning/viewersf/V1/ePlanningApi/layerintersect?type=property&id=${propId}&layers=epi`
-            );
-            const zoningData = await response.json();
+            if (propId) {
+              const response = await fetch(
+                `https://api.apps1.nsw.gov.au/planning/viewersf/V1/ePlanningApi/layerintersect?type=property&id=${propId}&layers=epi`
+              );
+              const zoningData = await response.json();
 
-            const zoningLayer = zoningData.find((l: any) => l.layerName === "Land Zoning Map");
+              if (Array.isArray(zoningData)) {
+                const zoningLayer = zoningData.find((l: any) => l.layerName === "Land Zoning Map");
 
-            if (zoningLayer?.results?.[0]) {
-              const zoneInfo = {
-                zoneName: zoningLayer.results[0].title,
-                lgaName: zoningLayer.results[0]["LGA Name"]
-              };
-              setZoneInfo(zoneInfo);
+                if (zoningLayer?.results?.[0]) {
+                  const zoneInfo = {
+                    zoneName: zoningLayer.results[0].title,
+                    lgaName: zoningLayer.results[0]["LGA Name"]
+                  };
+                  setZoneInfo(zoneInfo);
 
-              data.zoneInfo = zoneInfo.zoneName;
-              data.lgaName = zoneInfo.lgaName;
+                  data.zoneInfo = zoneInfo.zoneName;
+                  data.lgaName = zoneInfo.lgaName;
+                } else {
+                  setZoneInfo(null);
+                }
+              } else {
+                console.warn('Zoning data is not an array:', zoningData);
+                setZoneInfo(null);
+              }
             } else {
+              console.log('No propId available for zoning fetch (lot selection)');
               setZoneInfo(null);
             }
           } catch (error) {
@@ -511,7 +528,7 @@ export function OverviewTab() {
   }, [highlightedFrontage, map]);
 
   if (propertyData.loading) {
-    return <LoadingState />;
+    return <ImpressiveLoading message="Loading property overview..." />;
   }
 
   if (propertyData.error) {

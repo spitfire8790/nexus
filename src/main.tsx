@@ -8,19 +8,10 @@ import './index.css';
 import { Toaster } from "@/components/ui/toaster";
 import { AuthCallback } from '@/components/auth/callback';
 import { initPostHog } from '@/lib/posthog';
-import { loadStripe } from '@stripe/stripe-js';
-import { Elements } from '@stripe/react-stripe-js';
 
 // Initialize PostHog
 initPostHog();
 
-// Load Stripe
-const stripePublishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
-if (!stripePublishableKey) {
-  console.error("Missing VITE_STRIPE_PUBLISHABLE_KEY");
-  throw new Error("Missing VITE_STRIPE_PUBLISHABLE_KEY");
-}
-const stripePromise = loadStripe(stripePublishableKey);
 
 // Removed incorrect RouterOptions type annotation
 const routerOptions = {
@@ -50,10 +41,8 @@ const router = createBrowserRouter([
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <AuthProvider>
-      <Elements stripe={stripePromise}>
-        <RouterProvider router={router} />
-        <Toaster />
-      </Elements>
+      <RouterProvider router={router} />
+      <Toaster />
     </AuthProvider>
   </StrictMode>
 );

@@ -4,19 +4,12 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Trash2 } from "lucide-react";
 import * as L from 'leaflet';
-import { Switch } from "@/components/ui/switch";
 
 export function SavedPropertiesPane() {
   const savedProperties = useMapStore((state) => state.savedProperties);
   const removeSavedProperty = useMapStore((state) => state.removeSavedProperty);
   const map = useMapStore((state) => state.mapInstance);
   const setSelectedProperty = useMapStore((state) => state.setSelectedProperty);
-  const showSavedProperties = useMapStore((state) => state.showSavedPropertyMarkers);
-  const setShowSavedProperties = useMapStore((state) => state.setShowSavedPropertyMarkers);
-
-  const handleToggleVisibility = (checked: boolean) => {
-    setShowSavedProperties(checked);
-  };
 
   const handleRemove = async (id: string) => {
     await removeSavedProperty(id);
@@ -104,16 +97,8 @@ export function SavedPropertiesPane() {
 
   return (
     <div className="border-t">
-      <div className="p-4 flex items-center justify-between">
+      <div className="p-4">
         <h2 className="font-semibold">Saved Properties</h2>
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">Show on map</span>
-          <Switch
-            checked={showSavedProperties}
-            onCheckedChange={handleToggleVisibility}
-            aria-label="Toggle saved properties visibility"
-          />
-        </div>
       </div>
       <ScrollArea className="h-[200px]">
         <div className="space-y-2 p-4">

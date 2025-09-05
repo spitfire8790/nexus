@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 import * as L from 'leaflet';
-import { supabase } from '@/lib/supabase';
 import type { SearchResult } from '@/components/site-search-panel';
 
 export interface MapLayer {
@@ -90,13 +89,13 @@ interface MapState {
   setMeasureMode: (mode: 'none' | 'distance' | 'area') => void;
   updateTimeIndex: (id: string, index: number) => void;
   updateEmissionScenario: (id: string, scenario: 'low' | 'high') => void;
-  isChatOpen: boolean;
-  toggleChat: () => void;
   savedProperties: SavedProperty[];
   setSavedProperties: (properties: SavedProperty[]) => void;
   addSavedProperty: (property: Omit<SavedProperty, 'id'>) => Promise<void>;
   removeSavedProperty: (id: string) => Promise<void>;
   toggleLayerGroup: (groupId: string, enabled: boolean) => void;
+  selectedBasemap: string;
+  setSelectedBasemap: (basemap: string) => void;
   groupEnabledStates: Record<string, boolean>;
   updateGroupEnabled: (groupId: string, enabled: boolean) => void;
   showSavedPropertyMarkers: boolean;
@@ -104,15 +103,29 @@ interface MapState {
   permittedUses: {
     withConsent: string[] | null;
     withoutConsent: string[] | null;
+    prohibited: string[] | null;
     loading: boolean;
     error: string | null;
   };
   setPermittedUses: (uses: {
     withConsent: string[] | null;
     withoutConsent: string[] | null;
+    prohibited: string[] | null;
     loading: boolean;
     error: string | null;
-  }) => void;
+  } | ((prev: {
+    withConsent: string[] | null;
+    withoutConsent: string[] | null;
+    prohibited: string[] | null;
+    loading: boolean;
+    error: string | null;
+  }) => {
+    withConsent: string[] | null;
+    withoutConsent: string[] | null;
+    prohibited: string[] | null;
+    loading: boolean;
+    error: string | null;
+  })) => void;
   updateSelectedRoadTypes: (layerId: string, selectedTypes: number[]) => void;
   setMapBounds: (geometries: any[]) => void;
   mapView?: {
@@ -242,24 +255,6 @@ export const useMapStore = create<MapState>((set, get) => ({
       name: 'Imagery',
       layers: [
         {
-          id: 'nearmap',
-          name: 'Nearmap',
-          url: '',
-          enabled: false,
-          type: 'wms',
-          hidden: false,
-          opacity: 1,
-          attribution: ' Nearmap',
-          wmsLayers: 'Vert',
-          wmsParams: {
-            format: 'image/jpeg',
-            transparent: true,
-            version: '1.1.1'
-          },
-          tooltipKey: 'nearmap',
-          showKeyDialog: true
-        },
-        {
           id: 'imagery',
           name: 'NSW Imagery',
           url: 'https://maps.six.nsw.gov.au/arcgis/rest/services/public/NSW_Imagery/MapServer/tile/{z}/{y}/{x}',
@@ -352,16 +347,6 @@ export const useMapStore = create<MapState>((set, get) => ({
           layerId: 229,
           opacity: 0.7,
           attribution: ' NSW Government - Department of Planning, Housing and Infrastructure'
-        },
-        {
-          id: 'contamination',
-          name: 'Contaminated Land',
-          url: 'https://mapprod2.environment.nsw.gov.au/arcgis/rest/services/EPA/Contaminated_land_notified_sites/MapServer',
-          enabled: false,
-          type: 'dynamic',
-          layerId: 0,
-          opacity: 1,
-          attribution: ' NSW Government - EPA'
         },
         {
           id: 'epa-licenses',
@@ -632,28 +617,24 @@ export const useMapStore = create<MapState>((set, get) => ({
       }))
     }));
   },
-  isChatOpen: false,
-  toggleChat: () => set((state) => ({ isChatOpen: !state.isChatOpen })),
   savedProperties: [],
   setSavedProperties: (properties) => set({ savedProperties: properties }),
   
   addSavedProperty: async (property) => {
     try {
-      const { data, error } = await supabase
-        .from('saved_properties')
-        .insert({
-          address: property.address,
-          geometry: property.geometry,
-          user_id: (await supabase.auth.getUser()).data.user?.id
-        })
-        .select()
-        .single();
+      const newProperty = {
+        id: Date.now().toString(), // Simple ID generation for local storage
+        address: property.address,
+        geometry: property.geometry,
+        created_at: new Date().toISOString()
+      };
 
-      if (error) throw error;
-
-      set((state) => ({
-        savedProperties: [...state.savedProperties, data]
-      }));
+      set((state) => {
+        const updatedProperties = [...state.savedProperties, newProperty];
+        // Save to localStorage
+        localStorage.setItem('savedProperties', JSON.stringify(updatedProperties));
+        return { savedProperties: updatedProperties };
+      });
     } catch (error) {
       console.error('Error saving property:', error);
       throw error;
@@ -662,16 +643,12 @@ export const useMapStore = create<MapState>((set, get) => ({
 
   removeSavedProperty: async (id) => {
     try {
-      const { error } = await supabase
-        .from('saved_properties')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-
-      set((state) => ({
-        savedProperties: state.savedProperties.filter(p => p.id !== id)
-      }));
+      set((state) => {
+        const updatedProperties = state.savedProperties.filter(p => p.id !== id);
+        // Save to localStorage
+        localStorage.setItem('savedProperties', JSON.stringify(updatedProperties));
+        return { savedProperties: updatedProperties };
+      });
     } catch (error) {
       console.error('Error removing property:', error);
       throw error;
@@ -708,10 +685,13 @@ export const useMapStore = create<MapState>((set, get) => ({
   permittedUses: {
     withConsent: null,
     withoutConsent: null,
+    prohibited: null,
     loading: false,
     error: null
   },
-  setPermittedUses: (uses) => set({ permittedUses: uses }),
+  setPermittedUses: (uses) => set((state) => ({ 
+    permittedUses: typeof uses === 'function' ? uses(state.permittedUses) : uses 
+  })),
   updateSelectedRoadTypes: (layerId: string, selectedTypes: number[]) => {
     set((state) => ({
       layerGroups: state.layerGroups.map(group => ({
@@ -770,4 +750,6 @@ export const useMapStore = create<MapState>((set, get) => ({
   toggleSiteSearch: () => set((state) => ({ isSiteSearchOpen: !state.isSiteSearchOpen })),
   searchResults: null,
   setSearchResults: (results) => set({ searchResults: results }),
+  selectedBasemap: 'Carto',
+  setSelectedBasemap: (basemap) => set({ selectedBasemap: basemap }),
 }));

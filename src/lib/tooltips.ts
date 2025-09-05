@@ -104,12 +104,6 @@ export const TOOLTIPS: { [key: string]: TooltipConfig } = {
     source: "NSW Department of Planning, Housing and Infrastructure",
     link: "https://mapprod3.environment.nsw.gov.au/arcgis/rest/services/ePlanning/Planning_Portal_Hazard/MapServer"
   },
-  contamination: {
-    name: "Contaminated Land",
-    description: "The list of notified sites contain land that has been notified to the EPA as being potentially contaminated. The list states whether the land is regulated under the CLM Act. If land is declared as 'significantly contaminated', it is regulated under the CLM Act and will receive notices relating to the management of this contamination. The Environment Protection Authority (EPA) and the State of New South Wales (as the case may be) have taken all reasonable care to ensure that the information is complete and correct. The EPA and the State do not, however, warrant or represent that it is free from errors or omissions or that it is exhaustive. The EPA or the State may, without notice, change any or all of the information on this website at any time. You should obtain independent advice before you make any decision based on this information. The spatial data is made available on the understanding that the EPA and the State, their servants and agents, to the extent permitted by law, accept no responsibility for any damage, cost, loss or expense incurred by you as a result of any information on this website; or any error, omission or misrepresentation on this website; or any malfunction or failure to function of this website; without limiting (2) or (3) above, any delay, failure or error in recording, displaying or updating information.",
-    source: "NSW Environmental Protection Agency (EPA)",
-    link: "https://mapprod2.environment.nsw.gov.au/arcgis/rest/services/EPA/Contaminated_land_notified_sites/MapServer/0"
-  },
   "epa-licenses": {
     name: "EPA Licensed Premises",
     description: "Premises licensed by the EPA under the Protection of the Environment Operations Act 1997",
