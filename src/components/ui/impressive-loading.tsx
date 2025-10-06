@@ -28,7 +28,7 @@ export function ImpressiveLoading({
       <div className="text-center space-y-2">
         <h3 className="text-lg font-semibold text-foreground">{message}</h3>
         <p className="text-sm text-muted-foreground">
-          Analyzing property details, zoning information, and spatial data...
+          Analysing property details, zoning information, and spatial data...
         </p>
       </div>
 
